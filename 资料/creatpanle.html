@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏规则配置原型</title>
+    <style>
+        :root {
+            --primary-blue: #1890ff;
+            --bg-grey: #f5f7fa;
+            --border-color: #d9d9d9;
+            --text-color: #333;
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 0; background: #fff; color: var(--text-color); font-size: 14px; overflow: hidden;}
+
+        /* --- 布局通用 --- */
+        .app-container { width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+        .header { padding: 10px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; font-weight: bold; background: #fff; z-index: 10; }
+        .back-btn { cursor: pointer; margin-right: 10px; font-size: 16px; }
+        
+        /* --- 视图切换控制 --- */
+        .view { display: none; width: 100%; height: 100%; }
+        .view.active { display: flex; }
+
+        /* --- 主界面 (Main View) --- */
+        .main-layout { display: flex; width: 100%; height: calc(100vh - 45px); }
+        .sidebar { width: 200px; padding: 20px; border-right: 1px solid var(--border-color); background: #fff; }
+        .content-area { flex: 1; padding: 20px; background: #fff; overflow-y: auto; }
+
+        /* 按钮样式 */
+        .btn { padding: 6px 15px; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: #fff; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+        .btn:hover { color: var(--primary-blue); border-color: var(--primary-blue); }
+        .btn-primary { background: var(--primary-blue); color: #fff; border: none; }
+        .btn-primary:hover { background: #40a9ff; }
+        .btn-block { width: 100%; margin-bottom: 10px; }
+
+        /* 规则行样式 */
+        .rule-row { display: flex; align-items: center; padding: 10px; border: 1px solid #eee; margin-bottom: 10px; border-radius: 4px; background: #fafafa; }
+        .rule-label { width: 60px; font-weight: bold; color: #666; }
+        .rule-options { flex: 1; display: flex; gap: 15px; }
+        .rule-action { margin-left: 10px; cursor: pointer; color: #999; }
+        .rule-action:hover { color: var(--primary-blue); }
+
+        /* 分组样式 */
+        .group-box { background: #f0f2f5; border: 1px solid var(--border-color); padding: 10px; margin-top: 20px; border-radius: 4px; position: relative; }
+        .group-header { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 0 5px;}
+        .group-content { min-height: 50px; display: flex; flex-direction: column; gap: 10px; }
+        .group-footer { display: flex; gap: 5px; margin-top: 10px; border-top: 1px solid #e8e8e8; padding-top: 10px; }
+        .add-comp-btn { flex: 1; font-size: 12px; background: #e6f7ff; border: 1px dashed var(--primary-blue); color: var(--primary-blue); }
+
+        /* 动态组件样式 */
+        .dynamic-comp { background: #fff; border: 1px solid var(--primary-blue); padding: 10px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; background: #e6f7ff; }
+        .comp-preview { display: flex; gap: 10px; }
+        .comp-tag { font-size: 12px; background: #fff; padding: 2px 5px; border-radius: 2px; border: 1px solid #ddd; }
+
+        /* --- 遮罩层与弹窗 (Modals/Drawers) --- */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; display: none; }
+        .overlay.active { display: block; }
+        
+        /* 侧边抽屉 */
+        .drawer { position: fixed; top: 0; left: 0; width: 400px; height: 100vh; background: #fff; z-index: 101; transform: translateX(-100%); transition: 0.3s; box-shadow: 2px 0 8px rgba(0,0,0,0.15); display: flex; flex-direction: column; }
+        .drawer.right { left: auto; right: 0; transform: translateX(100%); }
+        .drawer.active { transform: translateX(0); }
+        .drawer-header { padding: 15px; border-bottom: 1px solid #eee; font-weight: bold; font-size: 16px; }
+        .drawer-body { flex: 1; padding: 20px; overflow-y: auto; }
+        .drawer-footer { padding: 15px; border-top: 1px solid #eee; text-align: center; }
+
+        /* 选项配置样式 */
+        .option-select-item { display: flex; align-items: center; margin-bottom: 15px; padding: 10px; border: 1px solid #eee; border-radius: 4px; cursor: pointer; }
+        .option-select-item:hover { border-color: var(--primary-blue); }
+        .option-select-item.selected { border-color: var(--primary-blue); background: #e6f7ff; }
+        .circle-check { width: 16px; height: 16px; border-radius: 50%; border: 1px solid #ccc; margin-right: 10px; }
+        .option-select-item.selected .circle-check { background: var(--primary-blue); border-color: var(--primary-blue); }
+
+        /* 属性配置列表 */
+        .prop-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; }
+        .prop-input { padding: 5px; border: 1px solid #d9d9d9; border-radius: 4px; flex: 1; }
+        .rule-tag { background: var(--primary-blue); color: #fff; padding: 2px 6px; border-radius: 2px; font-size: 10px; cursor: pointer; }
+
+        /* --- 高级规则页面 (Advanced View) --- */
+        .adv-layout { display: flex; height: 100%; }
+        .adv-sidebar { width: 120px; background: #f5f5f5; border-right: 1px solid #ddd; }
+        .adv-tab { padding: 15px 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 13px; text-align: center; }
+        .adv-tab.active { background: #fff; color: var(--primary-blue); border-left: 3px solid var(--primary-blue); font-weight: bold; }
+        .adv-content { flex: 1; padding: 30px; overflow-y: auto; }
+
+        .form-group { margin-bottom: 20px; display: flex; align-items: center; }
+        .form-label { width: 100px; text-align: right; margin-right: 20px; font-weight: 500; }
+        .form-control { width: 200px; padding: 6px; border: 1px solid #d9d9d9; border-radius: 4px; }
+        
+        /* 辅助类 */
+        .icon { font-style: normal; margin-right: 5px; }
+        .radio { margin-right: 5px; }
+        
+    </style>
+</head>
+<body>
+
+    <!-- 遮罩层 -->
+    <div class="overlay" id="overlay" onclick="closeAllDrawers()"></div>
+
+    <!-- 1. 主视图 -->
+    <div id="view-main" class="view active app-container">
+        <div class="header">
+            <span>← 退出编辑</span>
+            <span style="margin-left: auto;">?</span>
+        </div>
+        <div class="main-layout">
+            <!-- 左侧操作栏 -->
+            <div class="sidebar">
+                <button class="btn btn-block" onclick="addGroup()">+ 添加分组</button>
+                <button class="btn btn-block">🔗 选项联动</button>
+            </div>
+
+            <!-- 中间画布 -->
+            <div class="content-area" id="canvas">
+                
+                <!-- 基础参数行 -->
+                <div class="rule-row">
+                    <span class="rule-label">人数</span>
+                    <div class="rule-options">
+                        <label><input type="radio" name="p" checked> 4人</label>
+                        <label><input type="radio" name="p"> 3人</label>
+                        <label><input type="radio" name="p"> 2人</label>
+                        <label><input type="checkbox"> 少人开局</label>
+                    </div>
+                    <span class="rule-action" onclick="openDrawer('drawer-people')">⚙️</span>
+                </div>
+
+                <div class="rule-row">
+                    <span class="rule-label">局数</span>
+                    <div class="rule-options">
+                        <label><input type="radio" name="r" checked> 4局</label>
+                        <label><input type="radio" name="r"> 8局</label>
+                        <label><input type="radio" name="r"> 16局</label>
+                    </div>
+                    <span class="rule-action" onclick="openDrawer('drawer-rounds')">⚙️</span>
+                </div>
+
+                <div class="rule-row">
+                    <span class="rule-label">底分</span>
+                    <select style="padding: 2px 10px;">
+                        <option>1</option>
+                        <option>2</option>
+                    </select>
+                    <span class="rule-action">⚙️</span>
+                </div>
+
+                <!-- 动态添加的分组容器 -->
+                <div id="groups-container">
+                    <!-- 示例分组 (对应原型图中的分组1) -->
+                    <div class="group-box">
+                        <div class="group-header">
+                            <span>分组1</span>
+                            <span>⚙️</span>
+                        </div>
+                        <div class="group-content" id="group-1-content">
+                            <div class="text-muted" style="text-align: center; color: #999; padding: 10px;">暂无元件，点击下方添加元件</div>
+                        </div>
+                        <div class="group-footer">
+                            <button class="btn add-comp-btn" onclick="addComponent(this, 'radio')">+ 单选</button>
+                            <button class="btn add-comp-btn" onclick="addComponent(this, 'check')">+ 复选</button>
+                            <button class="btn add-comp-btn">+ 下拉列表</button>
+                            <button class="btn add-comp-btn">+ 下拉&开关</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 设置人数抽屉 (左侧) -->
+    <div id="drawer-people" class="drawer">
+        <div class="drawer-header">设置人数选项</div>
+        <div class="drawer-body">
+            <h4>选项选择</h4>
+            <div class="option-select-item selected">
+                <div class="circle-check"></div>
+                <div>
+                    <div>4人/3人/2人，默认值4人</div>
+                </div>
+            </div>
+            <div class="option-select-item">
+                <div class="circle-check"></div>
+                <div>3人/2人，默认值3人</div>
+            </div>
+            <div class="option-select-item">
+                <div class="circle-check"></div>
+                <div>3人/2人，默认值3人</div>
+            </div>
+        </div>
+        <div class="drawer-footer">
+            <button class="btn btn-primary btn-block" onclick="closeAllDrawers()">保存</button>
+        </div>
+    </div>
+
+    <!-- 3. 设置局数抽屉 (左侧) -->
+    <div id="drawer-rounds" class="drawer">
+        <div class="drawer-header">设置局数选项</div>
+        <div class="drawer-body">
+            <div style="display: flex; margin-bottom: 20px; background: #eee; padding: 2px; border-radius: 4px;">
+                <div style="flex:1; text-align:center; padding: 5px; background: #fff; border-radius: 2px; font-weight: bold;">打局</div>
+                <div style="flex:1; text-align:center; padding: 5px; color: #666;">打圈</div>
+            </div>
+            
+            <div class="option-select-item selected">
+                <div class="circle-check"></div>
+                <div>4/8/16局，默认4局</div>
+            </div>
+            <div class="option-select-item">
+                <div class="circle-check"></div>
+                <div>8/16/32局，默认8局</div>
+            </div>
+        </div>
+        <div class="drawer-footer">
+            <button class="btn btn-primary btn-block" onclick="closeAllDrawers()">保存</button>
+        </div>
+    </div>
+
+    <!-- 4. 元件属性配置 (右侧) -->
+    <div id="drawer-props" class="drawer right">
+        <div class="drawer-header" style="display:flex; justify-content: space-between;">
+            <span>放弃</span>
+            <span>元件属性配置</span>
+            <span></span>
+        </div>
+        <div class="drawer-body">
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 12px; color: #666;">单选组名称</label>
+                <input type="text" class="prop-input" value="玩法选择" style="width: 100%; margin-top: 5px;">
+            </div>
+
+            <div style="background: #fafafa; padding: 10px; border-radius: 4px;">
+                <div style="display: flex; font-size: 12px; color: #999; margin-bottom: 5px;">
+                    <span style="width: 30px;"></span>
+                    <span style="flex: 1;">选项名</span>
+                    <span style="width: 50px;">赋值</span>
+                </div>
+
+                <!-- 选项行 1 -->
+                <div class="prop-item">
+                    <span style="font-weight: bold;">1</span>
+                    <input type="text" class="prop-input" value="不漂">
+                    <input type="text" class="prop-input" style="width: 40px; flex:none;" value="0">
+                    <span class="rule-tag" onclick="switchView('view-adv')">规则 0</span>
+                </div>
+                <div style="margin-left: 25px; font-size: 10px; margin-bottom: 10px;">
+                    <label><input type="checkbox" checked> 默认选中</label>
+                </div>
+
+                <!-- 选项行 2 -->
+                <div class="prop-item">
+                    <span style="font-weight: bold;">2</span>
+                    <input type="text" class="prop-input" value="自由选漂">
+                    <input type="text" class="prop-input" style="width: 40px; flex:none;" value="1">
+                    <span class="rule-tag" onclick="switchView('view-adv')">规则 1</span>
+                </div>
+
+                <button class="btn btn-block" style="margin-top: 10px; font-size: 12px; border-style: dashed;">添加选项</button>
+            </div>
+
+        </div>
+        <div class="drawer-footer">
+            <button class="btn btn-primary btn-block" onclick="closeAllDrawers()">保存</button>
+        </div>
+    </div>
+
+    <!-- 5. 高级规则页面 (全屏) -->
+    <div id="view-adv" class="view app-container" style="background: #f0f2f5;">
+        <div class="header">
+            <span class="back-btn" onclick="switchView('view-main')">← 返回</span>
+            <span>正在编辑：xxxx选项的规则</span>
+        </div>
+        <div class="main-layout" style="margin: 20px; background: #fff; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); height: calc(100vh - 100px);">
+            <!-- 高级导航 -->
+            <div class="adv-sidebar">
+                <div class="adv-tab">基础规则</div>
+                <div class="adv-tab active">发牌前阶段</div>
+                <div class="adv-tab">发牌后阶段</div>
+                <div class="adv-tab">摸打阶段</div>
+                <div class="adv-tab">天胡</div>
+                <div class="adv-tab">算分阶段</div>
+            </div>
+            
+            <!-- 高级表单 -->
+            <div class="adv-content">
+                <h3 style="margin-top: 0;">坐庄</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">启用</label>
+                    <!-- Switch Toggle Simulation -->
+                    <div style="width: 40px; height: 20px; background: var(--primary-blue); border-radius: 10px; position: relative;">
+                        <div style="width: 16px; height: 16px; background: #fff; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">首局坐庄</label>
+                    <label style="margin-right: 15px;"><input type="radio" name="banker" checked> 房主坐庄</label>
+                    <label><input type="radio" name="banker"> 随机坐庄</label>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">庄家接炮</label>
+                    <select class="form-control"><option>庄家连庄</option></select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">闲家接炮</label>
+                    <select class="form-control"><option>庄家连庄</option></select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">若一炮多响</label>
+                    <select class="form-control"><option>点炮玩家坐庄</option></select>
+                </div>
+
+                <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; text-align: center;">
+                    <button class="btn btn-primary" style="width: 150px;" onclick="switchView('view-main')">保存并离开</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 视图切换逻辑
+        function switchView(viewId) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            // 关闭所有弹窗
+            closeAllDrawers();
+        }
+
+        // 抽屉/弹窗控制
+        function openDrawer(drawerId) {
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById(drawerId).classList.add('active');
+        }
+
+        function closeAllDrawers() {
+            document.getElementById('overlay').classList.remove('active');
+            document.querySelectorAll('.drawer').forEach(el => el.classList.remove('active'));
+        }
+
+        // 动态添加分组
+        let groupCount = 1;
+        function addGroup() {
+            groupCount++;
+            const container = document.getElementById('groups-container');
+            const newGroupHTML = `
+                <div class="group-box">
+                    <div class="group-header">
+                        <span>分组${groupCount}</span>
+                        <span>⚙️</span>
+                    </div>
+                    <div class="group-content">
+                        <div class="text-muted" style="text-align: center; color: #999; padding: 10px;">暂无元件，点击下方添加元件</div>
+                    </div>
+                    <div class="group-footer">
+                        <button class="btn add-comp-btn" onclick="addComponent(this, 'radio')">+ 单选</button>
+                        <button class="btn add-comp-btn" onclick="addComponent(this, 'check')">+ 复选</button>
+                        <button class="btn add-comp-btn">+ 下拉列表</button>
+                        <button class="btn add-comp-btn">+ 下拉&开关</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', newGroupHTML);
+            // 滚动到底部
+            const canvas = document.getElementById('canvas');
+            canvas.scrollTop = canvas.scrollHeight;
+        }
+
+        // 动态添加组件
+        function addComponent(btn, type) {
+            const contentArea = btn.parentElement.previousElementSibling;
+            
+            // 移除"暂无元件"提示
+            const emptyMsg = contentArea.querySelector('.text-muted');
+            if(emptyMsg) emptyMsg.remove();
+
+            let compHTML = '';
+            if(type === 'radio') {
+                compHTML = `
+                <div class="dynamic-comp">
+                    <div class="comp-preview">
+                        <div class="comp-tag">单选</div>
+                        <div style="display:flex; gap:5px;">
+                            <div class="comp-tag">不漂</div>
+                            <div class="comp-tag">自由选漂</div>
+                        </div>
+                    </div>
+                    <span class="rule-action" onclick="openDrawer('drawer-props')">⚙️</span>
+                </div>`;
+            } else if (type === 'check') {
+                compHTML = `
+                <div class="dynamic-comp">
+                    <div class="comp-preview">
+                        <div class="comp-tag">复选</div>
+                        <div style="display:flex; gap:5px;">
+                            <div class="comp-tag">选项1</div>
+                        </div>
+                    </div>
+                    <span class="rule-action" onclick="openDrawer('drawer-props')">⚙️</span>
+                </div>`;
+            }
+
+            contentArea.insertAdjacentHTML('beforeend', compHTML);
+        }
+    </script>
+</body>
+</html>

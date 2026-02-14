@@ -1,0 +1,808 @@
+<template>
+  <div class="modal-container">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-left">
+        <span class="sub-title">胡分</span>
+        <span class="separator">/</span>
+        <span class="page-title">自摸胡牌</span>
+      </div>
+      <div class="header-right">
+        <div class="close-icon" title="关闭" @click="$emit('close')">✕</div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <!-- Rule Cards -->
+      <div v-for="(card, index) in ruleCards" :key="card.id" class="rule-card" :class="{ expanded: card.expanded }" @contextmenu="showContextMenuHandler($event, card, 'rules')">
+        <div class="card-header" @click="toggleCard(card)">
+          <div class="header-content">
+            <span class="seq-num">{{ index + 1 }}</span>
+            <input 
+              type="text" 
+              class="card-title" 
+              v-model="card.title" 
+              @click.stop
+            />
+          </div>
+          <div class="card-tools">⚙️</div>
+        </div>
+        <div class="card-body">
+          <!-- Condition Row -->
+          <div class="logic-row">
+            <span class="logic-label">当</span>
+            <div class="formula-container">
+              <!-- Group 1 -->
+              <div class="chip-group">
+                <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '当前赢家')">当前赢家</span>
+                <span class="chip chip-text">的</span>
+                <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '番型')">番型</span>
+              </div>
+              <span class="chip chip-text">为</span>
+              <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '清一色')">清一色</span>
+              
+              <!-- Logic Operator -->
+              <span class="operator-box" @click="handleChipClick($event, 'operator', '或')">或</span>
+
+              <!-- Group 2 -->
+              <div class="chip-group">
+                <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '当前赢家')">当前赢家</span>
+                <span class="chip chip-text">的</span>
+                <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '番型')">番型</span>
+              </div>
+              <span class="chip chip-text">为</span>
+              <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '七对')">七对</span>
+            </div>
+          </div>
+
+          <!-- Action Row -->
+          <div class="logic-row">
+            <span class="logic-label">就</span>
+            <div style="flex:1; display:flex; align-items:center; gap: 10px;">
+              <span style="font-size:13px; font-weight:bold;">确认出分玩家</span>
+              <div class="dropdown-trigger" style="width: 100%;">点炮玩家</div>
+            </div>
+          </div>
+
+          <!-- Calculation Row -->
+          <div class="logic-row">
+            <span class="logic-label"></span>
+            <div style="flex:1; display:flex; align-items:flex-start; gap: 10px;">
+              <span style="font-size:13px; font-weight:bold; margin-top:8px;">计算出分番数</span>
+              <div class="formula-container" style="background:#fff;">
+                <div class="chip-group">
+                  <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '收分玩家')">收分玩家</span>
+                  <span class="chip chip-text">的</span>
+                  <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '个人收分番')">个人收分番</span>
+                </div>
+                <span class="chip chip-text">的值</span>
+                
+                <span class="operator-box" @click="handleChipClick($event, 'operator', '+')">+</span>
+
+                <div class="chip-group">
+                  <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '出分玩家')">出分玩家</span>
+                  <span class="chip chip-text">的</span>
+                  <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '个人出分番')">个人出分番</span>
+                </div>
+                <span class="chip chip-text">的值</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Else Block -->
+      <div class="else-section">
+        <span class="section-tag">否则就</span>
+        <span class="split-icon">⤢</span>
+        
+        <div class="logic-row">
+          <div style="flex:1; display:flex; align-items:center; gap: 10px;">
+            <span style="font-size:13px; font-weight:bold; width: 85px;">确认出分玩家</span>
+            <div class="dropdown-trigger" style="flex:1;">点炮玩家</div>
+          </div>
+        </div>
+
+        <div class="logic-row">
+          <div style="flex:1; display:flex; align-items:center; gap: 10px;">
+            <span style="font-size:13px; font-weight:bold; width: 85px;">计算出分番数</span>
+            <div class="formula-container">
+              <div class="chip-group">
+                <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '收分玩家')">收分玩家</span>
+                <span class="chip chip-text">的</span>
+                <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '个人收分番')">个人收分番</span>
+              </div>
+              <span class="chip chip-text">的值</span>
+              <span class="operator-box" @click="handleChipClick($event, 'operator', '+')">+</span>
+              <div class="chip-group">
+                <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '出分玩家')">出分玩家</span>
+                <span class="chip chip-text">的</span>
+                <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '个人出分番')">个人出分番</span>
+              </div>
+              <span class="chip chip-text">的值</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modifier Section -->
+      <div class="modifier-section">
+        <div class="modifier-header">番数/分数修正（变量名：最终番数）</div>
+        <label class="checkbox-label">
+          <input type="checkbox" style="margin-right: 8px;"> 存在封顶或金顶场景，进行番数修正
+        </label>
+
+        <!-- Modifier Case 1 -->
+        <div v-for="(modifier, index) in modifierCards" :key="modifier.id" class="rule-card" :class="{ expanded: modifier.expanded }" @contextmenu="showContextMenuHandler($event, modifier, 'modifier')">
+          <div class="card-header" @click="toggleCard(modifier)">
+            <div class="header-content">
+              <span class="seq-num">{{ index + 1 }}</span>
+              <input 
+                type="text" 
+                class="card-title" 
+                v-model="modifier.title" 
+                @click.stop
+              />
+            </div>
+            <div class="card-tools">⚙️</div>
+          </div>
+          <div class="card-body">
+            <div class="logic-row">
+              <span class="logic-label">当</span>
+              <div class="formula-container">
+                   <div class="chip-group">
+                    <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '当前玩家')">当前玩家</span>
+                    <span class="chip chip-text">的</span>
+                    <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '金顶状态')">金顶状态</span>
+                  </div>
+                   <span class="chip chip-logic" @click="handleChipClick($event, 'logic', '成立')">成立</span>
+              </div>
+            </div>
+            <div class="logic-row">
+              <span class="logic-label">就</span>
+              <div class="formula-container">
+                <span class="chip chip-val" @click="handleChipClick($event, 'val', '7')">7</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+         <!-- Modifier Else -->
+         <div class="else-section" style="background: #fff; border-color: #ddd; margin-top: 10px;">
+            <span class="section-tag">否则就</span>
+            <div class="logic-row">
+              <span style="font-size:13px; font-weight:bold; margin-right: 10px; margin-top: 8px;">确认出分番数</span>
+              <div class="formula-container">
+                <span class="chip chip-val" @click="handleChipClick($event, 'val', 'Min')">Min</span>
+                <span class="chip chip-text">(</span>
+                <span class="chip chip-val" @click="handleChipClick($event, 'val', '6')">6</span>
+                <span class="chip chip-text">,</span>
+                <div class="chip-group" style="margin-left: 5px;">
+                  <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '出分玩家')">出分玩家</span>
+                  <span class="chip chip-text">的</span>
+                  <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '计算番数')">计算番数</span>
+                </div>
+                <span class="chip chip-text">的值</span>
+                <span class="chip chip-text">)</span>
+              </div>
+            </div>
+         </div>
+
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn btn-secondary">取消</button>
+      <button class="btn btn-secondary">保存</button>
+      <button class="btn btn-primary">保存并关闭</button>
+    </div>
+
+    <!-- 右键菜单 -->
+    <div class="context-menu" :class="{ show: showContextMenu }" :style="{ left: contextMenuX + 'px', top: contextMenuY + 'px' }">
+      <div class="context-menu-item rename" data-action="rename" @click="handleMenuAction('rename')">
+        <span>重命名</span>
+        <span class="context-menu-icon">⚙️</span>
+      </div>
+      <div class="context-menu-item" data-action="copy" @click="handleMenuAction('copy')">
+        <span>复制</span>
+        <span class="context-menu-icon">⚙️</span>
+      </div>
+      <div class="context-menu-item" data-action="add" @click="handleMenuAction('add')">
+        <span>下方新增一行</span>
+        <span class="context-menu-icon">⚙️</span>
+      </div>
+      <div class="context-menu-item" data-action="delete" @click="handleMenuAction('delete')">
+        <span>删除</span>
+        <span class="context-menu-icon">⚙️</span>
+      </div>
+      <div class="context-menu-item" data-action="moveUp" @click="handleMenuAction('moveUp')">
+        <span>上移</span>
+        <span class="context-menu-icon">⚙️</span>
+      </div>
+      <div class="context-menu-item" data-action="moveDown" @click="handleMenuAction('moveDown')">
+        <span>下移</span>
+        <span class="context-menu-icon">⚙️</span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, onMounted, onUnmounted } from 'vue';
+
+// 定义props和emit
+const emit = defineEmits(['close']);
+
+// 规则卡片数据
+const ruleCards = reactive([
+  {
+    id: 1,
+    title: '情况一 这里可以写对自己看的说明',
+    expanded: true
+  },
+  {
+    id: 2,
+    title: '情况二 这里可以写对自己看的说明',
+    expanded: false
+  },
+  {
+    id: 3,
+    title: '情况三 这里可以写对自己看的说明',
+    expanded: false
+  }
+]);
+
+// 修正卡片数据
+const modifierCards = reactive([
+  {
+    id: 1,
+    title: '情况一 这里可以写对自己看的说明',
+    expanded: true
+  }
+]);
+
+// 右键菜单状态
+const showContextMenu = ref(false);
+const contextMenuX = ref(0);
+const contextMenuY = ref(0);
+const currentCard = ref(null);
+const currentSection = ref(null);
+
+// 切换卡片展开/折叠状态
+const toggleCard = (card) => {
+  card.expanded = !card.expanded;
+};
+
+// 显示右键菜单
+const showContextMenuHandler = (e, card, section) => {
+  e.preventDefault();
+  currentCard.value = card;
+  currentSection.value = section;
+  
+  // 计算位置
+  let x = e.clientX;
+  let y = e.clientY;
+
+  // 防止菜单超出屏幕
+  const menuWidth = 160; // 预估菜单宽度
+  const menuHeight = 180; // 预估菜单高度
+  const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
+
+  if (x + menuWidth > screenWidth) {
+    x = screenWidth - menuWidth;
+  }
+  if (y + menuHeight > screenHeight) {
+    y = screenHeight - menuHeight;
+  }
+
+  contextMenuX.value = x;
+  contextMenuY.value = y;
+  showContextMenu.value = true;
+};
+
+// 关闭右键菜单
+const closeContextMenu = () => {
+  showContextMenu.value = false;
+  currentCard.value = null;
+  currentSection.value = null;
+};
+
+// 处理菜单操作
+const handleMenuAction = (action) => {
+  if (!currentCard.value || !currentSection.value) return;
+
+  switch (action) {
+    case 'rename':
+      // 重命名逻辑：聚焦到卡片标题输入框
+      const titleInput = document.querySelector(`input[value="${currentCard.value.title}"]`);
+      if (titleInput) {
+        titleInput.focus();
+        titleInput.select();
+      }
+      break;
+    case 'copy':
+      // 复制逻辑
+      if (currentSection.value === 'rules') {
+        const index = ruleCards.findIndex(card => card.id === currentCard.value.id);
+        if (index !== -1) {
+          const clonedCard = { ...currentCard.value, id: Date.now(), title: currentCard.value.title + ' (复制)', expanded: false };
+          ruleCards.splice(index + 1, 0, clonedCard);
+        }
+      } else if (currentSection.value === 'modifier') {
+        const index = modifierCards.findIndex(card => card.id === currentCard.value.id);
+        if (index !== -1) {
+          const clonedCard = { ...currentCard.value, id: Date.now(), title: currentCard.value.title + ' (复制)', expanded: false };
+          modifierCards.splice(index + 1, 0, clonedCard);
+        }
+      }
+      break;
+    case 'add':
+      // 新增逻辑
+      if (currentSection.value === 'rules') {
+        const index = ruleCards.findIndex(card => card.id === currentCard.value.id);
+        if (index !== -1) {
+          const newCard = {
+            id: Date.now(),
+            title: '新情况',
+            expanded: false
+          };
+          ruleCards.splice(index + 1, 0, newCard);
+        }
+      } else if (currentSection.value === 'modifier') {
+        const index = modifierCards.findIndex(card => card.id === currentCard.value.id);
+        if (index !== -1) {
+          const newCard = {
+            id: Date.now(),
+            title: '新情况',
+            expanded: false
+          };
+          modifierCards.splice(index + 1, 0, newCard);
+        }
+      }
+      break;
+    case 'delete':
+      // 删除逻辑
+      if (confirm('确定要删除这张卡片吗？')) {
+        if (currentSection.value === 'rules') {
+          const index = ruleCards.findIndex(card => card.id === currentCard.value.id);
+          if (index !== -1) {
+            ruleCards.splice(index, 1);
+          }
+        } else if (currentSection.value === 'modifier') {
+          const index = modifierCards.findIndex(card => card.id === currentCard.value.id);
+          if (index !== -1) {
+            modifierCards.splice(index, 1);
+          }
+        }
+      }
+      break;
+    case 'moveUp':
+      // 上移逻辑
+      if (currentSection.value === 'rules') {
+        const index = ruleCards.findIndex(card => card.id === currentCard.value.id);
+        if (index > 0) {
+          [ruleCards[index], ruleCards[index - 1]] = [ruleCards[index - 1], ruleCards[index]];
+        }
+      } else if (currentSection.value === 'modifier') {
+        const index = modifierCards.findIndex(card => card.id === currentCard.value.id);
+        if (index > 0) {
+          [modifierCards[index], modifierCards[index - 1]] = [modifierCards[index - 1], modifierCards[index]];
+        }
+      }
+      break;
+    case 'moveDown':
+      // 下移逻辑
+      if (currentSection.value === 'rules') {
+        const index = ruleCards.findIndex(card => card.id === currentCard.value.id);
+        if (index < ruleCards.length - 1) {
+          [ruleCards[index], ruleCards[index + 1]] = [ruleCards[index + 1], ruleCards[index]];
+        }
+      } else if (currentSection.value === 'modifier') {
+        const index = modifierCards.findIndex(card => card.id === currentCard.value.id);
+        if (index < modifierCards.length - 1) {
+          [modifierCards[index], modifierCards[index + 1]] = [modifierCards[index + 1], modifierCards[index]];
+        }
+      }
+      break;
+  }
+
+  closeContextMenu();
+};
+
+// Chip 点击事件处理
+const handleChipClick = (e, chipType, chipText) => {
+  e.stopPropagation(); // 防止触发 Card 折叠
+  // 模拟点击效果
+  const chip = e.target;
+  chip.style.opacity = '0.5';
+  setTimeout(() => chip.style.opacity = '1', 100);
+  console.log('Edit chip:', chipType, chipText);
+  // 这里可以添加Chip的编辑逻辑
+};
+
+// 初始化：为所有卡片绑定右键事件
+// 注意：在Vue中，我们通常使用@contextmenu指令而不是手动绑定事件
+
+// 点击文档其他地方关闭右键菜单
+const handleDocumentClick = () => {
+  closeContextMenu();
+};
+
+// 在组件挂载时添加事件监听器
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick);
+});
+
+// 在组件卸载时移除事件监听器
+onUnmounted(() => {
+  document.removeEventListener('click', handleDocumentClick);
+});
+</script>
+
+<style scoped>
+:root {
+  /* 语义色盘 - 提取自原图 */
+  --color-obj-bg: #fca5a5;    /* 对象背景 (粉) */
+  --color-obj-text: #fff;
+  --color-attr-bg: #f59e0b;   /* 属性/变量背景 (橙) */
+  --color-logic-bg: #4ade80;  /* 逻辑/判定背景 (绿) */
+  --color-val-bg: #60a5fa;    /* 数值/函数背景 (蓝) */
+  --color-bg-gray: #f3f4f6;   /* 卡片背景 */
+  --color-border: #e5e7eb;
+  --color-text-main: #1f2937;
+  --color-primary: #2563eb;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* --- 弹窗容器 --- */
+.modal-container {
+  width: 95%;
+  max-width: 1000px;
+  height: 90vh;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* --- 头部 Header --- */
+.modal-header {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  z-index: 10;
+  height: 60px;
+}
+
+.header-left { display: flex; align-items: center; gap: 8px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+.page-title { font-size: 16px; font-weight: bold; color: #111; }
+.sub-title { font-size: 14px; color: #666; }
+.separator { color: #d1d5db; margin: 0 4px; }
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-secondary {
+  background: #fff;
+  border-color: #d1d5db;
+  color: #374151;
+}
+.btn-secondary:hover { background-color: #f9fafb; border-color: #9ca3af; }
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+.btn-primary:hover { background-color: #1d4ed8; }
+
+.close-icon {
+  font-size: 20px;
+  color: #9ca3af;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  margin-left: 8px;
+  transition: all 0.2s;
+}
+.close-icon:hover { background-color: #f3f4f6; color: #4b5563; }
+
+/* --- 主内容区 Scroll Area --- */
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background-color: #f9fafb;
+}
+
+/* --- 页脚 Footer --- */
+.modal-footer {
+  padding: 12px 24px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #fff;
+  height: 60px;
+  align-items: center;
+}
+
+/* --- 规则卡片 Rule Card --- */
+.rule-card {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+  overflow: hidden;
+}
+.rule-card.expanded {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid var(--color-primary); /* 高亮展开项 */
+}
+
+/* 卡片头部（可点击折叠） */
+.card-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  cursor: pointer;
+}
+.card-header:hover { background-color: #f9fafb; }
+
+.header-content { display: flex; align-items: center; gap: 10px; flex: 1; }
+.seq-num {
+  background: blue;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+.card-title { font-size: 14px; color: var(--color-text-main); font-weight: 500; width: 100%; border: none; outline: none; background: transparent;}
+.card-tools { color: #9ca3af; cursor: pointer; }
+
+/* 卡片内容区 */
+.card-body {
+  padding: 16px;
+  background-color: #ecfeff; /* 浅青色背景，模拟原图 */
+  border-top: 1px solid var(--color-border);
+  display: none; /* 默认折叠 */
+}
+.rule-card.expanded .card-body { display: block; }
+
+/* 逻辑行 Layout */
+.logic-row {
+  display: flex;
+  align-items: flex-start; /* 对齐顶部，防止多行错位 */
+  margin-bottom: 12px;
+  line-height: 32px;
+}
+.logic-label {
+  font-weight: bold;
+  font-size: 14px;
+  margin-right: 12px;
+  min-width: 20px;
+  padding-top: 4px; 
+}
+
+/* --- 核心组件：公式编辑器/Chip容器 --- */
+.formula-container {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px 8px;
+  min-height: 38px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.formula-container:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* 下拉选框模拟 */
+.dropdown-trigger {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 0 10px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  min-width: 120px;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.dropdown-trigger::after {
+  content: "▼";
+  font-size: 10px;
+  color: #999;
+  margin-left: 8px;
+}
+
+/* --- Chips (拼图块) --- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  height: 26px;
+  border-radius: 2px;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+.chip:hover { opacity: 0.9; }
+.chip::after {
+  content: "▼";
+  font-size: 8px;
+  margin-left: 6px;
+  opacity: 0.7;
+}
+
+/* Chip 变体 */
+.chip-obj { background-color: var(--color-obj-bg); } /* 粉红 */
+.chip-attr { background-color: var(--color-attr-bg); } /* 橙色 */
+.chip-logic { background-color: var(--color-logic-bg); margin: 0 4px; } /* 绿色 */
+.chip-val { background-color: var(--color-val-bg); } /* 蓝色 */
+.chip-text { 
+  color: #374151; 
+  font-weight: normal; 
+  padding: 0 2px;
+  background: transparent;
+  box-shadow: none;
+  cursor: text;
+}
+.chip-text::after { content: none; }
+
+.chip-group {
+  display: inline-flex;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-right: 4px;
+}
+.chip-group .chip {
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  border-right: 1px solid rgba(255,255,255,0.2);
+}
+.chip-group .chip:last-child { border-right: none; }
+
+/* 运算符块 + */
+.operator-box {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  background: var(--color-logic-bg);
+  color: white;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  border-radius: 2px;
+  margin: 0 4px;
+  cursor: pointer;
+}
+
+/* --- 否则 (Else) 模块 --- */
+.else-section {
+  background: #ecfeff;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 20px;
+  position: relative;
+}
+.section-tag {
+  font-weight: bold;
+  margin-bottom: 12px;
+  display: block;
+}
+.split-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #666;
+  cursor: pointer;
+}
+
+/* --- 修正模块 (Modifer Section) --- */
+.modifier-section {
+  margin-top: 30px;
+  border-top: 1px solid #ccc;
+  padding-top: 20px;
+}
+.modifier-header {
+  font-weight: bold;
+  color: #4b5563;
+  margin-bottom: 10px;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+/* --- 右键菜单 --- */
+.context-menu {
+  position: fixed;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 1000;
+  min-width: 160px;
+  display: none;
+}
+.context-menu.show {
+  display: block;
+}
+.context-menu-item {
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.context-menu-item:hover {
+  background-color: #f3f4f6;
+}
+.context-menu-item:first-child {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+.context-menu-item:last-child {
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+.context-menu-item.rename {
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-weight: 500;
+}
+.context-menu-icon {
+  font-size: 14px;
+  color: #9ca3af;
+}
+</style>

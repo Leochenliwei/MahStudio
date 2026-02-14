@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>麻将高级配置 - 全局联动管理 V4 (多属性控制版)</title>
+    <style>
+        :root {
+            --primary: #2F54EB;
+            --primary-light: #f0f5ff;
+            --secondary: #fa8c16;
+            --bg-body: #F0F2F5;
+            --bg-white: #FFFFFF;
+            --text-main: #262626;
+            --text-sub: #8C8C8C;
+            --border: #E8E8E8;
+            --line-color: #D9D9D9;
+            --sidebar-width: 280px;
+            
+            /* 层级颜色系统 */
+            --level-group-bg: #f9f0ff; --level-group-text: #722ed1; --level-group-border: #d3adf7;
+            --level-comp-bg: #e6f7ff;  --level-comp-text: #1890ff; --level-comp-border: #91caff;
+            --level-item-bg: #e6fffb;  --level-item-text: #13c2c2; --level-item-border: #87e8de;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
+        
+        body { margin: 0; background: #222; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; overflow: hidden; }
+
+        /* --- 设备模拟器 --- */
+        .device-shell {
+            width: 960px; height: 500px;
+            background: var(--bg-body);
+            border: 12px solid #111; border-radius: 24px;
+            position: relative; display: flex; overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.7);
+        }
+
+        .app-container { display: flex; width: 100%; height: 100%; position: relative; }
+
+        /* 1. 左侧侧边栏 */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-white);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            z-index: 10;
+        }
+        .sidebar-header { height: 50px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--text-main); font-size: 14px; flex-shrink: 0;}
+        .search-box { padding: 10px; border-bottom: 1px solid #f5f5f5; flex-shrink: 0;}
+        .search-input { width: 100%; padding: 8px 12px; border: 1px solid #eee; border-radius: 6px; font-size: 12px; background: #f9f9f9; }
+        
+        .comp-list { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+        
+        /* 分组标题样式 */
+        .group-header {
+            padding: 12px 16px 4px 16px;
+            font-size: 12px; font-weight: bold; color: var(--text-sub);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 6px;
+            background: #fff; position: sticky; top: 0; z-index: 5;
+        }
+        .group-header::before { content:''; display:block; width:4px; height:4px; background:#ccc; border-radius:50%; }
+
+        /* 元件项样式 */
+        .comp-item {
+            padding: 8px 16px 8px 28px;
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; transition: 0.2s; font-size: 13px; color: var(--text-main);
+            border-left: 3px solid transparent;
+        }
+        .comp-item:hover { background: #fafafa; }
+        .comp-item.active { background: #E6F7FF; border-left-color: var(--primary); color: var(--primary); font-weight: 500; }
+        .rule-count { background: #f0f0f0; color: #999; font-size: 10px; padding: 1px 6px; border-radius: 10px; min-width: 20px; text-align: center; }
+        .comp-item.active .rule-count { background: var(--primary); color: white; }
+
+        /* 2. 右侧内容区 */
+        .main-content { flex: 1; display: flex; flex-direction: column; background: var(--bg-body); }
+        .main-header { height: 50px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-white); border-bottom: 1px solid var(--border); z-index: 5; flex-shrink: 0;}
+        .header-title { font-weight: 600; font-size: 15px; color: var(--text-main); }
+        
+        .rules-container { flex: 1; padding: 20px 24px; overflow-y: auto; }
+        .section-title { font-size: 12px; color: var(--text-sub); margin: 20px 0 12px 0; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        
+        /* 规则卡片 */
+        .summary-card { background: var(--bg-white); border-radius: 8px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); border: 1px solid transparent; cursor: pointer; transition: all 0.2s; margin-bottom: 12px; }
+        .summary-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(47,84,235,0.1); }
+        .summary-card.is-trigger { border-left: 3px solid var(--primary); }
+        .summary-card.is-target { border-left: 3px solid var(--secondary); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+        .badge.trigger { background: var(--primary-light); color: var(--primary); }
+        .badge.target { background: var(--secondary-light); color: var(--secondary); }
+        .shared-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: #d46b08; background: #fff7e6; padding: 1px 6px; border-radius: 4px; margin-left: 8px; border: 1px solid #ffd591; }
+        
+        .rule-desc { font-size: 13px; color: #333; line-height: 1.5; font-weight: 500; }
+        
+        /* 动作列表 - 多属性展示 */
+        .action-list { margin-top: 12px; padding-top: 8px; border-top: 1px dashed #eee; display: flex; flex-wrap: wrap; gap: 8px; }
+        
+        .target-chip { display: inline-flex; align-items: center; border-radius: 4px; padding: 3px 8px; font-size: 11px; border: 1px solid transparent; }
+        
+        /* 📦 组级别 */
+        .target-chip.level-group { background: var(--level-group-bg); color: var(--level-group-text); border-color: var(--level-group-border); }
+        .target-chip.level-group::before { content: '📦'; margin-right: 4px; font-size: 10px; }
+        
+        /* 🧩 元件级别 */
+        .target-chip.level-comp { background: var(--level-comp-bg); color: var(--level-comp-text); border-color: var(--level-comp-border); }
+        .target-chip.level-comp::before { content: '🧩'; margin-right: 4px; font-size: 10px; }
+        
+        /* 🔹 选项级别 */
+        .target-chip.level-item { background: var(--level-item-bg); color: var(--level-item-text); border-color: var(--level-item-border); }
+        .target-chip.level-item::before { content: '🔹'; margin-right: 4px; font-size: 10px; }
+        
+        .action-verb { font-weight: 700; margin-right: 4px; }
+        .path-text { opacity: 0.6; margin-right: 2px; font-size: 10px;}
+        .empty-state { padding: 30px; text-align: center; color: #ccc; font-size: 12px; background: rgba(255,255,255,0.5); border-radius: 8px; border: 1px dashed #ddd; }
+
+        /* 多属性标签 */
+        .multi-props { display: flex; gap: 2px; margin-left: 4px; }
+        .prop-tag { font-size: 9px; padding: 1px 3px; border-radius: 2px; font-weight: 500; }
+        .prop-tag.visible { background: #e6f7ff; color: #1890ff; }
+        .prop-tag.disabled { background: #fff7e6; color: #fa8c16; }
+        .prop-tag.selected { background: #f6ffed; color: #52c41a; }
+
+        /* V5移植：高亮样式 */
+        .target-chip.highlight { 
+            border-color: var(--primary) !important; 
+            background: #fff !important; 
+            box-shadow: 0 0 0 1px var(--primary) inset; /* 内阴影模拟边框加粗 */
+        }
+
+        /* V5移植：折叠标签样式 */
+        .target-chip.tag-others {
+            background: #f5f5f5;
+            color: #999;
+            border: 1px dashed #ccc;
+            cursor: help;
+        }
+
+        /* --- 编辑器层 --- */
+        .editor-layer { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: var(--bg-body); z-index: 100; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1); display: flex; flex-direction: column; }
+        .editor-layer.open { transform: translateX(0); }
+        .editor-header { height: 50px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; flex-shrink: 0; }
+        .editor-body { flex: 1; display: flex; padding: 0; overflow: hidden; }
+        .panel-conditions { flex: 5; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: #FAFAFA; }
+        .panel-actions { flex: 5; display: flex; flex-direction: column; background: white; }
+        .panel-title { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-size: 13px; font-weight: 600; color: var(--text-main); border-bottom: 1px solid #eee; background: white; flex-shrink: 0; }
+        .scroll-area { flex: 1; overflow-y: auto; padding: 16px; }
+
+        /* 编辑器内部控件 */
+        .action-edit-card { 
+            background: #fff; border: 1px solid var(--border); border-radius: 8px; 
+            padding: 12px; margin-bottom: 12px; border-left: 3px solid var(--primary); 
+            position: relative;
+        }
+        .action-edit-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 12px; font-size: 13px; font-weight: 600; 
+        }
+        .target-selector { 
+            width: 100%; font-weight: 500; margin-bottom: 12px; 
+        }
+        
+        /* 目标选择器 - 两步式 */
+        .target-selector-wrapper {
+            margin-bottom: 12px;
+        }
+        .selector-step {
+            margin-bottom: 8px;
+        }
+        .step-label {
+            font-size: 11px; color: #666; margin-bottom: 4px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .step-number {
+            width: 16px; height: 16px; border-radius: 50%;
+            background: var(--primary); color: white;
+            font-size: 10px; display: flex; align-items: center; justify-content: center;
+        }
+        .type-selector {
+            display: flex; gap: 8px; margin-bottom: 8px;
+        }
+        .type-option {
+            flex: 1; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px;
+            text-align: center; cursor: pointer; font-size: 11px;
+            background: white; transition: all 0.2s;
+        }
+        .type-option:hover {
+            border-color: var(--primary);
+        }
+        .type-option.active {
+            background: var(--primary-light); border-color: var(--primary);
+            color: var(--primary); font-weight: 500;
+        }
+        .object-selector {
+            opacity: 0.4; transition: opacity 0.2s;
+        }
+        .object-selector.enabled {
+            opacity: 1;
+        }
+
+        /* 多属性配置区域 */
+        .props-config { 
+            border: 1px dashed #e0e0e0; border-radius: 6px; 
+            padding: 8px; background: #fafafa; 
+        }
+        .prop-row { 
+            display: flex; align-items: center; justify-content: space-between; 
+            margin-bottom: 8px; padding: 4px 0; 
+            border-bottom: 1px solid #f0f0f0; 
+        }
+        .prop-row:last-child { margin-bottom: 0; border-bottom: none; }
+        .prop-label { 
+            display: flex; align-items: center; gap: 6px; 
+            font-size: 12px; color: #666; min-width: 80px; 
+        }
+        .prop-checkbox { 
+            width: 14px; height: 14px; margin: 0; 
+        }
+        .prop-controls { 
+            display: flex; align-items: center; gap: 8px; flex: 1; 
+        }
+        .condition-label { 
+            font-size: 10px; padding: 2px 6px; border-radius: 3px; 
+            min-width: 50px; text-align: center; 
+        }
+        .condition-label.when { background: #e6f7ff; color: #1890ff; }
+        .condition-label.else { background: #f5f5f5; color: #999; }
+        
+        .edit-select, .edit-input { border: 1px solid #eee; background: #F5F6FA; border-radius: 4px; padding: 4px 8px; font-size: 12px; height: 28px; color: var(--text-main); }
+        
+        /* 树状逻辑 */
+        .tree-node { position: relative; padding-left: 24px; margin-bottom: 8px; }
+        .tree-line { position: absolute; left: 0; top: 12px; bottom: 12px; width: 2px; background: var(--line-color); }
+        .logic-btn { position: absolute; left: -12px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: white; cursor: pointer; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transition: 0.2s; }
+        .logic-btn.and { background-color: var(--primary); }
+        .logic-btn.or { background-color: var(--secondary); }
+        .rule-item { background: white; border: 1px solid #eee; padding: 6px; display: flex; gap: 6px; border-radius: 4px; font-size: 12px; align-items: center;}
+        
+        /* 警告弹窗 */
+        .warning-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+        .warning-box { background: white; width: 320px; padding: 24px; border-radius: 16px; text-align: center; }
+        
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 6px 16px; border-radius: 18px; font-size: 13px; cursor: pointer; }
+        .btn-text { background: transparent; border: none; color: #666; cursor: pointer; }
+        .btn-add-small { font-size: 11px; padding: 2px 8px; background: white; border: 1px dashed #ccc; border-radius: 10px; color: var(--text-sub); cursor: pointer; margin-left: 8px; }
+        .btn-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; color: #999; cursor: pointer; }
+        .btn-icon:hover { color: #ff4d4f; }
+
+    </style>
+</head>
+<body>
+
+<div class="device-shell">
+    
+    <!-- LEVEL 1: DASHBOARD -->
+    <div class="app-container" id="dashboard">
+        <!-- 左侧：显示组 > 元件 列表 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <span>元件概览</span>
+                <span style="font-size:12px; color:var(--primary); cursor:pointer;">刷新</span>
+            </div>
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="搜索元件...">
+            </div>
+            
+            <div class="comp-list" id="compList">
+                <!-- JS 渲染 -->
+            </div>
+        </div>
+
+        <!-- 右侧：规则视图 -->
+        <div class="main-content">
+            <div class="main-header">
+                <div class="header-title" id="headerTitle">全部规则</div>
+                <button class="btn-primary" onclick="createNew()">+ 新建联动</button>
+            </div>
+            
+            <div class="rules-container" id="rulesContainer">
+                <!-- JS 渲染 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- LEVEL 2: 交互式编辑器 -->
+    <div class="editor-layer" id="editorLayer">
+        <div class="editor-header">
+            <button class="btn-text" onclick="closeEditor()">← 返回</button>
+            <span style="font-weight:600;" id="editorTitle">配置联动详情</span>
+            <button class="btn-primary" onclick="saveAndClose()">保存规则</button>
+        </div>
+        <div class="editor-body">
+            <!-- 左：条件树 -->
+            <div class="panel-conditions">
+                <div class="panel-title">
+                    <span>条件判断 (IF)</span>
+                    <span style="font-size:10px; color:#999; font-weight:400;">点击圆点切换 且/或</span>
+                </div>
+                <div class="scroll-area" id="conditionTreeRoot">
+                    <!-- JS 渲染条件树 -->
+                </div>
+            </div>
+            <!-- 右：动作列表 (多属性配置) -->
+            <div class="panel-actions">
+                <div class="panel-title">
+                    <span>执行动作 (THEN)</span>
+                    <div class="btn-add-small" onclick="addAction()" style="color:var(--primary); border-color:var(--primary);">+ 新增动作</div>
+                </div>
+                <div class="scroll-area" id="actionListEdit">
+                    <!-- JS 渲染动作 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 警告弹窗 -->
+    <div class="warning-overlay" id="warningModal">
+        <div class="warning-box">
+            <div style="font-size: 32px; margin-bottom: 12px;">⚠️</div>
+            <h3 style="margin: 0 0 8px 0; font-size: 16px;">共享规则提示</h3>
+            <p style="font-size: 13px; color: #666; line-height: 1.5; margin-bottom: 24px;">
+                此规则同时控制了 <b id="sharedCount"></b> 个对象。<br>修改将影响全局配置。
+            </p>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-text" style="flex:1; border:1px solid #eee; border-radius:18px;" onclick="closeWarning()">取消</button>
+                <button class="btn-primary" style="flex:1;" onclick="confirmEdit()">继续编辑</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- 1. 数据结构 (Group > Component > Options) ---
+    const formSchema = [
+        {
+            id: 'g_play', name: '玩法设置',
+            components: [
+                { id: 'c_play1', name: '听牌可托管', type: 'bool', options: [{v:'true', l:'开启'},{v:'false', l:'关闭'}] },
+                { id: 'c_play2', name: '吃张不打张', type: 'bool', options: [{v:'true', l:'开启'},{v:'false', l:'关闭'}] },
+                { id: 'c_play3', name: '可吃字牌', type: 'bool', options: [{v:'true', l:'开启'},{v:'false', l:'关闭'}] },
+                { id: 'c_play4', name: '去字牌', type: 'bool', options: [{v:'true', l:'开启'},{v:'false', l:'关闭'}] }
+            ]
+        },
+        {
+            id: 'g_buy', name: '买码设置',
+            components: [
+                { id: 'c_buy_mode', name: '买码方式', type: 'radio', options: [
+                    {v: 'opt_none', l: '不买'},
+                    {v: 'opt_1', l: '买1码'},
+                    {v: 'opt_2', l: '买2码'}
+                ]},
+                { id: 'c_explode', name: '爆炸码', type: 'bool', options: [{v:'true', l:'开启'},{v:'false', l:'关闭'}] }
+            ]
+        },
+        {
+            id: 'g_score', name: '加分设置',
+            components: [
+                { id: 'c_huang', name: '荒庄分', type: 'number' },
+                { id: 'c_gen', name: '跟庄分', type: 'number' }
+            ]
+        }
+    ];
+
+    // 扁平化元件列表
+    const flatComponents = formSchema.flatMap(g => g.components.map(c => ({...c, groupId: g.id})));
+
+    // 初始规则数据 - V4: 支持多属性配置 + V5移植：添加更多目标用于演示折叠
+    let rules = [
+        {
+            id: 101,
+            triggers: ['c_play1'],
+            desc: "当 [听牌可托管] 等于 '开启'",
+            conditionTree: { id: 'root', logic: 'and', children: [{ type: 'rule', id: 'r1', field: 'c_play1', op: 'eq', val: 'true' }] },
+            targets: [
+                { 
+                    id: 'g_score', level: 'group', name: '加分设置',
+                    // V4: 多属性配置
+                    props: {
+                        visible: { enabled: true, when: 'hide', else: 'show' },
+                        disabled: { enabled: false, when: 'lock', else: 'unlock' },
+                        selected: { enabled: false, when: 'true', else: 'false' }
+                    }
+                },
+                { 
+                    id: 'c_play2', level: 'comp', name: '吃张不打张',
+                    props: {
+                        visible: { enabled: true, when: 'show', else: 'hide' },
+                        disabled: { enabled: true, when: 'unlock', else: 'lock' },
+                        selected: { enabled: false, when: 'true', else: 'false' }
+                    }
+                },
+                // V5移植：添加第三个目标用于演示折叠效果
+                { 
+                    id: 'c_play3', level: 'comp', name: '可吃字牌',
+                    props: {
+                        visible: { enabled: false, when: 'show', else: 'hide' },
+                        disabled: { enabled: true, when: 'lock', else: 'unlock' },
+                        selected: { enabled: false, when: 'true', else: 'false' }
+                    }
+                }
+            ]
+        },
+        {
+            id: 102,
+            triggers: ['c_buy_mode'],
+            desc: "当 [买码方式] 等于 '不买'",
+            conditionTree: { id: 'root', logic: 'and', children: [{ type: 'rule', id: 'r2', field: 'c_buy_mode', op: 'eq', val: 'opt_none' }] },
+            targets: [
+                { 
+                    id: 'c_explode', level: 'comp', name: '爆炸码',
+                    props: {
+                        visible: { enabled: false, when: 'show', else: 'hide' },
+                        disabled: { enabled: true, when: 'lock', else: 'unlock' },
+                        selected: { enabled: false, when: 'true', else: 'false' }
+                    }
+                }
+            ]
+        }
+    ];
+
+    // --- 2. 状态管理 ---
+    let activeFilter = 'all'; 
+    let currentEditingRule = null;
+
+    // --- 3. Dashboard 渲染逻辑 ---
+
+    function renderSidebar() {
+        const container = document.getElementById('compList');
+        let html = `
+            <div class="comp-item ${activeFilter==='all'?'active':''}" onclick="setFilter('all')">
+                <span>全部规则概览</span>
+                <span class="rule-count">${rules.length}</span>
+            </div>
+        `;
+
+        formSchema.forEach(group => {
+            html += `<div class="group-header">${group.name}</div>`;
+            group.components.forEach(comp => {
+                const count = rules.filter(r => r.triggers.includes(comp.id) || r.targets.some(t => t.id === comp.id || (t.level === 'group' && t.id === group.id))).length;
+                html += `
+                    <div class="comp-item ${activeFilter===comp.id?'active':''}" onclick="setFilter('${comp.id}')">
+                        <span>${comp.name}</span>
+                        ${count > 0 ? `<span class="rule-count">${count}</span>` : ''}
+                    </div>
+                `;
+            });
+        });
+        container.innerHTML = html;
+    }
+
+    function renderRules() {
+        const container = document.getElementById('rulesContainer');
+        const titleEl = document.getElementById('headerTitle');
+        
+        if (activeFilter === 'all') {
+            titleEl.innerText = '全部规则概览';
+            container.innerHTML = rules.map(r => renderCard(r, 'normal')).join('');
+        } else {
+            const currentComp = flatComponents.find(c => c.id === activeFilter);
+            titleEl.innerText = `元件：${currentComp.name}`;
+            
+            const activeRules = rules.filter(r => r.triggers.includes(activeFilter));
+            const passiveRules = rules.filter(r => r.targets.some(t => t.id === activeFilter || (t.level === 'group' && t.id === currentComp.groupId)));
+
+            let html = '';
+            html += `<div class="section-title"><span style="color:var(--primary)">●</span> 主动控制 (Trigger)</div>`;
+            html += activeRules.length ? activeRules.map(r => renderCard(r, 'trigger')).join('') : `<div class="empty-state">未控制其他对象</div>`;
+            html += `<div class="section-title" style="margin-top:20px;"><span style="color:var(--secondary)">●</span> 被动受控 (Target)</div>`;
+            html += passiveRules.length ? passiveRules.map(r => renderCard(r, 'target')).join('') : `<div class="empty-state">不受其他条件控制</div>`;
+            container.innerHTML = html;
+        }
+    }
+
+    // V5移植：生成 Target Chip 的辅助函数
+    function createTargetChipHtml(t, isHighlight) {
+        let badgeClass = '', content = '';
+        if (t.level === 'group') {
+            badgeClass = 'level-group';
+            content = `${t.name}`;
+        } else if (t.level === 'comp') {
+            badgeClass = 'level-comp';
+            content = `${t.name}`;
+        } else if (t.level === 'item') {
+            badgeClass = 'level-item';
+            content = `<span class="path-text">${t.parentName}/</span>${t.name}`;
+        }
+
+        // V4: 显示多属性标签
+        let propTags = '';
+        if (t.props) {
+            if (t.props.visible && t.props.visible.enabled) propTags += `<span class="prop-tag visible">显示</span>`;
+            if (t.props.disabled && t.props.disabled.enabled) propTags += `<span class="prop-tag disabled">交互</span>`;
+            if (t.props.selected && t.props.selected.enabled) propTags += `<span class="prop-tag selected">选中</span>`;
+        }
+        
+        const highlightClass = isHighlight ? 'highlight' : '';
+        return `<div class="target-chip ${badgeClass} ${highlightClass}">${content}<div class="multi-props">${propTags}</div></div>`;
+    }
+
+    function renderCard(r, type) {
+        const isShared = r.targets.length > 1;
+        const sharedBadge = isShared ? `<span class="shared-badge">🔗 共享规则</span>` : '';
+        let typeBadge = type === 'trigger' ? `<span class="badge trigger">它触发</span>` : (type === 'target' ? `<span class="badge target">它受控</span>` : '');
+
+        let actionHtml = '';
+
+        // V5移植：核心折叠逻辑
+        if (activeFilter !== 'all' && type === 'target') {
+            const currentComp = flatComponents.find(c => c.id === activeFilter);
+            
+            // 筛选出与当前组件相关的目标（直接ID匹配，或组ID匹配）
+            const relevantTargets = r.targets.filter(t => 
+                t.id === activeFilter || 
+                (t.level === 'group' && currentComp && t.id === currentComp.groupId)
+            );
+            
+            const othersCount = r.targets.length - relevantTargets.length;
+
+            if (relevantTargets.length > 0) {
+                // 仅渲染相关目标，并高亮
+                actionHtml += relevantTargets.map(t => createTargetChipHtml(t, true)).join('');
+                
+                // V5移植：渲染折叠标签
+                if (othersCount > 0) {
+                    actionHtml += `<div class="target-chip tag-others">+ 同时也影响其他 ${othersCount} 个对象</div>`;
+                }
+            } else {
+                // 理论上不会进入这里，因为 passiveRules 已经过滤过了
+                actionHtml = r.targets.map(t => createTargetChipHtml(t, false)).join('');
+            }
+
+        } else {
+            // 普通模式：渲染所有目标，无高亮
+            actionHtml = r.targets.map(t => createTargetChipHtml(t, false)).join('');
+        }
+
+        return `
+            <div class="summary-card is-${type}" onclick="handleCardClick(${r.id}, ${isShared})">
+                <div class="card-header">
+                    <span style="font-size:12px; color:#999;">Rule #${r.id}</span>
+                    <div style="display:flex; align-items:center;">${typeBadge}${sharedBadge}</div>
+                </div>
+                <div class="rule-desc">${r.desc}</div>
+                <div class="action-list">${actionHtml}</div>
+            </div>
+        `;
+    }
+
+    // --- 4. 编辑器逻辑 ---
+
+    // 4.1 条件树渲染 (Left Panel)
+    function renderTree() {
+        const container = document.getElementById('conditionTreeRoot');
+        if (currentEditingRule && currentEditingRule.conditionTree) {
+            container.innerHTML = renderGroup(currentEditingRule.conditionTree, true);
+        }
+    }
+
+    function renderGroup(group, isRoot = false) {
+        const logicText = group.logic === 'and' ? '且' : '或';
+        const logicClass = group.logic === 'and' ? 'and' : 'or';
+        return `
+            <div class="tree-node" id="group-${group.id}">
+                <div class="tree-line"></div>
+                <div class="logic-btn ${logicClass}" onclick="toggleLogic('${group.id}')">${logicText}</div>
+                <div>
+                    ${group.children.map((child, index) => {
+                        if (child.type === 'rule') return renderRuleItem(child, group.id, index);
+                        if (child.type === 'group') return `<div class="sub-group">${renderGroup(child)}<div class="btn-icon" style="position:absolute;top:4px;right:4px;" onclick="removeNode('${group.id}', ${index})">✕</div></div>`;
+                    }).join('')}
+                </div>
+                <div style="margin-top:8px; display:flex;">
+                    <div class="btn-add-small" onclick="addCondition('${group.id}')">+ 条件</div>
+                    ${isRoot ? `<div class="btn-add-small" style="margin-left:8px;" onclick="addGroup('${group.id}')">+ 条件组</div>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderRuleItem(rule, parentId, index) {
+        const field = flatComponents.find(f => f.id === rule.field) || flatComponents[0];
+        const hasOpts = field.options;
+        return `
+            <div class="rule-item">
+                <select class="edit-select" style="width:100px;" onchange="updateRule('${parentId}', ${index}, 'field', this.value)">
+                    ${flatComponents.map(f => `<option value="${f.id}" ${f.id === rule.field ? 'selected' : ''}>${f.name}</option>`).join('')}
+                </select>
+                <select class="edit-select" style="width:60px;" onchange="updateRule('${parentId}', ${index}, 'op', this.value)">
+                    <option value="eq" ${rule.op==='eq'?'selected':''}>=</option>
+                    <option value="neq" ${rule.op==='neq'?'selected':''}>≠</option>
+                    <option value="gt" ${rule.op==='gt'?'selected':''}>&gt;</option>
+                    <option value="include" ${rule.op==='include'?'selected':''}>包含</option>
+                </select>
+                ${hasOpts ? 
+                    `<select class="edit-select" style="flex:1" onchange="updateRule('${parentId}', ${index}, 'val', this.value)">
+                         ${field.options.map(o => `<option value="${o.v}" ${o.v===rule.val?'selected':''}>${o.l}</option>`).join('')}
+                     </select>` :
+                    `<input type="text" class="edit-input" value="${rule.val || ''}" oninput="updateRule('${parentId}', ${index}, 'val', this.value)">`
+                }
+                <div class="btn-icon" onclick="removeNode('${parentId}', ${index})">✕</div>
+            </div>
+        `;
+    }
+
+    // 4.2 动作列表渲染 (Right Panel) - V4: 两步式目标选择
+    function renderEditorActions() {
+        const container = document.getElementById('actionListEdit');
+        if (!currentEditingRule.targets) return;
+
+        container.innerHTML = currentEditingRule.targets.map((act, idx) => {
+            return `
+            <div class="action-edit-card">
+                <div class="action-edit-header">
+                    <span>目标对象</span>
+                    <span style="color:#999; cursor:pointer;" onclick="removeAction(${idx})">✕</span>
+                </div>
+                
+                <!-- V4: 两步式目标选择器 -->
+                <div class="target-selector-wrapper">
+                    <!-- 第一步：选择目标类型 -->
+                    <div class="selector-step">
+                        <div class="step-label">
+                            <span class="step-number">1</span>
+                            <span>选择目标类型</span>
+                        </div>
+                        <div class="type-selector">
+                            <div class="type-option ${act.level==='group'?'active':''}" onclick="selectTargetType(${idx}, 'group')">
+                                📦 显示组
+                            </div>
+                            <div class="type-option ${act.level==='comp'?'active':''}" onclick="selectTargetType(${idx}, 'comp')">
+                                🧩 元件
+                            </div>
+                            <div class="type-option ${act.level==='item'?'active':''}" onclick="selectTargetType(${idx}, 'item')">
+                                🔹 选项
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 第二步：选择具体对象 -->
+                    <div class="selector-step">
+                        <div class="step-label">
+                            <span class="step-number">2</span>
+                            <span>选择具体对象</span>
+                        </div>
+                        <div class="object-selector ${act.level ? 'enabled' : ''}">
+                            ${renderObjectSelector(act, idx)}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- V4: 多属性配置区域 -->
+                <div class="props-config">
+                    ${renderPropConfig(act, idx, 'visible', '可见性', '👁️')}
+                    ${renderPropConfig(act, idx, 'disabled', '交互性', '🔒')}
+                    ${renderPropConfig(act, idx, 'selected', '选中性', '✅')}
+                </div>
+            </div>
+            `;
+        }).join('');
+    }
+
+    // 渲染具体对象选择器（根据类型动态生成）
+    function renderObjectSelector(action, actionIdx) {
+        if (!action.level) {
+            return `<select class="edit-select" style="width:100%;" disabled><option>请先选择目标类型</option></select>`;
+        }
+
+        let options = '';
+        let selectedValue = '';
+
+        if (action.level === 'group') {
+            // 显示组列表
+            formSchema.forEach(g => {
+                const isSelected = action.id === g.id;
+                if (isSelected) selectedValue = g.id;
+                options += `<option value="${g.id}" ${isSelected?'selected':''}>${g.name}</option>`;
+            });
+            return `<select class="edit-select" style="width:100%;" onchange="selectObject(${actionIdx}, this.value)">${options}</select>`;
+            
+        } else if (action.level === 'comp') {
+            // 元件列表（按组分类）
+            formSchema.forEach(g => {
+                options += `<optgroup label="${g.name}">`;
+                g.components.forEach(c => {
+                    const isSelected = action.id === c.id;
+                    if (isSelected) selectedValue = c.id;
+                    options += `<option value="${c.id}" ${isSelected?'selected':''}>${c.name}</option>`;
+                });
+                options += `</optgroup>`;
+            });
+            return `<select class="edit-select" style="width:100%;" onchange="selectObject(${actionIdx}, this.value)">${options}</select>`;
+            
+        } else if (action.level === 'item') {
+            // 选项级：需要两个下拉框（元件 + 选项）
+            let compOptions = '';
+            let itemOptions = '';
+            
+            // 元件选择器
+            formSchema.forEach(g => {
+                g.components.forEach(c => {
+                    if (c.options && c.options.length > 0) {
+                        const isSelected = action.id === c.id;
+                        compOptions += `<option value="${c.id}" ${isSelected?'selected':''}>${c.name}</option>`;
+                    }
+                });
+            });
+            
+            // 选项选择器（基于当前选中的元件）
+            if (action.id) {
+                const selectedComp = flatComponents.find(c => c.id === action.id);
+                if (selectedComp && selectedComp.options) {
+                    selectedComp.options.forEach(opt => {
+                        const isSelected = action.targetVal === opt.v;
+                        itemOptions += `<option value="${opt.v}" ${isSelected?'selected':''}>${opt.l}</option>`;
+                    });
+                }
+            }
+            
+            return `
+                <div style="display:flex; gap:8px;">
+                    <select class="edit-select" style="flex:1;" onchange="selectItemComponent(${actionIdx}, this.value)">
+                        <option value="">选择元件</option>
+                        ${compOptions}
+                    </select>
+                    <select class="edit-select" style="flex:1;" onchange="selectItemOption(${actionIdx}, this.value)" ${!action.id?'disabled':''}>
+                        <option value="">选择选项</option>
+                        ${itemOptions}
+                    </select>
+                </div>
+            `;
+        }
+        
+        return '';
+    }
+
+    // V4: 渲染单个属性配置行
+    function renderPropConfig(action, actionIdx, propType, propLabel, icon) {
+        const prop = action.props[propType];
+        const isEnabled = prop.enabled;
+        
+        let whenOptions = '', elseOptions = '';
+        if (propType === 'visible') {
+            whenOptions = `<option value="show" ${prop.when==='show'?'selected':''}>显示</option><option value="hide" ${prop.when==='hide'?'selected':''}>隐藏</option>`;
+            elseOptions = `<option value="show" ${prop.else==='show'?'selected':''}>显示</option><option value="hide" ${prop.else==='hide'?'selected':''}>隐藏</option>`;
+        } else if (propType === 'disabled') {
+            whenOptions = `<option value="lock" ${prop.when==='lock'?'selected':''}>锁定</option><option value="unlock" ${prop.when==='unlock'?'selected':''}>解锁</option>`;
+            elseOptions = `<option value="lock" ${prop.else==='lock'?'selected':''}>锁定</option><option value="unlock" ${prop.else==='unlock'?'selected':''}>解锁</option>`;
+        } else if (propType === 'selected') {
+            whenOptions = `<option value="true" ${prop.when==='true'?'selected':''}>选中</option><option value="false" ${prop.when==='false'?'selected':''}>不选中</option>`;
+            elseOptions = `<option value="true" ${prop.else==='true'?'selected':''}>选中</option><option value="false" ${prop.else==='false'?'selected':''}>不选中</option>`;
+        }
+
+        return `
+            <div class="prop-row">
+                <div class="prop-label">
+                    <input type="checkbox" class="prop-checkbox" ${isEnabled?'checked':''} 
+                           onchange="toggleProp(${actionIdx}, '${propType}', this.checked)">
+                    <span>${icon} ${propLabel}</span>
+                </div>
+                <div class="prop-controls" style="opacity: ${isEnabled ? 1 : 0.4};">
+                    <span class="condition-label when">满足时</span>
+                    <select class="edit-select" style="width:80px;" ${!isEnabled?'disabled':''} 
+                            onchange="updatePropValue(${actionIdx}, '${propType}', 'when', this.value)">
+                        ${whenOptions}
+                    </select>
+                    <span class="condition-label else">否则</span>
+                    <select class="edit-select" style="width:80px;" ${!isEnabled?'disabled':''} 
+                            onchange="updatePropValue(${actionIdx}, '${propType}', 'else', this.value)">
+                        ${elseOptions}
+                    </select>
+                </div>
+            </div>
+        `;
+    }
+
+    // --- 5. 数据处理工具函数 ---
+
+    function findGroup(id, current = currentEditingRule.conditionTree) {
+        if (current.id === id) return current;
+        for (let child of current.children) {
+            if (child.type === 'group') {
+                const res = findGroup(id, child);
+                if (res) return res;
+            }
+        }
+        return null;
+    }
+
+    function toggleLogic(groupId) {
+        const group = findGroup(groupId);
+        if (group) {
+            group.logic = group.logic === 'and' ? 'or' : 'and';
+            renderTree();
+        }
+    }
+
+    function addCondition(groupId) {
+        const group = findGroup(groupId);
+        if(group) {
+            group.children.push({ type: 'rule', id: Date.now(), field: flatComponents[0].id, op: 'eq', val: '' });
+            renderTree();
+        }
+    }
+    
+    function addGroup(groupId) {
+        const group = findGroup(groupId);
+        if(group) {
+            group.children.push({ type: 'group', id: 'g'+Date.now(), logic: 'or', children: [{ type: 'rule', id: Date.now(), field: flatComponents[0].id, op: 'eq', val: '' }] });
+            renderTree();
+        }
+    }
+
+    function removeNode(parentId, index) {
+        const group = findGroup(parentId);
+        if(group) {
+            group.children.splice(index, 1);
+            renderTree();
+        }
+    }
+
+    function updateRule(parentId, index, key, val) {
+        const group = findGroup(parentId);
+        if(group) {
+            group.children[index][key] = val;
+            if(key === 'field') renderTree();
+        }
+    }
+
+    function addAction() {
+        // V4: 默认添加一个未配置的动作
+        currentEditingRule.targets.push({ 
+            // 不设置默认值，让用户手动选择
+            props: {
+                visible: { enabled: true, when: 'show', else: 'hide' },
+                disabled: { enabled: false, when: 'lock', else: 'unlock' },
+                selected: { enabled: false, when: 'true', else: 'false' }
+            }
+        });
+        renderEditorActions();
+    }
+
+    function removeAction(index) {
+        currentEditingRule.targets.splice(index, 1);
+        renderEditorActions();
+    }
+
+    // V4: 两步式目标选择 - 选择目标类型
+    function selectTargetType(actionIdx, type) {
+        const action = currentEditingRule.targets[actionIdx];
+        
+        // 重置目标对象数据
+        action.level = type;
+        delete action.id;
+        delete action.name;
+        delete action.parentName;
+        delete action.targetVal;
+        
+        // 根据类型设置默认值
+        if (type === 'group' && formSchema.length > 0) {
+            action.id = formSchema[0].id;
+            action.name = formSchema[0].name;
+        } else if (type === 'comp' && flatComponents.length > 0) {
+            action.id = flatComponents[0].id;
+            action.name = flatComponents[0].name;
+        } else if (type === 'item') {
+            // 选项级别需要用户手动选择，不设默认值
+        }
+        
+        renderEditorActions();
+    }
+
+    // V4: 选择具体对象（组或元件）
+    function selectObject(actionIdx, objectId) {
+        const action = currentEditingRule.targets[actionIdx];
+        action.id = objectId;
+        
+        if (action.level === 'group') {
+            const group = formSchema.find(g => g.id === objectId);
+            action.name = group.name;
+        } else if (action.level === 'comp') {
+            const comp = flatComponents.find(c => c.id === objectId);
+            action.name = comp.name;
+        }
+        
+        renderEditorActions();
+    }
+
+    // V4: 选择选项级别的元件
+    function selectItemComponent(actionIdx, compId) {
+        const action = currentEditingRule.targets[actionIdx];
+        action.id = compId;
+        
+        if (compId) {
+            const comp = flatComponents.find(c => c.id === compId);
+            action.parentName = comp.name;
+            // 重置选项值
+            delete action.targetVal;
+            delete action.name;
+        }
+        
+        renderEditorActions();
+    }
+
+    // V4: 选择选项级别的具体选项
+    function selectItemOption(actionIdx, optionValue) {
+        const action = currentEditingRule.targets[actionIdx];
+        action.targetVal = optionValue;
+        
+        if (optionValue && action.id) {
+            const comp = flatComponents.find(c => c.id === action.id);
+            const option = comp.options.find(opt => opt.v === optionValue);
+            action.name = option.l;
+        }
+        
+        renderEditorActions();
+    }
+
+    // V4: 切换属性启用状态
+    function toggleProp(actionIdx, propType, enabled) {
+        currentEditingRule.targets[actionIdx].props[propType].enabled = enabled;
+        renderEditorActions();
+    }
+
+    // V4: 更新属性值
+    function updatePropValue(actionIdx, propType, condition, value) {
+        currentEditingRule.targets[actionIdx].props[propType][condition] = value;
+    }
+
+    // --- 6. 全局交互 ---
+    function setFilter(id) {
+        activeFilter = id;
+        renderSidebar();
+        renderRules();
+    }
+
+    function handleCardClick(ruleId, isShared) {
+        const rule = rules.find(r => r.id === ruleId);
+        currentEditingRule = JSON.parse(JSON.stringify(rule)); // Deep Copy
+        
+        if (isShared) {
+            document.getElementById('sharedCount').innerText = rule.targets.length;
+            document.getElementById('warningModal').style.display = 'flex';
+        } else {
+            openEditor();
+        }
+    }
+
+    function createNew() {
+        currentEditingRule = {
+            id: Date.now(),
+            triggers: [],
+            desc: '新规则 (未保存)',
+            conditionTree: { id: 'root', logic: 'and', children: [{ type: 'rule', id: Date.now(), field: flatComponents[0].id, op: 'eq', val: '' }] },
+            targets: []
+        };
+        openEditor();
+    }
+
+    function openEditor() {
+        document.getElementById('editorTitle').innerText = currentEditingRule.id > 1000 ? '新建规则' : `编辑规则 #${currentEditingRule.id}`;
+        renderTree();
+        renderEditorActions();
+        document.getElementById('editorLayer').classList.add('open');
+    }
+
+    function closeEditor() { document.getElementById('editorLayer').classList.remove('open'); currentEditingRule = null; }
+    function closeWarning() { document.getElementById('warningModal').style.display = 'none'; }
+    function confirmEdit() { closeWarning(); openEditor(); }
+
+    function saveAndClose() {
+        // 简单模拟保存
+        currentEditingRule.desc = `规则已修改 (${new Date().toLocaleTimeString()})`;
+        currentEditingRule.triggers = [flatComponents[0].id]; 
+
+        const idx = rules.findIndex(r => r.id === currentEditingRule.id);
+        if (idx >= 0) rules[idx] = currentEditingRule;
+        else rules.push(currentEditingRule);
+        
+        renderRules();
+        renderSidebar();
+        closeEditor();
+    }
+
+    // --- Init ---
+    renderSidebar();
+    renderRules();
+
+</script>
+</body>
+</html>

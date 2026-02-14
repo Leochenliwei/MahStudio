@@ -1,0 +1,477 @@
+<!-- 这是一个基于您提供的PDF文档（用户配置化-变量编辑器设计 v1.0）设计的HTML/CSS/JS还原方案。
+
+这个实现重点还原了以下核心功能：
+1.  **模态框 UI 结构**：模仿截图中的弹窗样式。
+2.  **变量类型切换**：支持下拉选择文档中提到的8种变量类型。
+3.  **动态视图渲染**：
+    *   **组内计算类**（相加/相乘/最大/最小）：展示“虚拟表格”视图。
+    *   **逻辑判断类**（判断是否成立/循环判断）：展示“可视化表达式编辑器”视图。
+4.  **交互逻辑**：
+    *   切换类型时的“数据清洗”提示（模拟）。
+    *   表达式的彩色块状样式还原（参考截图中的配色）。
+
+### 代码实现
+
+您可以将以下代码保存为 `.html` 文件并在浏览器中打开。
+
+```html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>变量编辑器设计 v1.0</title>
+    <style>
+        :root {
+            --primary-color: #1890ff;
+            --border-color: #d9d9d9;
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --tag-orange: #ff8e5d;
+            --tag-blue: #5b8ff9;
+            --tag-purple: #9254de;
+            --tag-green: #52c41a;
+            --tag-yellow: #faad14;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #eee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* 模态框整体 */
+        .modal {
+            width: 800px;
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 头部 */
+        .modal-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .close-btn {
+            cursor: pointer;
+            font-size: 18px;
+            color: #999;
+        }
+
+        /* 内容区域 */
+        .modal-body {
+            padding: 24px;
+            min-height: 400px;
+        }
+
+        /* 表单行 */
+        .form-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            width: 80px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .input-short {
+            max-width: 300px;
+        }
+
+        /* 视图容器 */
+        .editor-view {
+            display: none; /* 默认隐藏 */
+            margin-top: 20px;
+            padding: 20px;
+            background: #fcfcfc;
+            border: 1px solid #f0f0f0;
+            border-radius: 4px;
+        }
+
+        .editor-view.active {
+            display: block;
+        }
+
+        .view-title {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* 表格视图 (组内计算) */
+        .virtual-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .virtual-table th, .virtual-table td {
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .virtual-table th {
+            background-color: #fafafa;
+            font-weight: 500;
+        }
+
+        .table-operator {
+            text-align: center;
+            color: #666;
+            font-weight: bold;
+        }
+
+        /* 表达式编辑器视图 (判断/循环) */
+        .expression-box {
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            min-height: 100px;
+            border-radius: 4px;
+            background: white;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* 表达式块样式 (仿截图) */
+        .exp-block {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 2px;
+            overflow: hidden;
+            font-size: 12px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .exp-part {
+            padding: 4px 8px;
+        }
+
+        .part-subject { background-color: var(--tag-orange); } /* 当前赢家/胡牌玩家 */
+        .part-prop { background-color: var(--tag-blue); }    /* 番型/状态 */
+        .part-operator { background-color: #666; color: #fff; padding: 4px 6px; } /* 的值为/为 */
+        .part-value { background-color: var(--tag-yellow); }   /* 清一色/开 */
+        .part-logic { background-color: var(--tag-green); margin: 0 4px; border-radius: 2px; padding: 4px 8px; } /* 且/或 */
+        
+        .exp-text {
+            color: #666;
+            font-size: 14px;
+            margin: 0 5px;
+        }
+
+        /* 底部按钮 */
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background: #fff;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .btn-default {
+            background: #fff;
+            border-color: var(--border-color);
+            color: var(--text-color);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: #fff;
+        }
+        
+        /* 辅助说明文字 */
+        .hint-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+            margin-left: 80px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="modal">
+    <!-- 1. 头部 -->
+    <div class="modal-header">
+        <div class="modal-title">变量编辑</div>
+        <div class="close-btn">×</div>
+    </div>
+
+    <!-- 2. 主体配置区 -->
+    <div class="modal-body">
+        <!-- 变量名称 -->
+        <div class="form-item">
+            <label class="form-label">变量名称</label>
+            <input type="text" class="form-input input-short" placeholder="输入变量名称，长度≤10字符" maxlength="10">
+        </div>
+
+        <!-- 变量类型选择 -->
+        <div class="form-item">
+            <label class="form-label">变量类型</label>
+            <select id="variableType" class="form-input input-short">
+                <optgroup label="1. 组内计算">
+                    <option value="group_sum">组内相加</option>
+                    <option value="group_product">组内相乘</option>
+                    <option value="group_max">组内取最大</option>
+                    <option value="group_min">组内取最小</option>
+                </optgroup>
+                <optgroup label="2. 条件判断">
+                    <option value="bool_check" selected>判断是否成立</option>
+                </optgroup>
+                <optgroup label="3. 循环/聚合逻辑">
+                    <option value="loop_check_all">依次判断是否成立（且）</option>
+                    <option value="loop_check_any">任一条件成立（或）</option>
+                    <option value="loop_accum_sum">循环累加</option>
+                    <option value="loop_accum_product">循环累乘</option>
+                </optgroup>
+            </select>
+        </div>
+        <div class="hint-text" id="typeDesc">变量用于需要取 true/false 的场景，如其他表达式中</div>
+
+        <!-- 3. 动态配置区域 -->
+        
+        <!-- 视图A: 表格配置 (用于组内计算) -->
+        <div id="view-table" class="editor-view">
+            <span class="view-title">配置逻辑：建立虚拟表格，对组内指定属性进行计算（不成立则不参与）</span>
+            <table class="virtual-table">
+                <thead>
+                    <tr>
+                        <th width="40%">元素列 (对象)</th>
+                        <th width="10%">运算</th>
+                        <th width="40%">赋值列 (属性/常量)</th>
+                        <th width="10%">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="exp-block">
+                                <span class="exp-part part-subject">所有玩家</span>
+                            </div>
+                        </td>
+                        <td class="table-operator">的</td>
+                        <td>
+                            <div class="exp-block">
+                                <span class="exp-part part-prop">番型分值</span>
+                            </div>
+                        </td>
+                        <td style="text-align:center; color:#ff4d4f; cursor:pointer;">🗑</td>
+                    </tr>
+                    <tr>
+                         <td colspan="4" style="text-align: center; color: var(--primary-color); cursor: pointer; border-style: dashed;">+ 添加数据行</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 视图B: 表达式配置 (用于判断是否成立) -->
+        <div id="view-expression" class="editor-view active">
+            <span class="view-title">判断逻辑：配置条件判断表达式</span>
+            <div class="expression-box">
+                <!-- 模拟表达式块: 胡牌玩家 的番型 为 清一色 -->
+                <div class="exp-block">
+                    <span class="exp-part part-subject">胡牌玩家</span>
+                    <span class="exp-part part-prop">番型</span>
+                    <span class="exp-part part-operator">为</span>
+                    <span class="exp-part part-value">清一色</span>
+                </div>
+                
+                <div class="exp-block exp-part part-logic">或</div>
+
+                <!-- 模拟表达式块: 胡牌玩家 的番型 为 将一色 -->
+                <div class="exp-block">
+                    <span class="exp-part part-subject">胡牌玩家</span>
+                    <span class="exp-part part-prop">番型</span>
+                    <span class="exp-part part-operator">为</span>
+                    <span class="exp-part part-value">将一色</span>
+                </div>
+            </div>
+            <div class="hint-text" style="margin-left:0; margin-top:10px;">* 点击上方空白处调用软键盘输入更多条件</div>
+        </div>
+
+        <!-- 视图C: 循环逻辑 (用于依次判断/任一成立/累加) -->
+        <div id="view-loop" class="editor-view">
+            <span class="view-title" id="loopTitle">循环逻辑：对集合中每个对象进行判断</span>
+            <div class="expression-box">
+                <span class="exp-text">对于</span>
+                <div class="exp-block">
+                    <span class="exp-part part-subject">所有玩家</span>
+                </div>
+                <span class="exp-text">满足：</span>
+                
+                <div class="exp-block">
+                    <span class="exp-part part-subject">当前项</span>
+                    <span class="exp-part part-prop">状态</span>
+                    <span class="exp-part part-operator">为</span>
+                    <span class="exp-part part-value">开口</span>
+                </div>
+            </div>
+            <div class="hint-text" style="margin-left:0; margin-top:10px;">* 强制校验：表达式中必须包含且仅包含一个泛角色（如：所有玩家）</div>
+        </div>
+
+    </div>
+
+    <!-- 4. 底部按钮 -->
+    <div class="modal-footer">
+        <button class="btn btn-default">取消</button>
+        <button class="btn btn-primary" onclick="saveVariable()">确定</button>
+    </div>
+</div>
+
+<script>
+    // 映射：变量类型 -> 视图ID
+    const typeViewMap = {
+        'group_sum': 'view-table',
+        'group_product': 'view-table',
+        'group_max': 'view-table',
+        'group_min': 'view-table',
+        
+        'bool_check': 'view-expression',
+        
+        'loop_check_all': 'view-loop',
+        'loop_check_any': 'view-loop',
+        'loop_accum_sum': 'view-loop',
+        'loop_accum_product': 'view-loop'
+    };
+
+    // 描述文案映射
+    const descMap = {
+        'group_sum': '建立虚拟表格，计算组内所有对象的属性值之和',
+        'bool_check': '变量可用于需要取 true/false 的场景，如其他表达式中',
+        'loop_check_all': '循环判断多个对象，所有对象都满足条件时返回 true',
+        'loop_check_any': '循环判断多个对象，任一对象满足条件时返回 true',
+        'loop_accum_sum': '循环计算，将多名玩家的属性值相加',
+    };
+
+    const selectEl = document.getElementById('variableType');
+    const descEl = document.getElementById('typeDesc');
+    let currentViewId = 'view-expression'; // 初始视图
+
+    // 监听类型切换
+    selectEl.addEventListener('change', function(e) {
+        const newType = e.target.value;
+        const newViewId = typeViewMap[newType];
+        
+        // 模拟数据清洗提示 (根据文档Page 8)
+        // 实际逻辑中应判断当前编辑器内是否有数据，这里简单演示不同大类切换
+        if (newViewId !== currentViewId) {
+            const confirmChange = confirm("切换变量类型将清空当前配置区数据，是否继续？");
+            if (!confirmChange) {
+                // 恢复之前的选择 (这里简化处理，实际需要记录上一次的值)
+                return; 
+            }
+        }
+
+        // 更新视图
+        document.querySelectorAll('.editor-view').forEach(el => el.classList.remove('active'));
+        document.getElementById(newViewId).classList.add('active');
+        currentViewId = newViewId;
+
+        // 更新描述
+        descEl.innerText = descMap[newType] || '根据配置的逻辑进行计算或判断';
+
+        // 针对循环逻辑更新特定标题
+        if (newViewId === 'view-loop') {
+            const titleEl = document.querySelector('#view-loop .view-title');
+            if (newType.includes('accum')) {
+                titleEl.innerText = "循环计算：对集合中对象的属性值进行累加/累乘";
+            } else {
+                titleEl.innerText = "循环逻辑：对集合中每个对象进行判断 (且/或)";
+            }
+        }
+    });
+
+    // 模拟保存校验
+    function saveVariable() {
+        const nameInput = document.querySelector('.form-input[type="text"]');
+        if (!nameInput.value.trim()) {
+            alert("错误：变量名称不能为空");
+            return;
+        }
+
+        const type = selectEl.value;
+        // 模拟泛角色校验 (文档 Page 5/7)
+        if (type.startsWith('loop_')) {
+            // 这里仅做演示，实际需解析表达式树
+            const hasGenericRole = true; // 假设编辑器里有了“所有玩家”
+            if (!hasGenericRole) {
+                alert("保存失败：循环逻辑必须包含一个泛角色对象");
+                return;
+            }
+        }
+
+        alert("保存成功！");
+    }
+</script>
+
+</body>
+</html>
+```
+
+<!-- ### 设计说明：
+
+1.  **界面布局 (HTML/CSS)**：
+    *   采用了**侧边弹窗**或**居中Modal**的经典设计，符合B端工具类软件的风格。
+    *   **颜色系统**：定义了 `:root` 变量，复刻了文档截图中的颜色（橙色代表主体/玩家，蓝色代表属性，黄色代表值）。
+    *   **软键盘/标签块**：使用 `.exp-block` 和 `.exp-part` 类来模拟截图中的“软键盘输入”效果，视觉上非常直观。
+
+2.  **核心逻辑 (JavaScript)**：
+    *   **类型映射**：通过 `typeViewMap` 对象将8种下拉选项映射到3种不同的DOM结构（表格视图、普通表达式视图、循环逻辑视图）。这符合文档中“底层数据结构完全不同”的描述。
+    *   **交互反馈**：实现了文档Page 8提到的“数据清洗机制”。当用户从一类视图（如组内计算）切换到另一类（如条件判断）时，会弹出 `confirm` 提示框。
+    *   **校验模拟**：点击“确定”时，会简单检查变量名是否为空，并根据类型给出“泛角色校验”的模拟反馈。
+
+3.  **视图细节**：
+    *   **组内计算 (Table View)**：还原了文档Page 2和Page 3的虚拟表格概念，左侧是元素，中间是隐含运算符，右侧是赋值。
+    *   **条件判断 (Expression View)**：还原了Page 4的逻辑，展示了类似 `[胡牌玩家][番型][为][清一色]` 的块状结构。
+    *   **循环逻辑 (Loop View)**：还原了Page 5和Page 6的逻辑，增加了“所有玩家”等泛角色的语境提示。 -->

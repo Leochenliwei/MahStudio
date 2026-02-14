@@ -1,0 +1,1645 @@
+{
+  "components": [
+    {
+      "id": "iezZIQ",
+      "name": "牌库",
+      "category": "基   础",
+      "required": true,
+      "properties": [
+        {
+          "id": "CSwT01",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "6t8Ula",
+          "name": "牌堆模式",
+          "type": "toggle",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "预设牌堆",
+              "value": 1
+            },
+            {
+              "label": "自定义牌堆",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "1DQXQm",
+          "name": "预设选择",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "144张（含东南西北中发白花）",
+              "value": 1
+            },
+            {
+              "label": "136张（含东南西北中发白）",
+              "value": 2
+            },
+            {
+              "label": "124张（含东南西北）",
+              "value": 3
+            },
+            {
+              "label": "120张（含中发白）",
+              "value": 4
+            },
+            {
+              "label": "112张（含中）",
+              "value": 5
+            },
+            {
+              "label": "108张（万条筒）",
+              "value": 6
+            },
+            {
+              "label": "84张  （条筒中发白）",
+              "value": 7
+            }
+          ],
+          "visibleWhen": "{{6t8Ula}} == 1",
+          "titleWidth": "4cl",
+          "itemWidth": "16cl"
+        },
+        {
+          "id": "phjFJL",
+          "name": "自定义选择",
+          "type": "button",
+          "visibleWhen": "{{6t8Ula}} == 2",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "mahjongstack"
+          }
+        }
+      ]
+    },
+    {
+      "id": "1Gy4Sh",
+      "name": "字成顺",
+      "category": "基   础",
+      "properties": [
+        {
+          "id": "1BOIGm",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "upE8yo",
+          "name": "成顺规则",
+          "type": "select",
+          "defaultValue": 4,
+          "datas": [
+            {
+              "label": "仅风牌成顺（无序）",
+              "value": 1
+            },
+            {
+              "label": "仅箭牌牌成顺",
+              "value": 2
+            },
+            {
+              "label": "仅风牌成顺（有序）",
+              "value": 3
+            },
+            {
+              "label": "风牌，箭牌都成顺（按顺序成顺，东南西北仅有东南西，南西北）",
+              "value": 4
+            },
+            {
+              "label": "风牌，箭牌都成顺（不需按顺序，东南西北任意三张即可）",
+              "value": 5
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "16cl"
+        }
+      ]
+    },
+    {
+      "id": "MzQGnD",
+      "name": "游戏模式",
+      "category": "基   础",
+      "required": true,
+      "properties": [
+        {
+          "id": "x2x8aJ",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "ItozlW",
+          "name": "玩法模式",
+          "type": "toggle",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "常规玩法",
+              "value": 1
+            },
+            {
+              "label": "血战玩法",
+              "value": 2
+            },
+            {
+              "label": "血流玩法",
+              "value": 3
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "EtTtMA",
+          "name": "一炮多响",
+          "type": "switch",
+          "defaultValue": false,
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "LpdUMI",
+          "name": "一炮多响时强制可胡玩家一起胡",
+          "type": "switch",
+          "defaultValue": false,
+          "visibleWhen": "{{EtTtMA}} == true",
+          "description": "有人胡时，强制其他人一起胡",
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "KQw3Mq",
+          "name": "截胡优先级",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "按逆时针座位顺序离点炮玩家最近的先胡",
+              "value": 1
+            },
+            {
+              "label": "按胡牌番大小顺序番大的玩家先胡",
+              "value": 2
+            }
+          ],
+          "visibleWhen": "{{EtTtMA}} == false",
+          "titleWidth": "4cl",
+          "itemWidth": "16cl"
+        },
+        {
+          "id": "118MeK",
+          "name": "模打顺序",
+          "type": "toggle",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "先摸后打",
+              "value": 1
+            },
+            {
+              "label": "先打后摸",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        }
+      ]
+    },
+    {
+      "id": "yzQCTB",
+      "name": "坐庄规则",
+      "category": "发牌前",
+      "properties": [
+        {
+          "id": "J9mcr0",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "7DTJHR",
+          "name": "首局坐庄",
+          "type": "toggle",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "房主坐庄",
+              "value": 1
+            },
+            {
+              "label": "随机坐庄",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "Teva5H",
+          "name": "庄家接炮",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "庄胡牌，庄连庄",
+              "value": 1
+            },
+            {
+              "label": "庄胡牌，下家接庄",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "11Mor1",
+          "name": "闲家接炮",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "闲胡牌，轮庄",
+              "value": 1
+            },
+            {
+              "label": "闲胡牌，胡牌玩家接庄",
+              "value": 2
+            },
+            {
+              "label": "闲胡牌，胡牌玩家下家接庄",
+              "value": 3
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "PsrWGA",
+          "name": "一炮多响时",
+          "type": "toggle",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "点炮玩家坐庄",
+              "value": 1
+            },
+            {
+              "label": "按座位号先胡玩家坐庄",
+              "value": 2
+            }
+          ],
+          "visibleWhen": "{{EtTtMA}} == 2",
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "18bRcU",
+          "name": "庄家自摸",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "庄胡牌，庄连庄",
+              "value": 1
+            },
+            {
+              "label": "庄胡牌，下家接庄",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "1CCU21",
+          "name": "闲家自摸",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "闲胡牌，轮庄",
+              "value": 1
+            },
+            {
+              "label": "闲胡牌，胡牌玩家接庄",
+              "value": 2
+            },
+            {
+              "label": "闲胡牌，胡牌玩家下家接庄",
+              "value": 3
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "iVjQDW",
+          "name": "荒庄",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "庄家连庄",
+              "value": 1
+            },
+            {
+              "label": "庄家下家坐庄",
+              "value": 2
+            },
+            {
+              "label": "本局有杠，庄家下家坐庄，否则庄家连庄",
+              "value": 3
+            },
+            {
+              "label": "最后一个抓牌玩家坐庄",
+              "value": 4
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "1uMqFa",
+          "name": "查叫定庄",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "被查叫玩家坐庄",
+              "value": 1
+            },
+            {
+              "label": "庄家下家接庄",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "ScM1Me",
+          "name": "扩展玩法",
+          "type": "checkbox",
+          "datas": [
+            {
+              "label": "长毛",
+              "value": 1
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "qKU71a",
+          "name": "长毛配置",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "连1庄开始长毛",
+              "value": 1
+            },
+            {
+              "label": "连2庄开始长毛",
+              "value": 2
+            },
+            {
+              "label": "连3庄开始长毛",
+              "value": 3
+            },
+            {
+              "label": "连4庄开始长毛",
+              "value": 4
+            },
+            {
+              "label": "连5庄开始长毛",
+              "value": 5
+            }
+          ],
+          "visibleWhen": "{{ScM1Me}} == 1",
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        }
+      ]
+    },
+    {
+      "id": "BvlAPM",
+      "name": "买分组件",
+      "category": "发牌前",
+      "properties": [
+        {
+          "id": "wjGzsS",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "jlXWQt",
+          "name": "买分场景",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "每N小局选择买分",
+              "value": 1
+            },
+            {
+              "label": "首局选择买分",
+              "value": 2
+            },
+            {
+              "label": "由创房选项指定买分值",
+              "value": 3
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "jOATzs",
+          "name": "小局间隔",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "1小局",
+              "value": 1
+            },
+            {
+              "label": "2小局",
+              "value": 2
+            },
+            {
+              "label": "3小局",
+              "value": 3
+            },
+            {
+              "label": "4小局",
+              "value": 4
+            }
+          ],
+          "visibleWhen": "{{jlXWQt}} == 1",
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "mCi3Hw",
+          "name": "买分玩家",
+          "type": "toggle",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "庄家买分",
+              "value": 1
+            },
+            {
+              "label": "所有人买分",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "WaYKl4",
+          "name": "自由买分的选项组合",
+          "type": "select",
+          "defaultValue": 4,
+          "datas": [
+            {
+              "label": "提供选项：不买/1分",
+              "value": 1
+            },
+            {
+              "label": "提供选项：不买/买1/2分",
+              "value": 2
+            },
+            {
+              "label": "提供选项：不买/买1/2/3分",
+              "value": 3
+            },
+            {
+              "label": "提供选项：不买/买1/2/3/4分",
+              "value": 4
+            },
+            {
+              "label": "提供选项：不买/买1/2/3/4/5分",
+              "value": 5
+            }
+          ],
+          "visibleWhen": "{{jlXWQt}} == 1 or {{jlXWQt}} == 2",
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "reK6nM",
+          "name": "固定买分值",
+          "type": "select",
+          "defaultValue": 2,
+          "datas": [
+            {
+              "label": "不买",
+              "value": 1
+            },
+            {
+              "label": "买1分",
+              "value": 2
+            },
+            {
+              "label": "买2分",
+              "value": 3
+            },
+            {
+              "label": "买3分",
+              "value": 4
+            },
+            {
+              "label": "买4分",
+              "value": 5
+            },
+            {
+              "label": "买5分",
+              "value": 6
+            }
+          ],
+          "visibleWhen": "{{jlXWQt}} == 3",
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        }
+      ]
+    },
+    {
+      "id": "RFnZ1Q",
+      "name": "开局掷骰子",
+      "category": "发牌前",
+      "properties": [
+        {
+          "id": "J78PUj",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "ri24s3",
+          "name": "骰子设置",
+          "type": "toggle",
+          "defaultValue": 3,
+          "datas": [
+            {
+              "label": "1个骰子",
+              "value": 1
+            },
+            {
+              "label": "2个骰子",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        }
+      ]
+    },
+    {
+      "id": "SSS1eN",
+      "name": "发牌组件",
+      "category": "发牌后",
+      "required": true,
+      "properties": [
+        {
+          "id": "aGVRLZ",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "r7zDCx",
+          "name": "发牌数",
+          "type": "toggle",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "庄14，闲家13",
+              "value": 1
+            },
+            {
+              "label": "庄17，闲家16",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        }
+      ]
+    },
+    {
+      "id": "hMLRil",
+      "name": "翻特殊牌",
+      "category": "发牌后",
+      "properties": [
+        {
+          "id": "1Fr2kn",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "Dqb5R9",
+          "name": "地区选择/模式选择",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "湖北-赖子&痞子",
+              "value": 1
+            },
+            {
+              "label": "江西-精牌&飞宝",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "hu_bao_lai_zi_pi_zi",
+          "type": "container",
+          "visibleWhen": "{{Dqb5R9}} == 1"
+        }
+      ]
+    },
+    {
+      "id": "tTzYoX",
+      "name": "吃牌",
+      "category": "行   牌",
+      "properties": [
+        {
+          "id": "1HF4Fw",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "chi_lei_xing",
+          "name": "吃类型",
+          "type": "checkbox",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "常规吃",
+              "value": 1
+            },
+            {
+              "label": "赖子吃",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "chi_pai_dui_xiang",
+          "name": "吃牌对象",
+          "type": "toggle",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "仅上家",
+              "value": 1
+            },
+            {
+              "label": "所有玩家",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "chi_zi_pai",
+          "name": "吃字牌",
+          "type": "switch",
+          "defaultValue": false,
+          "visibleWhen": "{{1BOIGm}} == 2",
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "BaLxNG",
+          "name": "食替/开倒车",
+          "type": "switch",
+          "defaultValue": false,
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "FiKcGu",
+          "name": "食替规则",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "吃任意当前吃牌玩家不能打对应牌张",
+              "value": 1
+            },
+            {
+              "label": "吃的牌为两头牌不能出两头牌",
+              "value": 2,
+              "description": "4、5吃6当前吃牌玩家不能出3、6"
+            }
+          ],
+          "visibleWhen": "{{BaLxNG}} == true",
+          "titleWidth": "4cl",
+          "itemWidth": "15cl"
+        },
+        {
+          "id": "RdnSpY",
+          "name": "吃动作限制",
+          "type": "switch",
+          "defaultValue": false,
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "CboSCO",
+          "name": "动作限制",
+          "type": "button",
+          "visibleWhen": "{{RdnSpY}} == true",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "actionlimit",
+            "actionType": 1
+          }
+        },
+        {
+          "id": "chi_clientsource",
+          "name": "客户端表现",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "clientsource"
+          }
+        }
+      ]
+    },
+    {
+      "id": "IvQpJY",
+      "name": "碰牌",
+      "category": "行   牌",
+      "properties": [
+        {
+          "id": "ExvH53",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "h664E2",
+          "name": "是否存在特殊碰",
+          "type": "switch",
+          "defaultValue": false,
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "FjDgpm",
+          "name": "特殊碰选择",
+          "type": "checkbox",
+          "datas": [
+            {
+              "label": "春夏秋冬碰",
+              "value": 1,
+              "description": "任意两张牌可以碰另一张牌"
+            },
+            {
+              "label": "梅兰竹菊碰",
+              "value": 2,
+              "description": "任意两张牌可以碰另一张牌"
+            },
+            {
+              "label": "中发白碰",
+              "value": 3,
+              "description": "任意两张牌可以碰另一张牌"
+            }
+          ],
+          "visibleWhen": "{{h664E2}} == true",
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "Oue2kd",
+          "name": "过水限制",
+          "type": "switch",
+          "defaultValue": false,
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "SEY1Bf",
+          "name": "漏碰后的限制",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "不允许碰漏的牌",
+              "value": 1
+            },
+            {
+              "label": "不允许进行任何碰牌操作",
+              "value": 2
+            }
+          ],
+          "visibleWhen": "{{Oue2kd}} == true",
+          "titleWidth": "8cl",
+          "itemWidth": "12cl"
+        },
+        {
+          "id": "18pKRw",
+          "name": "解除限制的条件",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "出牌后解禁",
+              "value": 1
+            },
+            {
+              "label": "摸牌后解禁",
+              "value": 2
+            }
+          ],
+          "visibleWhen": "{{Oue2kd}} == true",
+          "titleWidth": "8cl",
+          "itemWidth": "12cl"
+        },
+        {
+          "id": "ycoTWA",
+          "name": "碰动作限制",
+          "type": "switch",
+          "defaultValue": false,
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "zBfcRu",
+          "name": "动作限制",
+          "type": "button",
+          "visibleWhen": "{{ycoTWA}} == true",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "actionlimit",
+            "actionType": 2
+          }
+        },
+        {
+          "id": "peng_clientsource",
+          "name": "客户端表现",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "clientsource"
+          }
+        }
+      ]
+    },
+    {
+      "id": "11m0uu",
+      "name": "杠牌",
+      "category": "行   牌",
+      "properties": [
+        {
+          "id": "AZy6xV",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "KNDZ4w",
+          "name": "杠种类",
+          "type": "checkbox",
+          "defaultValue": [
+            1,
+            2,
+            3
+          ],
+          "datas": [
+            {
+              "label": "直杠",
+              "value": 1
+            },
+            {
+              "label": "补杠",
+              "value": 2
+            },
+            {
+              "label": "暗杠",
+              "value": 3
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "16RzMp",
+          "name": "暗杠展示规则",
+          "type": "toggle",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "仅展示牌背",
+              "value": 1
+            },
+            {
+              "label": "仅展示1张牌面",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "CLJChw",
+          "name": "可杠牌的时机",
+          "type": "select",
+          "defaultValue": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "datas": [
+            {
+              "label": "他人出牌后",
+              "value": 1
+            },
+            {
+              "label": "摸牌后",
+              "value": 2
+            },
+            {
+              "label": "吃牌后",
+              "value": 3
+            },
+            {
+              "label": "碰牌后",
+              "value": 4
+            },
+            {
+              "label": "杠牌后",
+              "value": 5
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "4cl",
+          "multiSelect": true,
+          "columnCount": 2
+        },
+        {
+          "id": "huan_gang_switch",
+          "name": "允许缓杠",
+          "type": "switch",
+          "defaultValue": false,
+          "description": "缓杠是指在摸到杠牌的情况下，玩家可以选择不立即杠牌，而是选择稍后杠牌。",
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "huan_gang_xuan_ze",
+          "name": "缓杠规则",
+          "type": "select",
+          "defaultValue": 3,
+          "datas": [
+            {
+              "label": "补杠可缓杠",
+              "value": 1
+            },
+            {
+              "label": "暗杠可缓杠",
+              "value": 2
+            },
+            {
+              "label": "补杠、暗杠都可缓杠",
+              "value": 3
+            }
+          ],
+          "visibleWhen": "{{huan_gang_switch}} == true",
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "huan_gang_suan_fen",
+          "name": "缓杠也进行杠分结算",
+          "type": "switch",
+          "defaultValue": true,
+          "visibleWhen": "{{huan_gang_switch}} == true",
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "xqHSro",
+          "name": "特殊杠",
+          "type": "switch",
+          "defaultValue": false,
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "p6RGAE",
+          "name": "特殊杠选择",
+          "type": "select",
+          "datas": [
+            {
+              "label": "中发白杠",
+              "value": 1
+            },
+            {
+              "label": "东南西北杠",
+              "value": 2
+            },
+            {
+              "label": "春夏秋冬杠",
+              "value": 3
+            },
+            {
+              "label": "梅兰竹菊杠",
+              "value": 4
+            },
+            {
+              "label": "蚂蚁杠",
+              "value": 5
+            },
+            {
+              "label": "大象杠",
+              "value": 6
+            },
+            {
+              "label": "王八幺杠",
+              "value": 7
+            },
+            {
+              "label": "王八九杠",
+              "value": 8
+            }
+          ],
+          "visibleWhen": "{{xqHSro}} == true",
+          "titleWidth": "4cl",
+          "itemWidth": "8cl",
+          "multiSelect": true,
+          "columnCount": 2
+        },
+        {
+          "id": "vjxndw",
+          "name": "杠限制",
+          "type": "switch",
+          "defaultValue": false,
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "rlAh5x",
+          "name": "动作限制",
+          "type": "button",
+          "visibleWhen": "{{vjxndw}} == true",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "actionlimit",
+            "actionType": 3
+          }
+        },
+        {
+          "id": "gang_clientsource",
+          "name": "客户端表现",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "clientsource"
+          }
+        }
+      ]
+    },
+    {
+      "id": "XyV2JX",
+      "name": "海底规则",
+      "category": "行   牌",
+      "properties": [
+        {
+          "id": "18kEBT",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "GzQTnZ",
+          "name": "触发条件",
+          "type": "toggle",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "荒庄前最后1圈牌",
+              "value": 1
+            },
+            {
+              "label": "荒庄前最后1张牌",
+              "value": 2
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "uB6ndA",
+          "name": "海底操作",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "正常摸打",
+              "value": 1
+            },
+            {
+              "label": "自动分张",
+              "value": 2,
+              "description": "进入海底后，玩家只能摸牌，不再出牌"
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "IC7Fwh",
+          "name": "特殊规则",
+          "type": "checkbox",
+          "datas": [
+            {
+              "label": "杠穿",
+              "value": 1,
+              "description": "杠后牌堆剩余牌数不足以分张时，跳过海底环节"
+            },
+            {
+              "label": "海底剩一张牌时，可放弃摸牌直接荒庄",
+              "value": 2
+            },
+            {
+              "label": "海底剩一张牌时且摸牌玩家未听，可放弃摸牌直接荒庄",
+              "value": 3
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "15cl"
+        }
+      ]
+    },
+    {
+      "id": "pIcrq5",
+      "name": "小局结束条件",
+      "category": "行   牌",
+      "properties": [
+        {
+          "id": "17Upf8",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "zwWM4D",
+          "name": "荒庄规则",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "抓光牌墙荒庄",
+              "value": 0
+            },
+            {
+              "label": "剩余1墩牌荒庄",
+              "value": 1
+            },
+            {
+              "label": "剩余2墩牌荒庄",
+              "value": 2
+            },
+            {
+              "label": "剩余3墩牌荒庄",
+              "value": 3
+            },
+            {
+              "label": "剩余4墩牌荒庄",
+              "value": 4
+            },
+            {
+              "label": "剩余5墩牌荒庄",
+              "value": 5
+            },
+            {
+              "label": "剩余6墩牌荒庄",
+              "value": 6
+            },
+            {
+              "label": "剩余7墩牌荒庄",
+              "value": 7
+            },
+            {
+              "label": "剩余8墩牌荒庄",
+              "value": 8
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "16cl"
+        },
+        {
+          "id": "N6Dn3L",
+          "name": "特殊结束",
+          "type": "switch",
+          "defaultValue": false,
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "18LrVH",
+          "name": "特殊流局规则",
+          "type": "checkbox",
+          "datas": [
+            {
+              "label": "首轮跟庄",
+              "value": 2,
+              "description": "首轮闲家出牌与庄家一致，立即结束本局"
+            },
+            {
+              "label": "四杠流局",
+              "value": 4,
+              "description": "单个玩家进行四次杠，立即结束本局"
+            },
+            {
+              "label": "一炮多响流局",
+              "value": 5,
+              "description": "点炮时其他玩家都可胡牌，立即结束本局"
+            }
+          ],
+          "visibleWhen": "{{N6Dn3L}} == true",
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        }
+      ]
+    },
+    {
+      "id": "10GRvO",
+      "name": "胡牌规则",
+      "category": "胡   牌",
+      "required": true,
+      "properties": [
+        {
+          "id": "6DBKXm",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "QCB7mz",
+          "name": "胡牌方式",
+          "type": "checkbox",
+          "defaultValue": [
+            1,
+            2
+          ],
+          "datas": [
+            {
+              "label": "自摸",
+              "value": 1
+            },
+            {
+              "label": "点炮",
+              "value": 2
+            },
+            {
+              "label": "抢杠",
+              "value": 3
+            },
+            {
+              "label": "存在杠开番",
+              "value": 4
+            },
+            {
+              "label": "存在杠炮番",
+              "value": 5
+            }
+          ],
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "qaf4j1",
+          "name": "抢杠的定义",
+          "type": "checkbox",
+          "defaultValue": [
+            1,
+            2,
+            3
+          ],
+          "datas": [
+            {
+              "label": "可抢明杠",
+              "value": 1
+            },
+            {
+              "label": "可抢暗杠",
+              "value": 2
+            },
+            {
+              "label": "可抢补杠",
+              "value": 3
+            }
+          ],
+          "visibleWhen": "{{QCB7mz}} == 3",
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "19HPkU",
+          "name": "杠开的定义",
+          "type": "checkbox",
+          "defaultValue": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "datas": [
+            {
+              "label": "明杠可杠开",
+              "value": 1
+            },
+            {
+              "label": "暗杠可杠开",
+              "value": 2
+            },
+            {
+              "label": "补杠可杠开",
+              "value": 3
+            },
+            {
+              "label": "花杠可杠开",
+              "value": 4
+            },
+            {
+              "label": "赖子杠/皮子杠可杠开",
+              "value": 5,
+              "visibleWhen": "{{Dqb5R9}} == 1"
+            }
+          ],
+          "visibleWhen": "{{QCB7mz}} == 4",
+          "titleWidth": "4cl",
+          "itemWidth": "4cl"
+        },
+        {
+          "id": "1DxqfM",
+          "name": "有胡必胡",
+          "type": "switch",
+          "defaultValue": false,
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "JLcSC1",
+          "name": "存在过胡限制",
+          "type": "switch",
+          "defaultValue": false,
+          "visibleWhen": "{{1DxqfM}} == false",
+          "description": "过胡时，相同胡分的牌型不允许胡牌",
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "nJ81C8",
+          "name": "过胡后不允许进行以下操作",
+          "type": "checkbox",
+          "datas": [
+            {
+              "label": "禁止胡相同牌",
+              "value": 1
+            },
+            {
+              "label": "禁止胡相同牌/番型",
+              "value": 2
+            },
+            {
+              "label": "禁止胡牌行为",
+              "value": 3
+            }
+          ],
+          "visibleWhen": "{{JLcSC1}} == true",
+          "titleWidth": "4cl",
+          "itemWidth": "6cl",
+          "layout": 1
+        },
+        {
+          "id": "IpbyHg",
+          "name": "过胡后可以进行以下操作",
+          "type": "checkbox",
+          "datas": [
+            {
+              "label": "摸牌后可胡",
+              "value": 1
+            },
+            {
+              "label": "出牌后可胡",
+              "value": 2
+            },
+            {
+              "label": "分数更大可胡",
+              "value": 3
+            }
+          ],
+          "visibleWhen": "{{JLcSC1}} == true",
+          "description": "为保证对局公平性，选择过胡后，只能在满足下面情况时允许胡牌",
+          "titleWidth": "4cl",
+          "itemWidth": "6cl",
+          "layout": 1
+        }
+      ]
+    },
+    {
+      "id": "zAdqAs",
+      "name": "胡分",
+      "category": "算   分",
+      "required": true,
+      "properties": [
+        {
+          "id": "oIVQvB",
+          "name": "是否启用",
+          "type": "component_switch",
+          "defaultValue": false
+        },
+        {
+          "id": "o8fZNx",
+          "name": "胡分计算方式",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "直接算分",
+              "value": 1
+            },
+            {
+              "label": "番数转换为分数",
+              "value": 2
+            }
+          ],
+          "titleWidth": "12cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "siAtbD",
+          "name": "接炮胡牌时，收分玩家为",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "接炮胡牌的玩家",
+              "value": 1
+            },
+            {
+              "label": "接炮胡牌/抢杠胡牌的玩家",
+              "value": 2
+            }
+          ],
+          "titleWidth": "12cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "HzmHzT",
+          "name": "算分规则",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "calscore"
+          }
+        },
+        {
+          "id": "LHQMCJ",
+          "name": "自摸胡牌时，收分玩家为",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "自摸胡牌的玩家",
+              "value": 1
+            },
+            {
+              "label": "自摸胡牌/杠开胡牌的玩家",
+              "value": 2
+            }
+          ],
+          "titleWidth": "12cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "ByrFOC",
+          "name": "算分规则",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "calscore"
+          }
+        },
+        {
+          "id": "6WRfrK",
+          "name": "抢杠胡牌时，收分玩家为",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "抢杠胡牌的玩家",
+              "value": 1
+            }
+          ],
+          "titleWidth": "12cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "14N1kO",
+          "name": "算分规则",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "calscore"
+          }
+        },
+        {
+          "id": "1HGwzS",
+          "name": "杠开胡牌时，收分玩家为",
+          "type": "select",
+          "defaultValue": 1,
+          "datas": [
+            {
+              "label": "杠开胡牌的玩家",
+              "value": 1
+            }
+          ],
+          "titleWidth": "12cl",
+          "itemWidth": "8cl"
+        },
+        {
+          "id": "4Uwjwi",
+          "name": "算分规则",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "calscore"
+          }
+        },
+        {
+          "id": "9X9VU9",
+          "name": "",
+          "type": "container"
+        },
+        {
+          "id": "bao_pai_grNs0dD7oup",
+          "name": "",
+          "type": "container"
+        },
+        {
+          "id": "oG1fxj",
+          "name": "",
+          "type": "container"
+        },
+        {
+          "id": "ZDWo9X",
+          "name": "是否存在起胡限制",
+          "type": "switch",
+          "defaultValue": false,
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "qi_hu_group",
+          "type": "container",
+          "visibleWhen": "{{ZDWo9X}}==true"
+        }
+      ]
+    }
+  ],
+  "totalComponents": 15
+}

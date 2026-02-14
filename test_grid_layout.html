@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网格布局测试</title>
+    <style>
+        /* 模拟项目中的 CSS 变量 */
+        :root {
+            --spacing-2: 0.5rem;
+            --spacing-4: 1rem;
+            --color-text-primary: #333;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            margin-bottom: 2rem;
+        }
+        
+        h2 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* 复选框组样式 */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-4);
+            width: 100%;
+            border: 1px solid #ddd;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .checkbox-option {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-2);
+            cursor: pointer;
+            flex-basis: calc(33.333% - var(--spacing-4));
+            min-width: 120px;
+        }
+        
+        .checkbox-option span {
+            word-break: break-word;
+        }
+        
+        /* 单选按钮组样式 */
+        .toggle-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-4);
+            width: 100%;
+            border: 1px solid #ddd;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .toggle-option {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-2);
+            cursor: pointer;
+            flex-basis: calc(33.333% - var(--spacing-4));
+            min-width: 120px;
+        }
+        
+        .toggle-option span {
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>网格布局测试</h1>
+    
+    <h2>测试 1: 复选框组 - 短文字选项</h2>
+    <div class="checkbox-group">
+        <label class="checkbox-option">
+            <input type="checkbox" checked>
+            <span>选项 1</span>
+        </label>
+        <label class="checkbox-option">
+            <input type="checkbox" checked>
+            <span>选项 2</span>
+        </label>
+        <label class="checkbox-option">
+            <input type="checkbox">
+            <span>选项 3</span>
+        </label>
+        <label class="checkbox-option">
+            <input type="checkbox">
+            <span>选项 4</span>
+        </label>
+        <label class="checkbox-option">
+            <input type="checkbox">
+            <span>选项 5</span>
+        </label>
+        <label class="checkbox-option">
+            <input type="checkbox">
+            <span>选项 6</span>
+        </label>
+    </div>
+    
+    <h2>测试 2: 复选框组 - 长文字选项</h2>
+    <div class="checkbox-group">
+        <label class="checkbox-option">
+            <input type="checkbox" checked>
+            <span>这是一个非常长的选项文字，测试自动换行功能</span>
+        </label>
+        <label class="checkbox-option">
+            <input type="checkbox" checked>
+            <span>这是另一个非常长的选项文字，确保能够正确换行</span>
+        </label>
+        <label class="checkbox-option">
+            <input type="checkbox">
+            <span>短选项</span>
+        </label>
+        <label class="checkbox-option">
+            <input type="checkbox">
+            <span>中等长度的选项文字</span>
+        </label>
+    </div>
+    
+    <h2>测试 3: 单选按钮组 - 混合长度选项</h2>
+    <div class="toggle-group">
+        <label class="toggle-option">
+            <input type="radio" name="test" checked>
+            <span>短选项 1</span>
+        </label>
+        <label class="toggle-option">
+            <input type="radio" name="test">
+            <span>这是一个非常长的单选按钮选项文字，测试自动换行</span>
+        </label>
+        <label class="toggle-option">
+            <input type="radio" name="test">
+            <span>中等长度选项</span>
+        </label>
+        <label class="toggle-option">
+            <input type="radio" name="test">
+            <span>另一个短选项</span>
+        </label>
+        <label class="toggle-option">
+            <input type="radio" name="test">
+            <span>又一个非常长的选项文字，确保布局正确</span>
+        </label>
+    </div>
+</body>
+</html>
