@@ -3,9 +3,7 @@
     <!-- Header -->
     <div class="modal-header">
       <div class="header-left">
-        <span class="sub-title">胡分</span>
-        <span class="separator">/</span>
-        <span class="page-title">自摸胡牌</span>
+        <span class="page-title">番数/分数修正</span>
       </div>
       <div class="header-right">
         <div class="close-icon" title="关闭" @click="$emit('close')">✕</div>
@@ -14,128 +12,76 @@
 
     <!-- Body -->
     <div class="modal-body">
-      <!-- Rule Cards -->
-      <div v-for="(card, index) in ruleCards" :key="card.id" class="rule-card" :class="{ expanded: card.expanded }" @contextmenu="showContextMenuHandler($event, card, 'rules')">
-        <div class="card-header" @click="toggleCard(card)">
-          <div class="header-content">
-            <span class="seq-num">{{ index + 1 }}</span>
-            <input 
-              type="text" 
-              class="card-title" 
-              v-model="card.title" 
-              @click.stop
-            />
+      <div class="modifier-section">
+        <div class="modifier-header">番数/分数修正（变量名：最终番数）</div>
+        <label class="checkbox-label">
+          <input type="checkbox" style="margin-right: 8px;" v-model="hasModifier"> 存在封顶或金顶场景，进行番数修正
+        </label>
+
+        <!-- Modifier Case 1 -->
+        <div v-for="(modifier, index) in modifierCards" :key="modifier.id" class="rule-card" :class="{ expanded: modifier.expanded }" @contextmenu="showContextMenuHandler($event, modifier, 'modifier')">
+          <div class="card-header" @click="toggleCard(modifier)">
+            <div class="header-content">
+              <span class="seq-num">{{ index + 1 }}</span>
+              <input 
+                type="text" 
+                class="card-title" 
+                v-model="modifier.title" 
+                @click.stop
+              />
+            </div>
+            <div class="card-tools">⚙️</div>
           </div>
-          <div class="card-tools">⚙️</div>
+          <div class="card-body">
+            <div class="logic-row">
+              <span class="logic-label">当</span>
+              <div class="formula-container">
+                   <div class="chip-group">
+                    <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '当前玩家')">当前玩家</span>
+                    <span class="chip chip-text">的</span>
+                    <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '金顶状态')">金顶状态</span>
+                  </div>
+                   <span class="chip chip-logic" @click="handleChipClick($event, 'logic', '成立')">成立</span>
+              </div>
+            </div>
+            <div class="logic-row">
+              <span class="logic-label">就</span>
+              <div class="formula-container">
+                <span class="chip chip-val" @click="handleChipClick($event, 'val', '7')">7</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="card-body">
-          <!-- Condition Row -->
-          <div class="logic-row">
-            <span class="logic-label">当</span>
-            <div class="formula-container">
-              <!-- Group 1 -->
-              <div class="chip-group">
-                <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '当前赢家')">当前赢家</span>
-                <span class="chip chip-text">的</span>
-                <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '番型')">番型</span>
-              </div>
-              <span class="chip chip-text">为</span>
-              <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '清一色')">清一色</span>
-              
-              <!-- Logic Operator -->
-              <span class="operator-box" @click="handleChipClick($event, 'operator', '或')">或</span>
 
-              <!-- Group 2 -->
-              <div class="chip-group">
-                <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '当前赢家')">当前赢家</span>
-                <span class="chip chip-text">的</span>
-                <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '番型')">番型</span>
-              </div>
-              <span class="chip chip-text">为</span>
-              <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '七对')">七对</span>
-            </div>
-          </div>
-
-          <!-- Action Row -->
-          <div class="logic-row">
-            <span class="logic-label">就</span>
-            <div style="flex:1; display:flex; align-items:center; gap: 10px;">
-              <span style="font-size:13px; font-weight:bold;">确认出分玩家</span>
-              <div class="dropdown-trigger" style="width: 100%;">点炮玩家</div>
-            </div>
-          </div>
-
-          <!-- Calculation Row -->
-          <div class="logic-row">
-            <span class="logic-label"></span>
-            <div style="flex:1; display:flex; align-items:flex-start; gap: 10px;">
-              <span style="font-size:13px; font-weight:bold; margin-top:8px;">计算出分番数</span>
-              <div class="formula-container" style="background:#fff;">
-                <div class="chip-group">
-                  <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '收分玩家')">收分玩家</span>
-                  <span class="chip chip-text">的</span>
-                  <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '个人收分番')">个人收分番</span>
-                </div>
-                <span class="chip chip-text">的值</span>
-                
-                <span class="operator-box" @click="handleChipClick($event, 'operator', '+')">+</span>
-
-                <div class="chip-group">
+         <!-- Modifier Else -->
+         <div class="else-section" style="background: #fff; border-color: #ddd; margin-top: 10px;">
+            <span class="section-tag">否则就</span>
+            <div class="logic-row">
+              <span style="font-size:13px; font-weight:bold; margin-right: 10px; margin-top: 8px;">确认出分番数</span>
+              <div class="formula-container">
+                <span class="chip chip-val" @click="handleChipClick($event, 'val', 'Min')">Min</span>
+                <span class="chip chip-text">(</span>
+                <span class="chip chip-val" @click="handleChipClick($event, 'val', '6')">6</span>
+                <span class="chip chip-text">,</span>
+                <div class="chip-group" style="margin-left: 5px;">
                   <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '出分玩家')">出分玩家</span>
                   <span class="chip chip-text">的</span>
-                  <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '个人出分番')">个人出分番</span>
+                  <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '计算番数')">计算番数</span>
                 </div>
                 <span class="chip chip-text">的值</span>
+                <span class="chip chip-text">)</span>
               </div>
             </div>
-          </div>
-        </div>
+         </div>
+
       </div>
-
-      <!-- Else Block -->
-      <div class="else-section">
-        <span class="section-tag">否则就</span>
-        <span class="split-icon">⤢</span>
-        
-        <div class="logic-row">
-          <div style="flex:1; display:flex; align-items:center; gap: 10px;">
-            <span style="font-size:13px; font-weight:bold; width: 85px;">确认出分玩家</span>
-            <div class="dropdown-trigger" style="flex:1;">点炮玩家</div>
-          </div>
-        </div>
-
-        <div class="logic-row">
-          <div style="flex:1; display:flex; align-items:center; gap: 10px;">
-            <span style="font-size:13px; font-weight:bold; width: 85px;">计算出分番数</span>
-            <div class="formula-container">
-              <div class="chip-group">
-                <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '收分玩家')">收分玩家</span>
-                <span class="chip chip-text">的</span>
-                <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '个人收分番')">个人收分番</span>
-              </div>
-              <span class="chip chip-text">的值</span>
-              <span class="operator-box" @click="handleChipClick($event, 'operator', '+')">+</span>
-              <div class="chip-group">
-                <span class="chip chip-obj" @click="handleChipClick($event, 'obj', '出分玩家')">出分玩家</span>
-                <span class="chip chip-text">的</span>
-                <span class="chip chip-attr" @click="handleChipClick($event, 'attr', '个人出分番')">个人出分番</span>
-              </div>
-              <span class="chip chip-text">的值</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-     
 
     </div>
 
     <!-- Footer -->
     <div class="modal-footer">
-      <button class="btn btn-secondary">取消</button>
-      <button class="btn btn-secondary">保存</button>
-      <button class="btn btn-primary">保存并关闭</button>
+      <button class="btn btn-secondary" @click="$emit('close')">取消</button>
+      <button class="btn btn-primary" @click="saveAndClose">保存并关闭</button>
     </div>
 
     <!-- 右键菜单 -->
@@ -165,26 +111,17 @@
         <span class="context-menu-icon">⚙️</span>
       </div>
     </div>
-
-    <!-- 番数修正弹窗 -->
-    <div v-if="showModifierModal" class="modal-overlay">
-      <div class="modal-wrapper">
-        <ScoreModifierModal @close="closeModifierModal" @save="saveModifierData" />
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
-import Icon from './Icon.vue';
-import ScoreModifierModal from './ScoreModifierModal.vue';
 
 // 定义props和emit
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'save']);
 
-// 规则卡片数据
-const ruleCards = reactive([
+// 修正卡片数据
+const modifierCards = reactive([
   {
     id: 1,
     title: '情况一 这里可以写对自己看的说明',
@@ -192,16 +129,15 @@ const ruleCards = reactive([
   }
 ]);
 
+// 是否存在修正场景
+const hasModifier = ref(false);
+
 // 右键菜单状态
 const showContextMenu = ref(false);
 const contextMenuX = ref(0);
 const contextMenuY = ref(0);
 const currentCard = ref(null);
 const currentSection = ref(null);
-
-// 番数修正弹窗状态
-const showModifierModal = ref(false);
-const hasModifier = ref(false);
 
 /**
  * 切换卡片展开/折叠状态
@@ -306,18 +242,7 @@ const renameCard = (card, section) => {
  * @param {string} section 卡片所在区域
  */
 const copyCard = (card, section) => {
-  if (section === 'rules') {
-    const index = ruleCards.findIndex(c => c.id === card.id);
-    if (index !== -1) {
-      const clonedCard = { 
-        ...card, 
-        id: Date.now(), 
-        title: card.title + ' (复制)', 
-        expanded: false 
-      };
-      ruleCards.splice(index + 1, 0, clonedCard);
-    }
-  } else if (section === 'modifier') {
+  if (section === 'modifier') {
     const index = modifierCards.findIndex(c => c.id === card.id);
     if (index !== -1) {
       const clonedCard = { 
@@ -337,17 +262,7 @@ const copyCard = (card, section) => {
  * @param {string} section 卡片所在区域
  */
 const addCardBelow = (card, section) => {
-  if (section === 'rules') {
-    const index = ruleCards.findIndex(c => c.id === card.id);
-    if (index !== -1) {
-      const newCard = {
-        id: Date.now(),
-        title: '新情况',
-        expanded: false
-      };
-      ruleCards.splice(index + 1, 0, newCard);
-    }
-  } else if (section === 'modifier') {
+  if (section === 'modifier') {
     const index = modifierCards.findIndex(c => c.id === card.id);
     if (index !== -1) {
       const newCard = {
@@ -367,12 +282,7 @@ const addCardBelow = (card, section) => {
  */
 const deleteCard = (card, section) => {
   if (confirm('确定要删除这张卡片吗？')) {
-    if (section === 'rules') {
-      const index = ruleCards.findIndex(c => c.id === card.id);
-      if (index !== -1) {
-        ruleCards.splice(index, 1);
-      }
-    } else if (section === 'modifier') {
+    if (section === 'modifier') {
       const index = modifierCards.findIndex(c => c.id === card.id);
       if (index !== -1) {
         modifierCards.splice(index, 1);
@@ -387,12 +297,7 @@ const deleteCard = (card, section) => {
  * @param {string} section 卡片所在区域
  */
 const moveCardUp = (card, section) => {
-  if (section === 'rules') {
-    const index = ruleCards.findIndex(c => c.id === card.id);
-    if (index > 0) {
-      [ruleCards[index], ruleCards[index - 1]] = [ruleCards[index - 1], ruleCards[index]];
-    }
-  } else if (section === 'modifier') {
+  if (section === 'modifier') {
     const index = modifierCards.findIndex(c => c.id === card.id);
     if (index > 0) {
       [modifierCards[index], modifierCards[index - 1]] = [modifierCards[index - 1], modifierCards[index]];
@@ -406,12 +311,7 @@ const moveCardUp = (card, section) => {
  * @param {string} section 卡片所在区域
  */
 const moveCardDown = (card, section) => {
-  if (section === 'rules') {
-    const index = ruleCards.findIndex(c => c.id === card.id);
-    if (index < ruleCards.length - 1) {
-      [ruleCards[index], ruleCards[index + 1]] = [ruleCards[index + 1], ruleCards[index]];
-    }
-  } else if (section === 'modifier') {
+  if (section === 'modifier') {
     const index = modifierCards.findIndex(c => c.id === card.id);
     if (index < modifierCards.length - 1) {
       [modifierCards[index], modifierCards[index + 1]] = [modifierCards[index + 1], modifierCards[index]];
@@ -445,33 +345,21 @@ const handleChipClick = (e, chipType, chipText) => {
 };
 
 /**
+ * 保存并关闭
+ */
+const saveAndClose = () => {
+  emit('save', {
+    hasModifier: hasModifier.value,
+    modifierCards: modifierCards
+  });
+  emit('close');
+};
+
+/**
  * 点击文档其他地方关闭右键菜单
  */
 const handleDocumentClick = () => {
   closeContextMenu();
-};
-
-/**
- * 打开番数修正弹窗
- */
-const openModifierModal = () => {
-  showModifierModal.value = true;
-};
-
-/**
- * 关闭番数修正弹窗
- */
-const closeModifierModal = () => {
-  showModifierModal.value = false;
-};
-
-/**
- * 保存番数修正数据
- * @param {Object} data 修正数据
- */
-const saveModifierData = (data) => {
-  hasModifier.value = data.hasModifier;
-  console.log('保存番数修正数据:', data);
 };
 
 // 在组件挂载时添加事件监听器
@@ -814,7 +702,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   font-size: 13px;
-  color: #666;
+  color: #4b5563;
   margin-bottom: 15px;
 }
 .checkbox-label input[type="checkbox"] {
@@ -872,43 +760,6 @@ onUnmounted(() => {
   color: #9ca3af;
 }
 
-/* --- 番数修正弹窗样式 --- */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-wrapper {
-  width: 95%;
-  max-width: 1000px;
-  height: 90vh;
-  overflow: hidden;
-  border-radius: 8px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* 修正模块操作区样式 */
-.modifier-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.modifier-indicator {
-  font-size: 13px;
-  color: #10b981;
-  font-weight: 500;
-}
-
 /* --- 响应式设计 --- */
 @media (max-width: 768px) {
   .modal-body {
@@ -942,17 +793,6 @@ onUnmounted(() => {
   .btn {
     padding: 6px 12px;
     font-size: 13px;
-  }
-  
-  .modal-wrapper {
-    width: 98%;
-    height: 95vh;
-  }
-  
-  .modifier-actions {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
   }
 }
 </style>

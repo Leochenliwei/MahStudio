@@ -457,7 +457,7 @@ async function loadComponents() {
   try {
     // 使用正确的路径，基于vite.config.js中的base配置
     console.log('尝试获取 components_list.json 文件...')
-    const response = await fetch('/components_list.json')
+    const response = await fetch('/MahStudio/components_list.json')
     
     // 检查响应状态
     console.log('响应状态:', response.status)
