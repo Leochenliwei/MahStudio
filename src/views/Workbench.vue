@@ -351,7 +351,7 @@
                 </div>
                 
                 <!-- 按钮类型 -->
-                <button v-else-if="property.type === 'button'" class="property-button">
+                <button v-else-if="property.type === 'button'" class="property-button" @click="handleButtonClick(property)">
                   {{ property.name }}
                 </button>
                 
@@ -370,6 +370,13 @@
       @close="closeVariableManagement"
     />
 
+    <!-- 算分规则配置弹窗 -->
+    <div v-if="isCalcScoreConfigModalVisible" class="modal-overlay-center">
+      <div class="modal-wrapper">
+        <CalcScoreConfig @close="isCalcScoreConfigModalVisible = false" />
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -379,6 +386,7 @@ import { useRouter, useRoute } from 'vue-router'
 import VueDraggableResizable from 'vue-draggable-resizable'
 import Icon from '../components/Icon.vue'
 import VariableManagementModal from '../components/VariableManagementModal.vue'
+import CalcScoreConfig from '../components/CalcScoreConfig.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -445,9 +453,37 @@ const expandedCategories = ref(new Set())
 
 // 加载组件列表数据
 async function loadComponents() {
+  console.log('开始加载组件列表...')
   try {
+    // 使用正确的路径，基于vite.config.js中的base配置
+    console.log('尝试获取 components_list.json 文件...')
     const response = await fetch('/components_list.json')
+    
+    // 检查响应状态
+    console.log('响应状态:', response.status)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    // 检查响应类型
+    const contentType = response.headers.get('content-type')
+    console.log('响应类型:', contentType)
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text()
+      throw new Error(`Invalid content type: ${contentType}. Response: ${text.substring(0, 100)}...`)
+    }
+    
     const data = await response.json()
+    console.log('获取到组件数据:', data.components.length, '个组件')
+    
+    // 检查是否有算分相关的组件
+    const calscoreComponents = data.components.filter(component => {
+      return component.properties && component.properties.some(prop => 
+        prop.type === 'button' && prop.extend && prop.extend.editorType === 'calscore'
+      )
+    })
+    console.log('找到算分规则按钮组件:', calscoreComponents.length, '个')
+    
     // 为每个组件添加默认图标、启用状态和锁定状态
     components.value = data.components.map(component => ({
       ...component,
@@ -456,6 +492,7 @@ async function loadComponents() {
       enabled: component.required || false, // 强制开启的组件默认启用
       locked: component.required || false // 强制开启的组件默认锁定
     }))
+    console.log('组件列表加载完成:', components.value.length, '个组件')
     return components.value
   } catch (error) {
     console.error('加载组件列表失败:', error)
@@ -529,6 +566,9 @@ const isPropertiesSidebarCollapsed = ref(false)
 
 // 变量管理弹窗状态
 const isVariableManagementModalVisible = ref(false)
+
+// 算分规则配置弹窗状态
+const isCalcScoreConfigModalVisible = ref(false)
 
 // 切换左侧组件侧边栏
 function toggleComponentsSidebar() {
@@ -1034,6 +1074,19 @@ function updatePanelProperties() {
 function getComponentProperties(componentId) {
   const component = components.value.find(c => c.id === componentId)
   return component ? component.properties : []
+}
+
+/**
+ * 处理按钮点击事件
+ * @param {object} property - 属性对象
+ */
+function handleButtonClick(property) {
+  console.log('按钮被点击:', property)
+  // 检查是否有extend属性和editorType
+  if (property.extend && property.extend.editorType === 'calscore') {
+    // 打开算分规则配置弹窗
+    isCalcScoreConfigModalVisible.value = true
+  }
 }
 </script>
 
@@ -1772,6 +1825,30 @@ input:focus + .toggle-slider {
   height: 100%;
   z-index: 0;
   pointer-events: none;
+}
+
+/* 算分规则配置弹窗样式 */
+.modal-overlay-center {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-wrapper {
+  width: 90vw;
+  height: 90vh;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 /* 右侧属性面板样式 */
 .properties-panel {

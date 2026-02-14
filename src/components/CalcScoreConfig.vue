@@ -26,7 +26,9 @@
               @click.stop
             />
           </div>
-          <div class="card-tools">⚙️</div>
+          <div class="card-tools">
+            <Icon name="menu" size="16" />
+          </div>
         </div>
         <div class="card-body">
           <!-- Condition Row -->
@@ -145,7 +147,9 @@
                 @click.stop
               />
             </div>
-            <div class="card-tools">⚙️</div>
+            <div class="card-tools">
+              <Icon name="menu" size="16" />
+            </div>
           </div>
           <div class="card-body">
             <div class="logic-row">
@@ -232,6 +236,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
+import Icon from './Icon.vue';
 
 // 定义props和emit
 const emit = defineEmits(['close']);
@@ -271,12 +276,20 @@ const contextMenuY = ref(0);
 const currentCard = ref(null);
 const currentSection = ref(null);
 
-// 切换卡片展开/折叠状态
+/**
+ * 切换卡片展开/折叠状态
+ * @param {Object} card 卡片对象
+ */
 const toggleCard = (card) => {
   card.expanded = !card.expanded;
 };
 
-// 显示右键菜单
+/**
+ * 显示右键菜单
+ * @param {Event} e 鼠标事件
+ * @param {Object} card 卡片对象
+ * @param {string} section 卡片所在区域
+ */
 const showContextMenuHandler = (e, card, section) => {
   e.preventDefault();
   currentCard.value = card;
@@ -304,116 +317,187 @@ const showContextMenuHandler = (e, card, section) => {
   showContextMenu.value = true;
 };
 
-// 关闭右键菜单
+/**
+ * 关闭右键菜单
+ */
 const closeContextMenu = () => {
   showContextMenu.value = false;
   currentCard.value = null;
   currentSection.value = null;
 };
 
-// 处理菜单操作
+/**
+ * 处理菜单操作
+ * @param {string} action 操作类型
+ */
 const handleMenuAction = (action) => {
   if (!currentCard.value || !currentSection.value) return;
 
   switch (action) {
     case 'rename':
       // 重命名逻辑：聚焦到卡片标题输入框
-      const titleInput = document.querySelector(`input[value="${currentCard.value.title}"]`);
-      if (titleInput) {
-        titleInput.focus();
-        titleInput.select();
-      }
+      renameCard(currentCard.value, currentSection.value);
       break;
     case 'copy':
       // 复制逻辑
-      if (currentSection.value === 'rules') {
-        const index = ruleCards.findIndex(card => card.id === currentCard.value.id);
-        if (index !== -1) {
-          const clonedCard = { ...currentCard.value, id: Date.now(), title: currentCard.value.title + ' (复制)', expanded: false };
-          ruleCards.splice(index + 1, 0, clonedCard);
-        }
-      } else if (currentSection.value === 'modifier') {
-        const index = modifierCards.findIndex(card => card.id === currentCard.value.id);
-        if (index !== -1) {
-          const clonedCard = { ...currentCard.value, id: Date.now(), title: currentCard.value.title + ' (复制)', expanded: false };
-          modifierCards.splice(index + 1, 0, clonedCard);
-        }
-      }
+      copyCard(currentCard.value, currentSection.value);
       break;
     case 'add':
       // 新增逻辑
-      if (currentSection.value === 'rules') {
-        const index = ruleCards.findIndex(card => card.id === currentCard.value.id);
-        if (index !== -1) {
-          const newCard = {
-            id: Date.now(),
-            title: '新情况',
-            expanded: false
-          };
-          ruleCards.splice(index + 1, 0, newCard);
-        }
-      } else if (currentSection.value === 'modifier') {
-        const index = modifierCards.findIndex(card => card.id === currentCard.value.id);
-        if (index !== -1) {
-          const newCard = {
-            id: Date.now(),
-            title: '新情况',
-            expanded: false
-          };
-          modifierCards.splice(index + 1, 0, newCard);
-        }
-      }
+      addCardBelow(currentCard.value, currentSection.value);
       break;
     case 'delete':
       // 删除逻辑
-      if (confirm('确定要删除这张卡片吗？')) {
-        if (currentSection.value === 'rules') {
-          const index = ruleCards.findIndex(card => card.id === currentCard.value.id);
-          if (index !== -1) {
-            ruleCards.splice(index, 1);
-          }
-        } else if (currentSection.value === 'modifier') {
-          const index = modifierCards.findIndex(card => card.id === currentCard.value.id);
-          if (index !== -1) {
-            modifierCards.splice(index, 1);
-          }
-        }
-      }
+      deleteCard(currentCard.value, currentSection.value);
       break;
     case 'moveUp':
       // 上移逻辑
-      if (currentSection.value === 'rules') {
-        const index = ruleCards.findIndex(card => card.id === currentCard.value.id);
-        if (index > 0) {
-          [ruleCards[index], ruleCards[index - 1]] = [ruleCards[index - 1], ruleCards[index]];
-        }
-      } else if (currentSection.value === 'modifier') {
-        const index = modifierCards.findIndex(card => card.id === currentCard.value.id);
-        if (index > 0) {
-          [modifierCards[index], modifierCards[index - 1]] = [modifierCards[index - 1], modifierCards[index]];
-        }
-      }
+      moveCardUp(currentCard.value, currentSection.value);
       break;
     case 'moveDown':
       // 下移逻辑
-      if (currentSection.value === 'rules') {
-        const index = ruleCards.findIndex(card => card.id === currentCard.value.id);
-        if (index < ruleCards.length - 1) {
-          [ruleCards[index], ruleCards[index + 1]] = [ruleCards[index + 1], ruleCards[index]];
-        }
-      } else if (currentSection.value === 'modifier') {
-        const index = modifierCards.findIndex(card => card.id === currentCard.value.id);
-        if (index < modifierCards.length - 1) {
-          [modifierCards[index], modifierCards[index + 1]] = [modifierCards[index + 1], modifierCards[index]];
-        }
-      }
+      moveCardDown(currentCard.value, currentSection.value);
       break;
   }
 
   closeContextMenu();
 };
 
-// Chip 点击事件处理
+/**
+ * 重命名卡片
+ * @param {Object} card 卡片对象
+ * @param {string} section 卡片所在区域
+ */
+const renameCard = (card, section) => {
+  // 这里可以添加更复杂的重命名逻辑
+  console.log('Rename card:', card.title);
+};
+
+/**
+ * 复制卡片
+ * @param {Object} card 卡片对象
+ * @param {string} section 卡片所在区域
+ */
+const copyCard = (card, section) => {
+  if (section === 'rules') {
+    const index = ruleCards.findIndex(c => c.id === card.id);
+    if (index !== -1) {
+      const clonedCard = { 
+        ...card, 
+        id: Date.now(), 
+        title: card.title + ' (复制)', 
+        expanded: false 
+      };
+      ruleCards.splice(index + 1, 0, clonedCard);
+    }
+  } else if (section === 'modifier') {
+    const index = modifierCards.findIndex(c => c.id === card.id);
+    if (index !== -1) {
+      const clonedCard = { 
+        ...card, 
+        id: Date.now(), 
+        title: card.title + ' (复制)', 
+        expanded: false 
+      };
+      modifierCards.splice(index + 1, 0, clonedCard);
+    }
+  }
+};
+
+/**
+ * 在下方新增卡片
+ * @param {Object} card 卡片对象
+ * @param {string} section 卡片所在区域
+ */
+const addCardBelow = (card, section) => {
+  if (section === 'rules') {
+    const index = ruleCards.findIndex(c => c.id === card.id);
+    if (index !== -1) {
+      const newCard = {
+        id: Date.now(),
+        title: '新情况',
+        expanded: false
+      };
+      ruleCards.splice(index + 1, 0, newCard);
+    }
+  } else if (section === 'modifier') {
+    const index = modifierCards.findIndex(c => c.id === card.id);
+    if (index !== -1) {
+      const newCard = {
+        id: Date.now(),
+        title: '新情况',
+        expanded: false
+      };
+      modifierCards.splice(index + 1, 0, newCard);
+    }
+  }
+};
+
+/**
+ * 删除卡片
+ * @param {Object} card 卡片对象
+ * @param {string} section 卡片所在区域
+ */
+const deleteCard = (card, section) => {
+  if (confirm('确定要删除这张卡片吗？')) {
+    if (section === 'rules') {
+      const index = ruleCards.findIndex(c => c.id === card.id);
+      if (index !== -1) {
+        ruleCards.splice(index, 1);
+      }
+    } else if (section === 'modifier') {
+      const index = modifierCards.findIndex(c => c.id === card.id);
+      if (index !== -1) {
+        modifierCards.splice(index, 1);
+      }
+    }
+  }
+};
+
+/**
+ * 上移卡片
+ * @param {Object} card 卡片对象
+ * @param {string} section 卡片所在区域
+ */
+const moveCardUp = (card, section) => {
+  if (section === 'rules') {
+    const index = ruleCards.findIndex(c => c.id === card.id);
+    if (index > 0) {
+      [ruleCards[index], ruleCards[index - 1]] = [ruleCards[index - 1], ruleCards[index]];
+    }
+  } else if (section === 'modifier') {
+    const index = modifierCards.findIndex(c => c.id === card.id);
+    if (index > 0) {
+      [modifierCards[index], modifierCards[index - 1]] = [modifierCards[index - 1], modifierCards[index]];
+    }
+  }
+};
+
+/**
+ * 下移卡片
+ * @param {Object} card 卡片对象
+ * @param {string} section 卡片所在区域
+ */
+const moveCardDown = (card, section) => {
+  if (section === 'rules') {
+    const index = ruleCards.findIndex(c => c.id === card.id);
+    if (index < ruleCards.length - 1) {
+      [ruleCards[index], ruleCards[index + 1]] = [ruleCards[index + 1], ruleCards[index]];
+    }
+  } else if (section === 'modifier') {
+    const index = modifierCards.findIndex(c => c.id === card.id);
+    if (index < modifierCards.length - 1) {
+      [modifierCards[index], modifierCards[index + 1]] = [modifierCards[index + 1], modifierCards[index]];
+    }
+  }
+};
+
+/**
+ * Chip 点击事件处理
+ * @param {Event} e 鼠标事件
+ * @param {string} chipType Chip类型
+ * @param {string} chipText Chip文本
+ */
 const handleChipClick = (e, chipType, chipText) => {
   e.stopPropagation(); // 防止触发 Card 折叠
   // 模拟点击效果
@@ -421,13 +505,21 @@ const handleChipClick = (e, chipType, chipText) => {
   chip.style.opacity = '0.5';
   setTimeout(() => chip.style.opacity = '1', 100);
   console.log('Edit chip:', chipType, chipText);
+  
   // 这里可以添加Chip的编辑逻辑
+  // 例如：显示一个下拉菜单，让用户选择不同的选项
+  // 或者：显示一个弹窗，让用户输入新的内容
+  // 暂时使用 alert 模拟编辑功能
+  const newValue = prompt(`编辑 ${chipType} 类型的 Chip:`, chipText);
+  if (newValue) {
+    console.log('Chip 新值:', newValue);
+    // 这里可以更新 Chip 的值
+  }
 };
 
-// 初始化：为所有卡片绑定右键事件
-// 注意：在Vue中，我们通常使用@contextmenu指令而不是手动绑定事件
-
-// 点击文档其他地方关闭右键菜单
+/**
+ * 点击文档其他地方关闭右键菜单
+ */
 const handleDocumentClick = () => {
   closeContextMenu();
 };
@@ -461,9 +553,8 @@ onUnmounted(() => {
 
 /* --- 弹窗容器 --- */
 .modal-container {
-  width: 95%;
-  max-width: 1000px;
-  height: 90vh;
+  width: 100%;
+  height: 100%;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
