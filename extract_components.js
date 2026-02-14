@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 读取 JSON 文件
-const jsonPath = path.join(__dirname, '资料/rule_config fixlaizi.json');
+const jsonPath = path.join(__dirname, '资料/rupilot_test_v5.json');
 const jsonContent = fs.readFileSync(jsonPath, 'utf8');
 const config = JSON.parse(jsonContent);
 

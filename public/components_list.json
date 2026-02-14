@@ -1526,7 +1526,7 @@
         },
         {
           "id": "HzmHzT",
-          "name": "算分规则",
+          "name": "接炮胡算分规则",
           "type": "button",
           "titleWidth": "12cl",
           "itemWidth": "8cl",
@@ -1554,7 +1554,7 @@
         },
         {
           "id": "ByrFOC",
-          "name": "算分规则",
+          "name": "自摸算分规则",
           "type": "button",
           "titleWidth": "12cl",
           "itemWidth": "8cl",
@@ -1578,7 +1578,7 @@
         },
         {
           "id": "14N1kO",
-          "name": "算分规则",
+          "name": "抢杠胡算分规则",
           "type": "button",
           "titleWidth": "12cl",
           "itemWidth": "8cl",
@@ -1602,7 +1602,7 @@
         },
         {
           "id": "4Uwjwi",
-          "name": "算分规则",
+          "name": "杠开算分规则",
           "type": "button",
           "titleWidth": "12cl",
           "itemWidth": "8cl",
@@ -1610,20 +1610,117 @@
             "editorType": "calscore"
           }
         },
+      
+       {
+          "id": "AAAAAA",
+          "type": "switch",
+          "name": "是否存在分数/番数修正",
+          "titleWidth": "18cl",
+          "itemWidth": "2cl",
+          "defaultValue": false
+        }, 
+        {
+          "id": "BBBBBB",
+          "type": "button",
+          "name": "修正规则",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "correctscore",
+            "scoreType":"hu_score",
+            "scoreName":"胡分"
+          },
+          "visibleWhen": "{{AAAAAA}}==true"
+        },
+        
         {
           "id": "9X9VU9",
+          "type": "container",
           "name": "",
-          "type": "container"
+          "elements": [{
+              "id": "dJG4bo",
+              "type": "toggle",
+              "name": "算分时机",
+              "titleWidth": "4cl",
+              "itemWidth": "4cl",
+              "defaultValue": 1,
+              "datas": [{
+                  "label": "胡牌结算",
+                  "value": 1
+                },
+                {
+                  "label": "实时结算",
+                  "value": 2
+                }
+              ]
+            },
+            {
+              "id": "onkFYs",
+              "type": "checkbox",
+              "name": "补充结算场景",
+              "titleWidth": "4cl",
+              "itemWidth": "4cl",
+              "defaultValue": [
+                1,
+                2
+              ],
+              "visibleWhen": "{{dJG4bo}}==1",
+              "datas": [{
+                  "label": "荒庄结算",
+                  "value": 1
+                },
+                {
+                  "label": "解散结算",
+                  "value": 2
+                }
+              ]
+            }
+          ]
         },
         {
-          "id": "bao_pai_grNs0dD7oup",
+          "id": "Ns0dD7",
+          "type": "container",
           "name": "",
-          "type": "container"
+          "elements": [{
+              "id": "14tCzK",
+              "type": "switch",
+              "name": "是否存在包牌/承包规则",
+              "titleWidth": "18cl",
+              "itemWidth": "2cl",
+              "defaultValue": false
+            },
+            {
+              "id": "NHc1kw",
+              "type": "button",
+              "name": "承包规则",
+              "titleWidth": "12cl",
+              "itemWidth": "8cl",
+              "visibleWhen": "{{14tCzK}}==true",
+              "extend": {
+                "editorType": "Contract",
+            "scoreType":"hu_score",
+            "scoreName":"胡分"
+              }
+            }
+          ]
         },
         {
           "id": "oG1fxj",
+          "type": "container",
           "name": "",
-          "type": "container"
+          "elements": [{
+            "id": "QDh5oK",
+            "type": "button",
+            "name": "设置番数转换",
+            "titleWidth": "12cl",
+            "itemWidth": "8cl",
+            "visibleWhen": "{{o8fZNx}}==2",
+            "extend": {
+              "editorType": "FanShuConvert",
+            "scoreType":"hu_score",
+            "scoreName":"胡分"
+            }
+          }]
         },
         {
           "id": "ZDWo9X",

@@ -4,7 +4,6 @@
       "id": "iezZIQ",
       "name": "牌库",
       "category": "基   础",
-      "required": true,
       "properties": [
         {
           "id": "CSwT01",
@@ -86,7 +85,6 @@
       "id": "1Gy4Sh",
       "name": "字成顺",
       "category": "基   础",
-      "required": true,
       "properties": [
         {
           "id": "1BOIGm",
@@ -130,7 +128,6 @@
       "id": "MzQGnD",
       "name": "游戏模式",
       "category": "基   础",
-      "required": true,
       "properties": [
         {
           "id": "x2x8aJ",
@@ -616,7 +613,6 @@
       "id": "SSS1eN",
       "name": "发牌组件",
       "category": "发牌后",
-      "required": true,
       "properties": [
         {
           "id": "aGVRLZ",
@@ -732,7 +728,7 @@
           "name": "吃字牌",
           "type": "switch",
           "defaultValue": false,
-          "visibleWhen": "{{1BOIGm}} == 2",
+          "visibleWhen": "{{1BOIGm}} == true",
           "titleWidth": "18cl",
           "itemWidth": "2cl"
         },
@@ -792,6 +788,56 @@
           "itemWidth": "8cl",
           "extend": {
             "editorType": "clientsource"
+          }
+        },
+        {
+          "id": "chi_contract",
+          "name": "承包关系",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "contract"
+          }
+        },
+        {
+          "id": "chi_actionpriority",
+          "name": "动作优先级",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "actionpriority"
+          }
+        },
+        {
+          "id": "chi_fanxingexclusion",
+          "name": "番型互斥",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "fanxingexclusion"
+          }
+        },
+        {
+          "id": "chi_correctscore",
+          "name": "番数/分数修正",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "correctscore"
+          }
+        },
+        {
+          "id": "chi_fanshuconvert",
+          "name": "番数转换",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "fanshuconvert"
           }
         }
       ]
@@ -1304,7 +1350,6 @@
       "id": "10GRvO",
       "name": "胡牌规则",
       "category": "胡   牌",
-      "required": true,
       "properties": [
         {
           "id": "6DBKXm",
@@ -1474,6 +1519,17 @@
           "titleWidth": "4cl",
           "itemWidth": "6cl",
           "layout": 1
+        },
+        {
+          "id": "fan_list",
+          "name": "番型选择",
+          "type": "button",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "fanxingselect"
+          },
+          "layout": 1
         }
       ]
     },
@@ -1531,7 +1587,9 @@
           "titleWidth": "12cl",
           "itemWidth": "8cl",
           "extend": {
-            "editorType": "calscore"
+            "editorType": "calscore",
+            "scoreType": "hu_score",
+            "scoreName": "胡分"
           }
         },
         {
@@ -1559,7 +1617,9 @@
           "titleWidth": "12cl",
           "itemWidth": "8cl",
           "extend": {
-            "editorType": "calscore"
+            "editorType": "calscore",
+            "scoreType": "hu_score",
+            "scoreName": "胡分"
           }
         },
         {
@@ -1583,7 +1643,9 @@
           "titleWidth": "12cl",
           "itemWidth": "8cl",
           "extend": {
-            "editorType": "calscore"
+            "editorType": "calscore",
+            "scoreType": "hu_score",
+            "scoreName": "胡分"
           }
         },
         {
@@ -1607,7 +1669,30 @@
           "titleWidth": "12cl",
           "itemWidth": "8cl",
           "extend": {
-            "editorType": "calscore"
+            "editorType": "calscore",
+            "scoreType": "hu_score",
+            "scoreName": "胡分"
+          }
+        },
+        {
+          "id": "AAAAAA",
+          "name": "是否存在分数/番数修正",
+          "type": "switch",
+          "defaultValue": false,
+          "titleWidth": "18cl",
+          "itemWidth": "2cl"
+        },
+        {
+          "id": "BBBBBB",
+          "name": "修正规则",
+          "type": "button",
+          "visibleWhen": "{{AAAAAA}}==true",
+          "titleWidth": "12cl",
+          "itemWidth": "8cl",
+          "extend": {
+            "editorType": "correctscore",
+            "scoreType": "hu_score",
+            "scoreName": "胡分"
           }
         },
         {
