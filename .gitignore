@@ -107,3 +107,10 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# 忽略资料目录
+资料/
+
+# 忽略测试的 Python 脚本
+**/test_*.py
+**/*_test.py
