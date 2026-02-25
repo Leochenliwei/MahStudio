@@ -1,0 +1,24 @@
+{
+  "name": "tencent-cloud-deploy",
+  "version": "1.0.0",
+  "description": "腾讯云部署工具，用于自动化部署 WEBconfig 项目到腾讯云",
+  "author": "WEBconfig Team",
+  "license": "MIT",
+  "main": "deploy.sh",
+  "scripts": {
+    "deploy": "./deploy.sh"
+  },
+  "keywords": [
+    "tencent-cloud",
+    "deploy",
+    "webconfig",
+    "cloudbase"
+  ],
+  "dependencies": {
+    "@cloudbase/cli": "^1.10.0"
+  },
+  "config": {
+    "deployPath": "/MahStudio",
+    "environment": "dev-1gjaefwhe1e8a952"
+  }
+}
