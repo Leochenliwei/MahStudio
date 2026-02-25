@@ -51,9 +51,15 @@ fi
 echo "✅ 文件添加成功"
 echo ""
 
+# 生成提交信息
+COMMIT_MSG="feat: 更新项目配置和组件"
+if [ -n "$1" ]; then
+    COMMIT_MSG="$1"
+fi
+
 # 提交文件
 echo "6. 提交文件..."
-git commit -m "feat: 添加腾讯云部署技能"
+git commit -m "$COMMIT_MSG"
 if [ $? -ne 0 ]; then
     echo "❌ 错误: 提交文件失败"
     exit 1

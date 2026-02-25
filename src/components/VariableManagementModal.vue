@@ -203,14 +203,15 @@ const deletingVariable = ref(null)
 
 // 变量类型名称映射
 const variableTypeNames = {
-  pattern_fan: '牌型番',
-  pattern_score: '牌型分',
-  action_fan: '行为番',
-  action_score: '行为分',
-  status_fan: '状态番',
-  status_score: '状态分',
-  custom_condition: '自定义条件',
-  loop_accumulate: '循环累加'
+  group_sum: '组内相加',
+  group_product: '组内相乘',
+  group_max: '组内取最大',
+  group_min: '组内取最小',
+  condition_holds: '判断是否成立',
+  all_condition_holds: '依次判断是否[同时]成立',
+  any_condition_holds: '依次判断是否[任意]成立',
+  loop_sum: '累加',
+  loop_product: '累乘'
 }
 
 // 模拟变量数据

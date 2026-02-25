@@ -14,44 +14,43 @@
         <form class="variable-form" @submit.prevent="saveVariable">
           <!-- 基本信息 -->
           <div class="form-section">
-            <h3 class="section-title">基本信息</h3>
             <div class="form-grid">
               <div class="form-group">
-                <label>变量名称</label>
+                <label>变量名称*</label>
                 <input 
                   type="text" 
                   v-model="formData.name" 
                   placeholder="请输入变量名称" 
                   class="form-input"
-                  required
                 >
               </div>
               <div class="form-group">
-                <label>变量类型</label>
-                <select v-model="formData.type" class="form-select" required>
+                <label>变量类型*</label>
+                <select v-model="formData.type" class="form-select">
                   <option value="">请选择变量类型</option>
                   <!-- 分组计算类 -->
-                  <optgroup label="分组计算类">
-                    <option value="pattern_fan">牌型番</option>
-                    <option value="pattern_score">牌型分</option>
-                    <option value="action_fan">行为番</option>
-                    <option value="action_score">行为分</option>
-                    <option value="status_fan">状态番</option>
-                    <option value="status_score">状态分</option>
+                  <optgroup label="计算类">
+                    <option value="group_sum">组内相加</option>
+                    <option value="group_product">组内相乘</option>
+                    <option value="group_max">组内取最大</option>
+                    <option value="group_min">组内取最小</option>
                   </optgroup>
                   <!-- 条件判断类 -->
                   <optgroup label="条件判断类">
-                    <option value="custom_condition">自定义条件</option>
+                    <option value="condition_holds">判断是否成立</option>
                   </optgroup>
                   <!-- 循环/聚合类 -->
                   <optgroup label="循环/聚合类">
-                    <option value="loop_accumulate">循环累加</option>
+                    <option value="all_condition_holds">依次判断是否[同时]成立</option>
+                    <option value="any_condition_holds">依次判断是否[任意]成立</option>
+                    <option value="loop_sum">累加</option>
+                    <option value="loop_product">累乘</option>
                   </optgroup>
                 </select>
               </div>
             </div>
             <div class="form-group">
-              <label>变量说明</label>
+              <label>变量说明（可选）</label>
               <textarea 
                 v-model="formData.description" 
                 placeholder="请输入变量说明" 
@@ -72,8 +71,8 @@
                 <h4 class="config-subtitle">规则配置</h4>
                 <div class="virtual-table">
                   <div class="table-header">
-                    <div class="table-cell">分组</div>
-                    <div class="table-cell">条件</div>
+                    <div class="table-cell">元素</div>
+                   
                     <div class="table-cell">数值</div>
                     <div class="table-cell">操作</div>
                   </div>
@@ -84,21 +83,14 @@
                       class="table-row"
                     >
                       <div class="table-cell">
-                        <input 
-                          type="text" 
+                        <CustomSelect 
                           v-model="rule.group" 
-                          placeholder="请输入分组" 
-                          class="form-input small"
-                        >
+                          placeholder="请选择元素"
+                          label-key="label"
+                          value-key="value"
+                        />
                       </div>
-                      <div class="table-cell">
-                        <button 
-                          class="condition-btn" 
-                          @click="openConditionEditor(index)"
-                        >
-                          编辑条件
-                        </button>
-                      </div>
+                    
                       <div class="table-cell">
                         <input 
                           type="number" 
@@ -130,7 +122,7 @@
             </div>
             
             <!-- 条件判断类配置 -->
-            <div v-else-if="formData.type === 'custom_condition'" class="variable-config">
+            <div v-else-if="formData.type === 'condition_holds'" class="variable-config">
               <div class="config-section">
                 <h4 class="config-subtitle">条件配置</h4>
                 <div class="condition-editor">
@@ -174,7 +166,7 @@
             </div>
             
             <!-- 循环/聚合类配置 -->
-            <div v-else-if="formData.type === 'loop_accumulate'" class="variable-config">
+            <div v-else-if="['all_condition_holds', 'any_condition_holds', 'loop_sum', 'loop_product'].includes(formData.type)" class="variable-config">
               <div class="config-section">
                 <h4 class="config-subtitle">循环配置</h4>
                 <div class="loop-config">
@@ -262,6 +254,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import Icon from './Icon.vue'
+import CustomSelect from './CustomSelect.vue'
 
 /**
  * 变量编辑器组件
@@ -300,6 +293,35 @@ const formData = ref({
 // 编辑状态
 const editingVariable = ref(null)
 
+/**
+ * 分组选项数据
+ */
+const groupOptions = ref([
+  { value: 'qidui', label: '七对', category: 'pai_type' },
+  { value: 'haohua_qidui', label: '豪华七对', category: 'pai_type' },
+  { value: 'ziyise', label: '字一色（假胡）', category: 'pai_type' },
+  { value: 'yinghu_deguo', label: '硬胡（德国）', category: 'pai_type' },
+  { value: 'haidilaoyue', label: '海底捞月', category: 'pai_type' },
+  { value: 'qianduanceshi', label: '前端测试', category: 'pai_type' },
+  { value: 'yitiaolong', label: '一条龙', category: 'pai_type' },
+  { value: 'zhuangjia', label: '庄家', category: 'shenfen' },
+  { value: 'xianjia', label: '闲家', category: 'shenfen' },
+  { value: 'zimo', label: '自摸', category: 'paiju' },
+  { value: 'fangpao', label: '放炮', category: 'paiju' },
+  { value: 'ying', label: '赢', category: 'zhuangtai' },
+  { value: 'shu', label: '输', category: 'zhuangtai' }
+])
+
+/**
+ * 分组标签页配置
+ */
+const groupTabs = ref([
+  { label: '状态', filter: (opt) => opt.category === 'zhuangtai' },
+  { label: '牌局', filter: (opt) => opt.category === 'paiju' },
+  { label: '身份', filter: (opt) => opt.category === 'shenfen' },
+  { label: '牌型', filter: (opt) => opt.category === 'pai_type' }
+])
+
 // 条件编辑器状态
 const showConditionEditor = ref(false)
 const tempCondition = ref('')
@@ -310,9 +332,8 @@ const currentRuleIndex = ref(-1)
  */
 const isGroupCalculationType = computed(() => {
   return [
-    'pattern_fan', 'pattern_score', 
-    'action_fan', 'action_score', 
-    'status_fan', 'status_score'
+    'group_sum', 'group_product', 
+    'group_max', 'group_min'
   ].includes(formData.value.type)
 })
 
@@ -511,7 +532,7 @@ function saveCondition() {
 .variable-form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-8);
+  gap: var(--spacing-4);
 }
 
 .form-section {
