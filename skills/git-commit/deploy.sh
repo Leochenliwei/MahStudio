@@ -57,6 +57,14 @@ if [ -n "$1" ]; then
     COMMIT_MSG="$1"
 fi
 
+# 检查是否有变更需要提交
+if git diff --cached --quiet; then
+    echo "ℹ️  没有需要提交的变更"
+    echo ""
+    echo "=== Git 检查完成 ==="
+    exit 0
+fi
+
 # 提交文件
 echo "6. 提交文件..."
 git commit -m "$COMMIT_MSG"
