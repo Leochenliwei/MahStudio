@@ -8,7 +8,7 @@ export default defineConfig({
     // 允许内网访问
     host: true
   },
-  base: '/MahConfig_WebPlatform_2026/',
+  base: '/MahStudio/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets'
