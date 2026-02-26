@@ -365,7 +365,8 @@ function createDefaultDraft() {
       description: newGameDescription.value,
       createdAt: now
     }, null, 2),
-    updatedAt: now
+    updatedAt: now,
+    updatedBy: 'admin'
   }
 }
 

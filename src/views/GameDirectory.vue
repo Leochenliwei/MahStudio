@@ -60,23 +60,23 @@
             <h3 class="section-title">
               <Icon name="layout-dashboard" size="16" class="mr-2" />
               测试约局
+              <span class="meta-item">游戏ID：10001</span>
             </h3>
           </div>
-          <div class="file-grid">
-            <FileCard 
-              v-if="testMatchFile" 
-              :key="testMatchFile.id || 'testMatch'"
-              :file="testMatchFile"
-              :environment="activeEnv"
-              @copy="copyFile"
-              @copy-to="showCopyToModal"
-              @publish="publishFile"
-            />
-            <div v-else class="empty-file-card">
-              <Icon name="inbox" size="32" class="empty-icon" />
-              <p>暂无测试约局配置</p>
-              <p class="empty-hint">请从草稿提测创建</p>
-            </div>
+          <FileCard 
+            v-if="testMatchFile" 
+            :key="testMatchFile.id || 'testMatch'"
+            :file="testMatchFile"
+            :environment="activeEnv"
+            @copy="copyFile"
+            @copy-to="showCopyToModal"
+            @publish="publishFile"
+            @view-history="handleViewHistory"
+          />
+          <div v-else class="empty-file-card">
+            <Icon name="inbox" size="32" class="empty-icon" />
+            <p>暂无测试约局配置</p>
+            <p class="empty-hint">请从草稿提测创建</p>
           </div>
         </div>
 
@@ -84,25 +84,25 @@
         <div class="file-section">
           <div class="section-header">
             <h3 class="section-title">
-              <Icon name="coin" size="16" class="mr-2" />
+              <Icon name="layout-dashboard" size="16" class="mr-2" />
               测试金币
+              <span class="meta-item">游戏ID：10002</span>
             </h3>
           </div>
-          <div class="file-grid">
-            <FileCard 
-              v-if="testGoldFile" 
-              :key="testGoldFile.id || 'testGold'"
-              :file="testGoldFile"
-              :environment="activeEnv"
-              @copy="copyFile"
-              @copy-to="showCopyToModal"
-              @publish="publishFile"
-            />
-            <div v-else class="empty-file-card">
-              <Icon name="inbox" size="32" class="empty-icon" />
-              <p>暂无测试金币配置</p>
-              <p class="empty-hint">请从草稿提测创建</p>
-            </div>
+          <FileCard 
+            v-if="testGoldFile" 
+            :key="testGoldFile.id || 'testGold'"
+            :file="testGoldFile"
+            :environment="activeEnv"
+            @copy="copyFile"
+            @copy-to="showCopyToModal"
+            @publish="publishFile"
+            @view-history="handleViewHistory"
+          />
+          <div v-else class="empty-file-card">
+            <Icon name="inbox" size="32" class="empty-icon" />
+            <p>暂无测试金币配置</p>
+            <p class="empty-hint">请从草稿提测创建</p>
           </div>
         </div>
       </div>
@@ -126,9 +126,14 @@
             class="file-list-item"
           >
             <div class="file-list-item-info">
-              <div class="file-list-item-name">{{ file.name }}</div>
+              <div class="file-list-item-name"> 
+                <span class="file-list-item-name">{{ file.name }} </span>
+              <span class="file-list-item-id">ID: {{ file.id }}</span>
+            </div>
               <div class="file-list-item-meta">
                 <span class="file-list-item-updated">更新于 {{ formatDateTime(file.updatedAt) }}</span>
+                <span class="file-list-item-separator">|</span>
+                <span class="file-list-item-updated-by">操作人：{{ file.updatedBy || '未知' }}</span>
               </div>
             </div>
             <div class="file-list-item-actions">
@@ -209,6 +214,14 @@
       @close="showSubmitTestModalVisible = false"
       @submit-test="handleSubmitTest"
     />
+    
+    <!-- 提测记录弹窗 -->
+    <SubmitHistoryModal 
+      :visible="showSubmitHistoryModal"
+      :submit-history="game?.submitHistory || []"
+      :target-type="currentViewFile?.type"
+      @close="closeSubmitHistoryModal"
+    />
   </div>
 </template>
 
@@ -234,6 +247,7 @@ import Icon from '../components/Icon.vue'
 import FileCard from '../components/FileCard.vue'
 import CopyToModal from '../components/CopyToModal.vue'
 import SubmitTestModal from '../components/SubmitTestModal.vue'
+import SubmitHistoryModal from '../components/SubmitHistoryModal.vue'
 import { FileType, getGameById, getOtherGames, updateGame } from '../data/mockData.js'
 
 // ==================== 路由相关 ====================
@@ -301,6 +315,18 @@ const showSubmitTestModalVisible = ref(false)
  * @type {Ref<Object|null>}
  */
 const currentSubmitDraft = ref(null)
+
+/**
+ * 提测记录弹窗状态
+ * @type {Ref<boolean>}
+ */
+const showSubmitHistoryModal = ref(false)
+
+/**
+ * 当前查看提测记录的文件
+ * @type {Ref<Object|null>}
+ */
+const currentViewFile = ref(null)
 
 // ==================== 数据模型 ====================
 
@@ -475,10 +501,53 @@ function showSubmitTestModal(draft) {
  * @param {string} targetType - 目标类型（testMatch/testGold）
  */
 function handleSubmitTest(targetType) {
+  if (!currentSubmitDraft.value) return
+  
+  const now = new Date().toISOString()
+  const submitRecord = {
+    id: `submit-${Date.now()}`,
+    draftId: currentSubmitDraft.value.id,
+    targetType: targetType,
+    createdAt: now,
+    createdBy: 'admin'
+  }
+  
+  // 添加提测记录到游戏的submitHistory数组
+  if (game.value) {
+    const updatedSubmitHistory = [...(game.value.submitHistory || []), submitRecord]
+    // 按时间倒序排序
+    updatedSubmitHistory.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    
+    const updatedGame = updateGame(game.value.id, {
+      submitHistory: updatedSubmitHistory,
+      updatedAt: now
+    })
+    if (updatedGame) {
+      game.value = updatedGame
+    }
+  }
+  
   // 模拟提测操作
   alert(`提测到：${targetType}`)
   showSubmitTestModalVisible.value = false
   currentSubmitDraft.value = null
+}
+
+/**
+ * 处理查看提测记录
+ * @param {Object} file - 文件对象
+ */
+function handleViewHistory(file) {
+  currentViewFile.value = file
+  showSubmitHistoryModal.value = true
+}
+
+/**
+ * 关闭提测记录弹窗
+ */
+function closeSubmitHistoryModal() {
+  showSubmitHistoryModal.value = false
+  currentViewFile.value = null
 }
 
 /**
@@ -514,7 +583,8 @@ function createDraft() {
     name: newDraftName.value.trim(),
     content: '{}',
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
+    updatedBy: 'admin'
   }
   
   // 添加到游戏的files数组并更新全局数据
@@ -821,17 +891,40 @@ function formatDateTime(dateString) {
   font-weight: 500;
   color: #1f2937;
   margin-bottom: 4px;
+  margin-right: 16px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.file-list-item-id {
+  font-size: 12px;
+  color: #6b7280;
+  font-family: 'Monaco', 'Menlo', monospace;
+  background-color: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
 .file-list-item-meta {
   font-size: 14px;
   color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .file-list-item-updated {
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.file-list-item-separator {
+  color: #9ca3af;
+}
+
+.file-list-item-updated-by {
   font-family: 'Monaco', 'Menlo', monospace;
 }
 
@@ -880,6 +973,9 @@ function formatDateTime(dateString) {
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /**
@@ -889,7 +985,7 @@ function formatDateTime(dateString) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+
   padding-bottom: 12px;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -915,13 +1011,8 @@ function formatDateTime(dateString) {
 }
 
 /**
- * 文件网格
+ * 文件网格样式已移除，直接在file-section中使用flex布局
  */
-.file-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
-}
 
 /**
  * 空文件卡片

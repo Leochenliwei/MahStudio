@@ -5,16 +5,26 @@
     关联需求：文件管理模块 - 文件卡片展示
   -->
   <div class="file-card" :class="[`type-${file.type}`, `env-${environment}`]">
-    <!-- 卡片头部：更新时间 -->
-    <div class="card-header">
-      <span class="update-time">{{ formatTime(file.updatedAt) }}</span>
-    </div>
-
     <!-- 卡片主体：文件名 -->
     <div class="card-body">
       <h4 class="file-name" :title="file.name">{{ file.name }}</h4>
       <p v-if="file.description" class="file-description">{{ file.description }}</p>
+      <p class="file-id" v-if="file.type === 'draft'">ID: {{ file.id }}</p>
     </div>
+    
+    
+    <!-- 卡片头部：更新时间和操作人 -->
+    <div class="card-header">
+      <button class="action-btn small copy-to" @click="handleViewHistory" title="查看提测记录">
+          <Icon name="clock" size="14" />
+      </button>
+      <span class="update-time">提测于：{{ formatTime(file.updatedAt) }}</span>
+      <span class="updated-by">|</span>
+      <span class="updated-by">操作人：{{ file.updatedBy || '未知' }}</span>
+      
+    </div>
+
+    
 
     <!-- 卡片底部：操作按钮 -->
     <div class="card-footer">
@@ -48,6 +58,7 @@
           <Icon name="share" size="14" />
           <span>复制到</span>
         </button>
+        
         <button class="action-btn gray" @click="handleGrayRelease" title="发灰度">
           <Icon name="rocket" size="14" />
           <span>发灰度</span>
@@ -111,7 +122,7 @@ const props = defineProps({
 })
 
 // 定义事件
-const emit = defineEmits(['edit', 'copy', 'copy-to', 'submit-test', 'gray-release'])
+const emit = defineEmits(['edit', 'copy', 'copy-to', 'submit-test', 'gray-release', 'view-history'])
 
 /**
  * 获取类型标签文本
@@ -202,6 +213,14 @@ function handleSubmit() {
 function handleGrayRelease() {
   emit('gray-release', props.file)
 }
+
+/**
+ * 处理查看提测记录按钮点击
+ * 关联需求：文件管理 - 查看提测记录
+ */
+function handleViewHistory() {
+  emit('view-history', props.file)
+}
 </script>
 
 <style scoped>
@@ -228,7 +247,7 @@ function handleGrayRelease() {
 .card-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* justify-content: space-between; */
   gap: var(--spacing-2);
 }
 
@@ -236,6 +255,13 @@ function handleGrayRelease() {
 
 /* 更新时间样式 */
 .update-time {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+}
+
+/* 操作人样式 */
+.updated-by {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
   white-space: nowrap;
@@ -268,6 +294,19 @@ function handleGrayRelease() {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+/* 文件ID样式 */
+.file-id {
+  margin: var(--spacing-1) 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: var(--line-height-normal);
+  font-family: var(--font-family-mono);
+  background: var(--color-surface-hover);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius-sm);
+  display: inline-block;
 }
 
 /* 卡片底部样式 */
@@ -365,6 +404,28 @@ function handleGrayRelease() {
   background: var(--color-warning);
   color: white;
   border-color: var(--color-warning);
+}
+
+/* 提测记录按钮 */
+.action-btn.history {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.action-btn.history:hover {
+  background: #8b5cf6;
+  color: white;
+  border-color: #8b5cf6;
+}
+
+/* 小图标按钮 */
+.action-btn.small-icon {
+  padding: var(--spacing-2);
+  min-width: auto;
+  flex: none;
+  width: 32px;
+  height: 32px;
 }
 
 /* 环境标识样式 - 测试环境 */

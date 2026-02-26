@@ -41,6 +41,22 @@ export const mockGames = {
     createdBy: 'admin',
     updatedAt: '2026-02-01T14:20:00',
     updatedBy: 'admin',
+    submitHistory: [
+      {
+        id: 'submit-1',
+        draftId: 'draft-1',
+        targetType: 'testMatch',
+        createdAt: '2026-02-01T12:00:00',
+        createdBy: 'admin'
+      },
+      {
+        id: 'submit-2',
+        draftId: 'draft-1',
+        targetType: 'testGold',
+        createdAt: '2026-02-01T14:20:00',
+        createdBy: 'admin'
+      }
+    ],
     files: [
       {
         id: 'draft-1',
@@ -48,7 +64,8 @@ export const mockGames = {
         name: '默认草稿',
         content: '{}',
         createdAt: '2026-02-01T10:30:00',
-        updatedAt: '2026-02-01T10:30:00'
+        updatedAt: '2026-02-01T10:30:00',
+        updatedBy: 'admin'
       },
       {
         id: 'draft-2',
@@ -56,7 +73,8 @@ export const mockGames = {
         name: '优化版',
         content: '{}',
         createdAt: '2026-02-02T09:00:00',
-        updatedAt: '2026-02-02T14:30:00'
+        updatedAt: '2026-02-02T14:30:00',
+        updatedBy: '王一博'
       },
       {
         id: 'draft-4',
@@ -64,7 +82,8 @@ export const mockGames = {
         name: '测试环境草稿',
         content: '{}',
         createdAt: '2026-02-03T10:00:00',
-        updatedAt: '2026-02-03T10:00:00'
+        updatedAt: '2026-02-03T10:00:00',
+        updatedBy: '江安明'
       },
       {
         id: 'testMatch-1',
@@ -72,7 +91,8 @@ export const mockGames = {
         name: '测试约局配置',
         content: '{}',
         createdAt: '2026-02-01T12:00:00',
-        updatedAt: '2026-02-01T12:00:00'
+        updatedAt: '2026-02-01T12:00:00',
+        updatedBy: 'admin'
       },
       {
         id: 'testGold-1',
@@ -80,7 +100,8 @@ export const mockGames = {
         name: '测试金币配置',
         content: '{}',
         createdAt: '2026-02-01T14:20:00',
-        updatedAt: '2026-02-01T14:20:00'
+        updatedAt: '2026-02-01T14:20:00',
+        updatedBy: 'admin'
       }
     ]
   },
@@ -92,6 +113,7 @@ export const mockGames = {
     createdBy: 'admin',
     updatedAt: '2026-02-03T16:45:00',
     updatedBy: 'admin',
+    submitHistory: [],
     files: [
       {
         id: 'draft-3',
@@ -99,7 +121,8 @@ export const mockGames = {
         name: '默认草稿',
         content: '{}',
         createdAt: '2026-02-02T09:00:00',
-        updatedAt: '2026-02-02T09:00:00'
+        updatedAt: '2026-02-02T09:00:00',
+        updatedBy: 'admin'
       },
       {
         id: 'draft-5',
@@ -107,7 +130,8 @@ export const mockGames = {
         name: '测试环境草稿',
         content: '{}',
         createdAt: '2026-02-04T11:00:00',
-        updatedAt: '2026-02-04T11:00:00'
+        updatedAt: '2026-02-04T11:00:00',
+        updatedBy: '杨孙怡'
       }
     ]
   },
@@ -119,6 +143,7 @@ export const mockGames = {
     createdBy: 'admin',
     updatedAt: '2026-02-03T08:00:00',
     updatedBy: 'admin',
+    submitHistory: [],
     files: [
       {
         id: 'draft-6',
@@ -126,7 +151,8 @@ export const mockGames = {
         name: '默认草稿',
         content: '{}',
         createdAt: '2026-02-03T08:00:00',
-        updatedAt: '2026-02-03T08:00:00'
+        updatedAt: '2026-02-03T08:00:00',
+        updatedBy: 'admin'
       },
       {
         id: 'draft-7',
@@ -134,7 +160,8 @@ export const mockGames = {
         name: '测试环境草稿',
         content: '{}',
         createdAt: '2026-02-04T10:00:00',
-        updatedAt: '2026-02-04T10:00:00'
+        updatedAt: '2026-02-04T10:00:00',
+        updatedBy: '王一博'
       }
     ]
   },
@@ -146,6 +173,7 @@ export const mockGames = {
     createdBy: 'admin',
     updatedAt: '2026-02-04T09:30:00',
     updatedBy: 'admin',
+    submitHistory: [],
     files: [
       {
         id: 'draft-8',
@@ -153,7 +181,8 @@ export const mockGames = {
         name: '默认草稿',
         content: '{}',
         createdAt: '2026-02-04T09:30:00',
-        updatedAt: '2026-02-04T09:30:00'
+        updatedAt: '2026-02-04T09:30:00',
+        updatedBy: 'admin'
       },
       {
         id: 'draft-9',
@@ -161,7 +190,8 @@ export const mockGames = {
         name: '测试环境草稿',
         content: '{}',
         createdAt: '2026-02-05T09:00:00',
-        updatedAt: '2026-02-05T09:00:00'
+        updatedAt: '2026-02-05T09:00:00',
+        updatedBy: '江安明'
       }
     ]
   },
@@ -173,6 +203,7 @@ export const mockGames = {
     createdBy: 'admin',
     updatedAt: '2026-02-05T10:00:00',
     updatedBy: 'admin',
+    submitHistory: [],
     files: [
       {
         id: 'draft-10',
@@ -180,7 +211,8 @@ export const mockGames = {
         name: '默认草稿',
         content: '{}',
         createdAt: '2026-02-05T10:00:00',
-        updatedAt: '2026-02-05T10:00:00'
+        updatedAt: '2026-02-05T10:00:00',
+        updatedBy: 'admin'
       },
       {
         id: 'draft-11',
@@ -188,7 +220,8 @@ export const mockGames = {
         name: '测试环境草稿',
         content: '{}',
         createdAt: '2026-02-06T10:00:00',
-        updatedAt: '2026-02-06T10:00:00'
+        updatedAt: '2026-02-06T10:00:00',
+        updatedBy: '杨孙怡'
       }
     ]
   }
