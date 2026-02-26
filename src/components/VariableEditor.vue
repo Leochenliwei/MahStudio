@@ -1,5 +1,5 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click="closeModal">
+  <div v-if="visible" class="modal-overlay">
     <div class="modal-container" @click.stop>
       <!-- 弹窗头部 -->
       <div class="modal-header">
@@ -11,7 +11,7 @@
       
       <!-- 弹窗内容 -->
       <div class="modal-content">
-        <form class="variable-form" @submit.prevent="saveVariable">
+        <form id="variableForm" class="variable-form" @submit.prevent="saveVariable">
           <!-- 基本信息 -->
           <div class="form-section">
             <div class="form-grid">
@@ -62,17 +62,16 @@
           
           <!-- 变量配置 - 根据类型显示不同的编辑视图 -->
           <div v-if="formData.type" class="form-section">
-            <h3 class="section-title">变量配置</h3>
             
             <!-- 分组计算类配置 -->
             <div v-if="isGroupCalculationType" class="variable-config">
               <!-- 虚拟表格配置 -->
               <div class="config-section">
-                <h4 class="config-subtitle">规则配置</h4>
+                <h4 class="config-subtitle">{{ getVariableTypeName(formData.type) }}</h4>
                 <div class="virtual-table">
                   <div class="table-header">
-                    <div class="table-cell">元素</div>
-                   
+                    <div class="table-cell">组内元素</div>
+                    <div class="table-cell"></div>
                     <div class="table-cell">数值</div>
                     <div class="table-cell">操作</div>
                   </div>
@@ -88,9 +87,12 @@
                           placeholder="请选择元素"
                           label-key="label"
                           value-key="value"
+                          :disabled-tabs="[0,5]"
                         />
                       </div>
-                    
+                    <div class="table-cell">
+                      {{ getConnector(rule.group) }}
+                    </div>
                       <div class="table-cell">
                         <input 
                           type="number" 
@@ -102,7 +104,7 @@
                       <div class="table-cell">
                         <button 
                           class="remove-btn" 
-                          @click="removeRule(index)"
+                          @click.stop="removeRule(index)"
                         >
                           删除
                         </button>
@@ -111,10 +113,11 @@
                   </div>
                   <div class="table-footer">
                     <button 
+                      type="button"
                       class="add-rule-btn" 
-                      @click="addRule"
+                      @click.stop="addRow"
                     >
-                      添加规则
+                      添加一行
                     </button>
                   </div>
                 </div>
@@ -124,131 +127,36 @@
             <!-- 条件判断类配置 -->
             <div v-else-if="formData.type === 'condition_holds'" class="variable-config">
               <div class="config-section">
-                <h4 class="config-subtitle">条件配置</h4>
-                <div class="condition-editor">
+                  <h4 class="config-subtitle">判断</h4>
                   <div class="condition-builder">
-                    <h5>条件表达式</h5>
-                    <div class="expression-builder">
-                      <button 
-                        class="add-condition-btn" 
-                        @click="openConditionEditor"
-                      >
-                        编辑条件
-                      </button>
-                      <div v-if="formData.condition" class="condition-preview">
-                        {{ formData.condition }}
-                      </div>
-                    </div>
+                    <h5>点击输入表达式</h5>
                   </div>
-                  <div class="result-config">
-                    <h5>结果配置</h5>
-                    <div class="form-group">
-                      <label>满足条件返回值</label>
-                      <input 
-                        type="number" 
-                        v-model.number="formData.trueValue" 
-                        placeholder="请输入数值" 
-                        class="form-input"
-                      >
-                    </div>
-                    <div class="form-group">
-                      <label>不满足条件返回值</label>
-                      <input 
-                        type="number" 
-                        v-model.number="formData.falseValue" 
-                        placeholder="请输入数值" 
-                        class="form-input"
-                      >
-                    </div>
-                  </div>
-                </div>
+                  <h4 class="config-subtitle">是否成立</h4>
               </div>
             </div>
             
             <!-- 循环/聚合类配置 -->
             <div v-else-if="['all_condition_holds', 'any_condition_holds', 'loop_sum', 'loop_product'].includes(formData.type)" class="variable-config">
               <div class="config-section">
-                <h4 class="config-subtitle">循环配置</h4>
-                <div class="loop-config">
-                  <div class="form-group">
-                    <label>循环对象</label>
-                    <select v-model="formData.loopObject" class="form-select">
-                      <option value="cards">牌</option>
-                      <option value="actions">行为</option>
-                      <option value="states">状态</option>
-                    </select>
+                 <h4 class="config-subtitle">{{ getVariableTypeName(formData.type) }}</h4>
+                <div class="condition-builder">
+                    <h5>点击输入表达式</h5>
                   </div>
-                  <div class="form-group">
-                    <label>循环条件</label>
-                    <button 
-                      class="condition-btn" 
-                      @click="openConditionEditor"
-                    >
-                      编辑条件
-                    </button>
-                  </div>
-                  <div class="form-group">
-                    <label>累加字段</label>
-                    <input 
-                      type="text" 
-                      v-model="formData.accumulateField" 
-                      placeholder="请输入累加字段" 
-                      class="form-input"
-                    >
-                  </div>
-                  <div class="form-group">
-                    <label>初始值</label>
-                    <input 
-                      type="number" 
-                      v-model.number="formData.initialValue" 
-                      placeholder="请输入初始值" 
-                      class="form-input"
-                    >
-                  </div>
-                </div>
               </div>
             </div>
           </div>
-          
-          <!-- 表单操作 -->
-          <div class="form-actions">
-            <button type="button" class="cancel-btn" @click="closeModal">取消</button>
-            <button type="submit" class="submit-btn">保存</button>
-          </div>
         </form>
+      </div>
+      
+      <!-- 表单操作 -->
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" @click="closeModal">取消</button>
+        <button type="submit" form="variableForm" class="submit-btn">保存</button>
       </div>
     </div>
   </div>
   
-  <!-- 条件编辑器 -->
-  <div v-if="showConditionEditor" class="modal-overlay" @click="closeConditionEditor">
-    <div class="modal-container small" @click.stop>
-      <div class="modal-header">
-        <h2>编辑条件</h2>
-        <button class="close-btn" @click="closeConditionEditor">
-          <Icon name="x" size="20" />
-        </button>
-      </div>
-      <div class="modal-content">
-        <div class="condition-editor-content">
-          <p>条件编辑器功能开发中...</p>
-          <div class="form-group">
-            <label>条件表达式</label>
-            <input 
-              type="text" 
-              v-model="tempCondition" 
-              placeholder="请输入条件表达式" 
-              class="form-input"
-            >
-          </div>
-        </div>
-        <div class="form-actions">
-          <button type="button" class="cancel-btn" @click="closeConditionEditor">取消</button>
-          <button type="button" class="submit-btn" @click="saveCondition">保存</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  
 </template>
 
 <script setup>
@@ -294,33 +202,43 @@ const formData = ref({
 const editingVariable = ref(null)
 
 /**
- * 分组选项数据
+ * 获取元素的数据类型
+ * @param {String} elementValue - 元素值
+ * @returns {String} - 数据类型
  */
-const groupOptions = ref([
-  { value: 'qidui', label: '七对', category: 'pai_type' },
-  { value: 'haohua_qidui', label: '豪华七对', category: 'pai_type' },
-  { value: 'ziyise', label: '字一色（假胡）', category: 'pai_type' },
-  { value: 'yinghu_deguo', label: '硬胡（德国）', category: 'pai_type' },
-  { value: 'haidilaoyue', label: '海底捞月', category: 'pai_type' },
-  { value: 'qianduanceshi', label: '前端测试', category: 'pai_type' },
-  { value: 'yitiaolong', label: '一条龙', category: 'pai_type' },
-  { value: 'zhuangjia', label: '庄家', category: 'shenfen' },
-  { value: 'xianjia', label: '闲家', category: 'shenfen' },
-  { value: 'zimo', label: '自摸', category: 'paiju' },
-  { value: 'fangpao', label: '放炮', category: 'paiju' },
-  { value: 'ying', label: '赢', category: 'zhuangtai' },
-  { value: 'shu', label: '输', category: 'zhuangtai' }
-])
+function getElementType(elementValue) {
+  // 从CustomSelect的默认选项中获取类型
+  const options = [
+    { value: 'qidui', type: 'bool' },
+    { value: 'haohua_qidui', type: 'bool' },
+    { value: 'ziyise', type: 'bool' },
+    { value: 'yinghu_deguo', type: 'bool' },
+    { value: 'haidilaoyue', type: 'bool' },
+    { value: 'yitiaolong', type: 'bool' },
+    { value: 'zhuangjia', type: 'bool' },
+    { value: 'xianjia', type: 'bool' },
+    { value: 'zimo', type: 'bool' },
+    { value: 'fangpao', type: 'bool' },
+    { value: 'chi_count', type: 'int' },
+    { value: 'gang_count', type: 'int' },
+    { value: 'laizi_gang_count', type: 'int' },
+    { value: 'touzi', type: 'bool' },
+    { value: 'shu', type: 'int' }
+  ]
+  
+  const element = options.find(opt => opt.value === elementValue)
+  return element ? element.type : 'bool'
+}
 
 /**
- * 分组标签页配置
+ * 根据数据类型获取连接符
+ * @param {String} elementValue - 元素值
+ * @returns {String} - 连接符
  */
-const groupTabs = ref([
-  { label: '状态', filter: (opt) => opt.category === 'zhuangtai' },
-  { label: '牌局', filter: (opt) => opt.category === 'paiju' },
-  { label: '身份', filter: (opt) => opt.category === 'shenfen' },
-  { label: '牌型', filter: (opt) => opt.category === 'pai_type' }
-])
+function getConnector(elementValue) {
+  const type = getElementType(elementValue)
+  return type === 'int' ? '×' : '的值为'
+}
 
 // 条件编辑器状态
 const showConditionEditor = ref(false)
@@ -336,6 +254,30 @@ const isGroupCalculationType = computed(() => {
     'group_max', 'group_min'
   ].includes(formData.value.type)
 })
+
+/**
+ * 变量类型到名称的映射
+ */
+const variableTypeNames = {
+  'group_sum': '组内相加',
+  'group_product': '组内相乘',
+  'group_max': '组内取最大',
+  'group_min': '组内取最小',
+  'condition_holds': '判断是否成立',
+  'all_condition_holds': '依次判断是否[同时]成立',
+  'any_condition_holds': '依次判断是否[任意]成立',
+  'loop_sum': '累加',
+  'loop_product': '累乘'
+}
+
+/**
+ * 获取变量类型的名称
+ * @param {String} type - 变量类型
+ * @returns {String} - 变量类型名称
+ */
+function getVariableTypeName(type) {
+  return variableTypeNames[type] || ''
+}
 
 /**
  * 监听变量变化，初始化表单数据
@@ -406,9 +348,9 @@ function saveVariable() {
 }
 
 /**
- * 添加规则
+ * 添加一行
  */
-function addRule() {
+function addRow() {
   formData.value.rules.push({
     group: '',
     condition: '',
@@ -486,6 +428,25 @@ function saveCondition() {
   overflow: hidden;
 }
 
+.modal-content {
+  flex: 1;
+  padding: var(--spacing-2);
+  overflow-y: auto;
+  margin-bottom: 0;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
 .modal-container.small {
   width: 600px;
   max-width: 90%;
@@ -522,17 +483,11 @@ function saveCondition() {
   color: var(--color-primary);
 }
 
-.modal-content {
-  flex: 1;
-  padding: var(--spacing-6);
-  overflow-y: auto;
-}
-
 /* 表单样式 */
 .variable-form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
+  gap: var(--spacing-2);
 }
 
 .form-section {
@@ -540,6 +495,7 @@ function saveCondition() {
   border-radius: var(--border-radius-md);
   padding: var(--spacing-6);
   background-color: var(--color-surface-hover);
+  overflow: visible;
 }
 
 .section-title {
@@ -600,7 +556,7 @@ function saveCondition() {
   transition: all var(--transition-normal);
   font-family: inherit;
   resize: vertical;
-  min-height: 100px;
+  min-height: 32px;
 }
 
 .form-textarea:focus {
@@ -625,13 +581,13 @@ function saveCondition() {
 .virtual-table {
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: var(--spacing-4);
 }
 
 .table-header {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 2fr 1fr;
   gap: var(--spacing-2);
   padding: var(--spacing-3);
   background-color: var(--color-surface-hover);
@@ -642,7 +598,7 @@ function saveCondition() {
 
 .table-row {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 2fr 1fr;
   gap: var(--spacing-2);
   padding: var(--spacing-3);
   border-bottom: 1px solid var(--color-border);
@@ -678,9 +634,9 @@ function saveCondition() {
 
 .remove-btn {
   padding: var(--spacing-2) var(--spacing-4);
-  background-color: #ef4444;
-  color: white;
-  border: none;
+  background-color: var(--color-surface);
+  color: #ef4444;
+  border-color: #ef4444;
   border-radius: var(--border-radius-md);
   font-size: var(--font-size-sm);
   cursor: pointer;
@@ -773,15 +729,7 @@ function saveCondition() {
   gap: var(--spacing-4);
 }
 
-/* 表单操作 */
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-4);
-  margin-top: var(--spacing-4);
-  padding-top: var(--spacing-4);
-  border-top: 1px solid var(--color-border);
-}
+
 
 .cancel-btn, .submit-btn {
   padding: var(--spacing-3) var(--spacing-6);

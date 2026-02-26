@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VariableEditor 测试</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        /* 简单的样式，模拟项目中的样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-container {
+            width: 90%;
+            max-width: 1000px;
+            max-height: 80vh;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #f5f5f5;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .modal-content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        
+        .form-section {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            background-color: #f9f9f9;
+            margin-bottom: 16px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .form-group label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .form-input, .form-select {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .virtual-table {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: visible;
+            margin-bottom: 16px;
+        }
+        
+        .table-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr 1fr;
+            gap: 8px;
+            padding: 12px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .table-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr 1fr;
+            gap: 8px;
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            align-items: center;
+        }
+        
+        .table-row:last-child {
+            border-bottom: none;
+        }
+        
+        .table-footer {
+            padding: 12px;
+            background-color: #f5f5f5;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        
+        .add-rule-btn {
+            padding: 12px 24px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .add-rule-btn:hover {
+            background-color: #3367d6;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .cancel-btn, .submit-btn {
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .cancel-btn {
+            background-color: #fff;
+            color: #333;
+        }
+        
+        .submit-btn {
+            background-color: #4285f4;
+            color: white;
+            border-color: #4285f4;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>VariableEditor 测试</h1>
+        <button @click="showEditor = true">打开变量编辑器</button>
+        
+        <!-- 变量编辑器 -->
+        <div v-if="showEditor" class="modal-overlay">
+            <div class="modal-container" @click.stop>
+                <!-- 弹窗头部 -->
+                <div class="modal-header">
+                    <h2>新增变量</h2>
+                    <button class="close-btn" @click="showEditor = false">×</button>
+                </div>
+                
+                <!-- 弹窗内容 -->
+                <div class="modal-content">
+                    <form class="variable-form" @submit.prevent="saveVariable">
+                        <!-- 基本信息 -->
+                        <div class="form-section">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>变量名称*</label>
+                                    <input 
+                                        type="text" 
+                                        v-model="formData.name" 
+                                        placeholder="请输入变量名称" 
+                                        class="form-input"
+                                    >
+                                </div>
+                                <div class="form-group">
+                                    <label>变量类型*</label>
+                                    <select v-model="formData.type" class="form-select">
+                                        <option value="">请选择变量类型</option>
+                                        <!-- 分组计算类 -->
+                                        <optgroup label="计算类">
+                                            <option value="group_sum">组内相加</option>
+                                            <option value="group_product">组内相乘</option>
+                                            <option value="group_max">组内取最大</option>
+                                            <option value="group_min">组内取最小</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 变量配置 - 根据类型显示不同的编辑视图 -->
+                        <div v-if="formData.type" class="form-section">
+                            
+                            <!-- 分组计算类配置 -->
+                            <div v-if="isGroupCalculationType" class="variable-config">
+                                <!-- 虚拟表格配置 -->
+                                <div class="config-section">
+                                    <h4 class="config-subtitle">规则配置</h4>
+                                    <div class="virtual-table">
+                                        <div class="table-header">
+                                            <div class="table-cell">元素</div>
+                                            <div class="table-cell"></div>
+                                            <div class="table-cell">数值</div>
+                                            <div class="table-cell">操作</div>
+                                        </div>
+                                        <div class="table-body">
+                                            <div 
+                                                v-for="(rule, index) in formData.rules" 
+                                                :key="index"
+                                                class="table-row"
+                                            >
+                                                <div class="table-cell">
+                                                    <select v-model="rule.group" class="form-select">
+                                                        <option value="">请选择元素</option>
+                                                        <option value="qidui">七对</option>
+                                                        <option value="haohua_qidui">豪华七对</option>
+                                                    </select>
+                                                </div>
+                                                <div class="table-cell">
+                                                    的值为
+                                                </div>
+                                                <div class="table-cell">
+                                                    <input 
+                                                        type="number" 
+                                                        v-model.number="rule.value" 
+                                                        placeholder="请输入数值" 
+                                                        class="form-input small"
+                                                    >
+                                                </div>
+                                                <div class="table-cell">
+                                                    <button 
+                                                        class="remove-btn" 
+                                                        @click.stop="removeRule(index)"
+                                                    >
+                                                        删除
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="table-footer">
+                                            <button 
+                                                type="button"
+                                                class="add-rule-btn" 
+                                                @click.stop="addRow"
+                                            >
+                                                添加一行
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 表单操作 -->
+                        <div class="form-actions">
+                            <button type="button" class="cancel-btn" @click="showEditor = false">取消</button>
+                            <button type="submit" class="submit-btn">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed } = Vue;
+        
+        const app = createApp({
+            setup() {
+                const showEditor = ref(false);
+                
+                // 表单数据
+                const formData = ref({
+                    name: '',
+                    type: '',
+                    description: '',
+                    rules: [],
+                    condition: '',
+                    trueValue: 1,
+                    falseValue: 0,
+                    loopObject: 'cards',
+                    accumulateField: '',
+                    initialValue: 0
+                });
+                
+                /**
+                 * 计算是否为分组计算类型
+                 */
+                const isGroupCalculationType = computed(() => {
+                    return [
+                        'group_sum', 'group_product', 
+                        'group_max', 'group_min'
+                    ].includes(formData.value.type)
+                });
+                
+                /**
+                 * 保存变量
+                 */
+                function saveVariable() {
+                    // 表单验证
+                    if (!formData.value.name.trim()) {
+                        alert('请输入变量名称');
+                        return;
+                    }
+                    
+                    if (!formData.value.type) {
+                        alert('请选择变量类型');
+                        return;
+                    }
+                    
+                    console.log('保存变量:', formData.value);
+                    showEditor.value = false;
+                }
+                
+                /**
+                 * 添加一行
+                 */
+                function addRow() {
+                    formData.value.rules.push({
+                        group: '',
+                        condition: '',
+                        value: 0
+                    });
+                    console.log('添加一行，当前行数:', formData.value.rules.length);
+                }
+                
+                /**
+                 * 删除规则
+                 * @param {number} index - 规则索引
+                 */
+                function removeRule(index) {
+                    formData.value.rules.splice(index, 1);
+                }
+                
+                return {
+                    showEditor,
+                    formData,
+                    isGroupCalculationType,
+                    saveVariable,
+                    addRow,
+                    removeRule
+                };
+            }
+        });
+        
+        app.mount('#app');
+    </script>
+</body>
+</html>

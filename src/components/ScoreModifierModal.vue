@@ -416,9 +416,9 @@ onUnmounted(() => {
 .header-left { display: flex; align-items: center; gap: 8px; }
 .header-right { display: flex; align-items: center; gap: 12px; }
 
-.page-title { font-size: 16px; font-weight: bold; color: #1f2937; }
-.sub-title { font-size: 14px; color: #6b7280; }
-.separator { color: #e5e7eb; margin: 0 4px; }
+.page-title { font-size: 16px; font-weight: bold; color: #111; }
+.sub-title { font-size: 14px; color: #666; }
+.separator { color: #d1d5db; margin: 0 4px; }
 
 .btn {
   padding: 8px 16px;
@@ -519,7 +519,7 @@ onUnmounted(() => {
 }
 .card-title {
   font-size: 14px;
-  color: #1f2937;
+  color: var(--color-text-main);
   font-weight: 500;
   width: 100%;
   border: none;
@@ -551,7 +551,6 @@ onUnmounted(() => {
 .logic-label {
   font-weight: bold;
   font-size: 14px;
-  color: #1f2937;
   margin-right: 12px;
   min-width: 20px;
   padding-top: 4px; 
@@ -675,7 +674,6 @@ onUnmounted(() => {
 }
 .section-tag {
   font-weight: bold;
-  color: #1f2937;
   margin-bottom: 12px;
   display: block;
 }
@@ -695,14 +693,14 @@ onUnmounted(() => {
 }
 .modifier-header {
   font-weight: bold;
-  color: #1f2937;
+  color: #4b5563;
   margin-bottom: 10px;
 }
 .checkbox-label {
   display: flex;
   align-items: center;
   font-size: 13px;
-  color: #4b5563;
+  color: #666;
   margin-bottom: 15px;
 }
 .checkbox-label input[type="checkbox"] {
@@ -729,7 +727,6 @@ onUnmounted(() => {
 .context-menu-item {
   padding: 8px 12px;
   font-size: 13px;
-  color: #1f2937;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -737,7 +734,6 @@ onUnmounted(() => {
 }
 .context-menu-item:hover {
   background-color: #f3f4f6;
-  color: #1f2937;
 }
 .context-menu-item:first-child {
   border-top-left-radius: 6px;

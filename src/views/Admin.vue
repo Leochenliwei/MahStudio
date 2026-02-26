@@ -92,6 +92,17 @@
                 @keyup.enter="addNewGame"
               />
             </div>
+            <div class="form-group">
+              <label for="gameName">游戏描述</label>
+              <input 
+                type="text" 
+                id="gameDescription" 
+                v-model="newGameDescription" 
+                placeholder="请输入游戏描述"
+                class="form-input"
+                @keyup.enter="addNewGame"
+              />
+            </div>
           </div>
           <div class="modal-footer">
             <button class="btn-text" @click="closeAddGameModal">取消</button>

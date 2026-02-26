@@ -219,7 +219,7 @@ const variables = ref([
   {
     id: '100001',
     name: '牌型番',
-    type: 'pattern_fan',
+    type: 'group_sum',
     description: '牌型番数计算',
     rules: [
       { group: '基本牌型', condition: '', value: 1 }
@@ -231,7 +231,7 @@ const variables = ref([
   {
     id: '100002',
     name: '牌型分',
-    type: 'pattern_score',
+    type: 'group_sum',
     description: '牌型分数计算',
     rules: [
       { group: '基本牌型', condition: '', value: 10 }
@@ -243,7 +243,7 @@ const variables = ref([
   {
     id: '100003',
     name: '行为番',
-    type: 'action_fan',
+    type: 'group_sum',
     description: '行为番数计算',
     rules: [
       { group: '基本行为', condition: '', value: 1 }
@@ -255,7 +255,7 @@ const variables = ref([
   {
     id: '100004',
     name: '行为分',
-    type: 'action_score',
+    type: 'group_sum',
     description: '行为分数计算',
     rules: [
       { group: '基本行为', condition: '', value: 5 }
@@ -267,7 +267,7 @@ const variables = ref([
   {
     id: '100005',
     name: '状态番',
-    type: 'status_fan',
+    type: 'group_sum',
     description: '状态番数计算',
     rules: [
       { group: '基本状态', condition: '', value: 1 }
@@ -279,7 +279,7 @@ const variables = ref([
   {
     id: '100006',
     name: '状态分',
-    type: 'status_score',
+    type: 'group_sum',
     description: '状态分数计算',
     rules: [
       { group: '基本状态', condition: '', value: 3 }
