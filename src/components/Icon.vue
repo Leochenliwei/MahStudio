@@ -6,7 +6,7 @@
     :style="{ color: color }"
     aria-hidden="true"
   >
-    <use :xlink:href="spriteUrl + '#' + props.name" />
+    <use :href="spriteUrl + '#' + props.name" />
   </svg>
 </template>
 
@@ -33,8 +33,8 @@ const props = defineProps({
 })
 
 const spriteUrl = computed(() => {
-  // @vite-ignore
-  return new URL('../assets/icons/sprite.svg', import.meta.url).href
+  // 使用基于public目录的相对路径，包含base路径
+  return '/MahStudio/icons/sprite.svg'
 })
 
 const classes = computed(() => {
@@ -47,6 +47,14 @@ const classes = computed(() => {
 svg {
   display: inline-block;
   vertical-align: middle;
+  fill: currentColor;
+  stroke: currentColor;
+  width: v-bind(size);
+  height: v-bind(size);
+}
+
+/* 确保use元素能正确显示 */
+svg use {
   fill: currentColor;
   stroke: currentColor;
 }

@@ -4,44 +4,57 @@
     <div class="left-sidebar">
       <h2>后台管理</h2>
       <div class="backend-menu">
-        <!-- <button @click="activePanel = 'dashboard'" class="menu-item">
-          <Icon name="PieChart" size="16" class="mr-2" />
-          仪表盘
+        <!-- 游戏管理-test 菜单 -->
+        <button 
+          @click="switchEnv('test')" 
+          class="menu-item"
+          :class="{ 'active': activeEnv === 'test' }"
+        >
+          <Icon name="grid" size="16" class="mr-2" />
+          游戏管理-test
         </button>
-        <button @click="activePanel = 'users'" class="menu-item">
-          <Icon name="Users" size="16" class="mr-2" />
-          用户管理
-        </button> -->
-        <button @click="activePanel = 'gameConfigs'" class="menu-item">
-          <Icon name="Gamepad2" size="16" class="mr-2" />
-          游戏配置
+        <!-- 游戏管理-online 菜单 -->
+        <button 
+          @click="switchEnv('online')" 
+          class="menu-item"
+          :class="{ 'active': activeEnv === 'online' }"
+        >
+          <Icon name="grid" size="16" class="mr-2" />
+          游戏管理-online
         </button>
-        <!-- <button @click="activePanel = 'settings'" class="menu-item">
-          <Icon name="Settings" size="16" class="mr-2" />
-          系统设置
-        </button> -->
+        <h4>！！！这里搞两个菜单主要是为了演示发布系统的双环境差异</h4>
       </div>
     </div>
     
     <!-- 右侧内容 -->
     <div class="right-content">
-           
+      <!-- 游戏配置列表区域 -->
       <div v-if="activePanel === 'gameConfigs'">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-6);">
-          <h3>游戏配置列表</h3>
-          <button class="action-btn" @click="showAddGameModal = true">新增游戏</button>
+        <!-- 头部区域：标题和新增按钮 -->
+        <div class="page-header">
+          <div class="header-left">
+            <h3>游戏配置列表</h3>
+            <span class="env-badge" :class="activeEnv">
+              {{ activeEnv === 'test' ? '测试环境' : '线上环境' }}
+            </span>
+          </div>
+          <button class="action-btn" @click="showAddGameModal = true">
+            
+            新增游戏
+          </button>
         </div>
+        
+        <!-- 游戏列表表格 -->
         <div class="config-table-container">
           <table class="config-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>名称</th>
-                <th>描述</th>
-                <th>状态</th>
-                <th>创建信息</th>
-                <th>编辑信息</th>
-                <th>操作</th>
+                <th style="width: 40px;">ID</th>
+                <th style="width: 150px;">名称</th>
+                <th style="width: 200px;">描述</th>
+                <th style="width: 200px;">创建信息</th>
+                <th style="width: 200px;">编辑信息</th>
+                <th >操作</th>
               </tr>
             </thead>
             <tbody>
@@ -49,25 +62,59 @@
                 v-for="config in gameConfigs" 
                 :key="config.id"
                 class="config-table-row"
-                @click="enterWorkbench(config.id)"
+                @click.stop="enterGameDirectory(config.id)"
               >
                 <td>{{ config.id }}</td>
-                <td>{{ config.name }}</td>
-                <td>{{ config.description }}</td>
                 <td>
-                  <span class="config-status" :class="config.status">
-                    {{ config.status }}
-                  </span>
+                  <div class="game-name">
+                    {{ config.name }}
+                  </div>
                 </td>
-                <td>{{ config.createdAt }}</td>
-                <td>{{ config.updatedAt }}</td>
                 <td>
-                  <button class="action-btn">编辑</button>
-                  <button class="action-btn-importentent">发布</button>
+                  <span class="game-description">{{ config.description || '-' }}</span>
+                </td>
+                <td>
+                  <div class="info-cell">
+                    <div class="info-user">{{ config.createdBy || '系统' }}</div>
+                    <div class="info-time">{{ formatDateTime(config.createdAt) }}</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="info-cell">
+                    <div class="info-user">{{ config.updatedBy || '系统' }}</div>
+                    <div class="info-time">{{ formatDateTime(config.updatedAt) }}</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="action-btn small" @click.stop="enterGameDirectory(config.id)">
+                     
+                      进入
+                    </button>
+                    <button class="action-btn small outline" @click.stop="editGame(config)">
+                    
+                      编辑
+                    </button>
+                    <button class="action-btn small outline" @click.stop="viewGame(config)">
+                      
+                      查看
+                    </button>
+                    <button class="action-btn small danger" @click.stop="deleteGame(config.id)">
+                   
+                      删除
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
           </table>
+          
+          <!-- 空状态提示 -->
+          <div v-if="gameConfigs.length === 0" class="empty-state">
+            <Icon name="box" size="48" class="empty-icon" />
+            <p>暂无游戏配置</p>
+            <button class="action-btn" @click="showAddGameModal = true">创建第一个游戏</button>
+          </div>
         </div>
       </div>
       
@@ -77,12 +124,16 @@
           <div class="modal-header">
             <h4>新增游戏</h4>
             <button class="modal-close-btn" @click="closeAddGameModal">
-              <Icon name="X" size="16" />
+              <Icon name="x" size="16" />
             </button>
           </div>
           <div class="modal-body">
+            <!-- 游戏名称输入 -->
             <div class="form-group">
-              <label for="gameName">游戏名称</label>
+              <label for="gameName">
+                游戏名称
+                <span class="required">*</span>
+              </label>
               <input 
                 type="text" 
                 id="gameName" 
@@ -92,25 +143,36 @@
                 @keyup.enter="addNewGame"
               />
             </div>
+            <!-- 游戏描述输入 -->
             <div class="form-group">
-              <label for="gameName">游戏描述</label>
-              <input 
-                type="text" 
+              <label for="gameDescription">游戏描述</label>
+              <textarea 
                 id="gameDescription" 
                 v-model="newGameDescription" 
-                placeholder="请输入游戏描述"
-                class="form-input"
-                @keyup.enter="addNewGame"
-              />
+                placeholder="请输入游戏描述（可选）"
+                class="form-textarea"
+                rows="3"
+              ></textarea>
             </div>
           </div>
           <div class="modal-footer">
             <button class="btn-text" @click="closeAddGameModal">取消</button>
-            <button class="action-btn" @click="addNewGame">确认</button>
+            <button class="action-btn" @click="addNewGame" :disabled="!newGameName.trim()">
+              确认
+            </button>
           </div>
         </div>
       </div>
 
+      <!-- 编辑游戏弹窗 -->
+      <GameInfoModal
+        v-if="showEditModal"
+        :game="currentGame"
+        :visible="showEditModal"
+        @close="closeEditModal"
+        @save="saveGameEdit"
+      />
+      
       <!-- Loading动画 -->
       <div v-if="showLoading" class="loading-overlay">
         <div class="loading-content">
@@ -131,84 +193,102 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+/**
+ * Admin.vue - 游戏管理后台页面
+ * 
+ * 需求关联：
+ * 1. 游戏列表展示（ID、名称、描述、创建/更新时间）
+ * 2. 点击游戏行进入目录详情页
+ * 3. 支持test/online环境切换
+ * 4. 新增游戏后自动创建默认草稿
+ * 
+ * @author Frontend Architect
+ * @since 2026-02-26
+ */
+
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import Icon from '../components/Icon.vue'
+import GameInfoModal from './gameinfo.vue'
+import { FileType, getAllGames, addNewGame as addNewGameToMock, updateGame } from '../data/mockData.js'
 
+// ==================== 路由相关 ====================
 const router = useRouter()
+const route = useRoute()
 
-// 激活的后台面板
+// ==================== 状态管理 ====================
+
+/**
+ * 当前激活的面板
+ * @type {Ref<string>}
+ */
 const activePanel = ref('gameConfigs')
 
-// 新增游戏弹窗状态
+/**
+ * 当前激活的环境（test/online）
+ * @type {Ref<string>}
+ */
+const activeEnv = ref('test')
+
+/**
+ * 新增游戏弹窗显示状态
+ * @type {Ref<boolean>}
+ */
 const showAddGameModal = ref(false)
 
-// 新游戏名称
+/**
+ * 新游戏名称输入
+ * @type {Ref<string>}
+ */
 const newGameName = ref('')
 
-// Loading动画状态
+/**
+ * 新游戏描述输入
+ * @type {Ref<string>}
+ */
+const newGameDescription = ref('')
+
+/**
+ * Loading动画显示状态
+ * @type {Ref<boolean>}
+ */
 const showLoading = ref(false)
 
-// 游戏配置列表数据
-const gameConfigs = ref([
-  {
-    id: 1,
-    name: '麻城痞子杠',
-    description: '麻城地区特色麻将玩法',
-    status: '启用',
-    version: '1.0.0',
-    createdAt: '2026-02-01',
-    updatedAt: '2026-02-01'
-  },
-  {
-    id: 2,
-    name: '通用麻将',
-    description: '标准通用麻将规则',
-    status: '启用',
-    version: '1.1.0',
-    createdAt: '2026-02-02',
-    updatedAt: '2026-02-03'
-  },
-  {
-    id: 3,
-    name: '香港麻将',
-    description: '香港地区特色麻将玩法',
-    status: '启用',
-    version: '2.0.0',
-    createdAt: '2026-02-03',
-    updatedAt: '2026-02-04'
-  },
-  {
-    id: 4,
-    name: '深圳麻将',
-    description: '深圳地区特色麻将玩法',
-    status: '启用',
-    version: '1.2.0',
-    createdAt: '2026-02-04',
-    updatedAt: '2026-02-05'
-  },
-  {
-    id: 5,
-    name: '四川麻将',
-    description: '四川地区特色麻将玩法',
-    status: '启用',
-    version: '1.3.0',
-    createdAt: '2026-02-05',
-    updatedAt: '2026-02-06'
-  }
-])
+/**
+ * 游戏编辑弹窗显示状态
+ * @type {Ref<boolean>}
+ */
+const showEditModal = ref(false)
 
-// 计算属性：启用的配置数量
+/**
+ * 当前编辑的游戏数据
+ * @type {Ref<Object>}
+ */
+const currentGame = ref(null)
+
+// ==================== 数据模型 ====================
+
+/**
+ * 游戏配置列表数据
+ * 数据模型：包含files数组，每个文件有type、name、content、updatedAt等字段
+ * @type {Ref<Array<Object>>}
+ */
+const gameConfigs = ref(getAllGames())
+
+// ==================== 计算属性 ====================
+
+/**
+ * 启用的配置数量
+ * @type {ComputedRef<number>}
+ */
 const activeConfigs = computed(() => {
-  return gameConfigs.value.filter(config => config.status === '启用').length
+  return gameConfigs.value.length
 })
 
-// 计算属性：禁用的配置数量
-const inactiveConfigs = computed(() => {
-  return gameConfigs.value.filter(config => config.status === '禁用').length
-})
-
-// 计算属性：最近更新的配置数量
+/**
+ * 最近更新的配置数量（7天内）
+ * @type {ComputedRef<number>}
+ */
 const recentUpdates = computed(() => {
   const today = new Date()
   const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -218,52 +298,104 @@ const recentUpdates = computed(() => {
   }).length
 })
 
-// 计算属性：最近的配置列表（按更新时间排序）
-const recentConfigs = computed(() => {
-  return [...gameConfigs.value]
-    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-    .slice(0, 3)
+// ==================== 生命周期钩子 ====================
+
+/**
+ * 组件挂载时初始化
+ * 从路由参数中读取环境设置
+ */
+onMounted(() => {
+  // 从路由query中读取环境参数
+  const env = route.query.env
+  if (env && (env === 'test' || env === 'online')) {
+    activeEnv.value = env
+  }
 })
 
-// 进入工作台
-function enterWorkbench(id) {
-  const config = gameConfigs.value.find(config => config.id === id)
-  const gameName = config ? config.name : `游戏配置 ${id}`
-  router.push({ name: 'Workbench', params: { id }, query: { gameName } })
+// ==================== 方法函数 ====================
+
+/**
+ * 切换环境
+ * @param {string} env - 环境类型（'test' 或 'online'）
+ * @description 点击左侧菜单切换test/online环境
+ */
+function switchEnv(env) {
+  activeEnv.value = env
+  // 更新路由参数，保持环境状态
+  router.replace({
+    query: { ...route.query, env }
+  })
 }
 
-// 关闭新增游戏弹窗
+/**
+ * 进入游戏目录详情页
+ * @param {number} gameId - 游戏ID
+ * @description 点击游戏行跳转到目录详情页，携带环境参数
+ */
+function enterGameDirectory(gameId) {
+  router.push({
+    name: 'GameDirectory',
+    params: { gameId: gameId.toString() },
+    query: { env: activeEnv.value }
+  })
+}
+
+/**
+ * 关闭新增游戏弹窗
+ * @description 关闭弹窗并清空输入内容
+ */
 function closeAddGameModal() {
   showAddGameModal.value = false
   newGameName.value = ''
+  newGameDescription.value = ''
 }
 
-// 新增游戏
+/**
+ * 创建默认草稿文件
+ * @returns {Object} 默认草稿文件对象
+ * @description 为新游戏创建默认草稿配置
+ */
+function createDefaultDraft() {
+  const now = new Date().toISOString()
+  return {
+    type: FileType.DRAFT,
+    name: '默认草稿',
+    content: JSON.stringify({
+      gameName: newGameName.value,
+      description: newGameDescription.value,
+      createdAt: now
+    }, null, 2),
+    updatedAt: now
+  }
+}
+
+/**
+ * 新增游戏
+ * @description 创建新游戏配置，自动添加默认草稿，完成后进入目录详情页
+ */
 function addNewGame() {
   if (!newGameName.value.trim()) {
     alert('请输入游戏名称')
     return
   }
   
-  // 生成新的唯一ID
-  const maxId = gameConfigs.value.length > 0 
-    ? Math.max(...gameConfigs.value.map(config => config.id)) 
-    : 0
-  const newId = maxId + 1
+  const now = new Date().toISOString()
   
-  // 创建新游戏配置对象
-  const newGame = {
-    id: newId,
+  // 创建新游戏配置对象，包含files数组和默认草稿
+  const newGameData = {
     name: newGameName.value.trim(),
-    description: '',
-    status: '启用',
-    version: '1.0.0',
-    createdAt: new Date().toISOString().split('T')[0],
-    updatedAt: new Date().toISOString().split('T')[0]
+    description: newGameDescription.value.trim(),
+    createdBy: 'admin', // 默认为admin用户
+    updatedBy: 'admin', // 默认为admin用户
+    // 自动创建默认草稿
+    files: [createDefaultDraft()]
   }
   
-  // 添加到游戏配置列表
-  gameConfigs.value.push(newGame)
+  // 添加到全局mock数据
+  const newGame = addNewGameToMock(newGameData)
+  
+  // 更新本地游戏配置列表
+  gameConfigs.value = getAllGames()
   
   // 关闭弹窗并清空输入
   closeAddGameModal()
@@ -271,18 +403,107 @@ function addNewGame() {
   // 显示loading动画
   showLoading.value = true
   
-  // 延迟一段时间后进入工作台，以展示loading动画
+  // 延迟一段时间后进入目录详情页，以展示loading动画
   setTimeout(() => {
     // 关闭loading动画
     showLoading.value = false
     
-    // 进入工作台
-    enterWorkbench(newId)
-  }, 2000) // 2秒延迟，足够展示动画效果
+    // 进入目录详情页
+    enterGameDirectory(newGame.id)
+  }, 1500) // 1.5秒延迟，展示动画效果
+}
+
+/**
+ * 编辑游戏
+ * @param {Object} game - 游戏配置对象
+ * @description 打开编辑游戏的弹窗，传递游戏数据
+ */
+function editGame(game) {
+  currentGame.value = game
+  showEditModal.value = true
+}
+
+/**
+ * 查看游戏
+ * @param {Object} game - 游戏配置对象
+ * @description 查看游戏的详细信息
+ */
+function viewGame(game) {
+  // 这里可以实现查看游戏详情的逻辑
+  console.log('查看游戏:', game)
+  alert(`查看游戏: ${game.name}\n描述: ${game.description}\n创建人: ${game.createdBy}\n创建时间: ${formatDateTime(game.createdAt)}\n编辑人: ${game.updatedBy}\n编辑时间: ${formatDateTime(game.updatedAt)}`)
+}
+
+/**
+ * 删除游戏
+ * @param {number} gameId - 游戏ID
+ * @description 删除指定ID的游戏配置
+ */
+function deleteGame(gameId) {
+  if (confirm('确定要删除这个游戏配置吗？')) {
+    const index = gameConfigs.value.findIndex(config => config.id === gameId)
+    if (index !== -1) {
+      gameConfigs.value.splice(index, 1)
+      console.log('删除游戏ID:', gameId)
+      alert('游戏配置已删除')
+    }
+  }
+}
+
+/**
+ * 关闭编辑游戏弹窗
+ * @description 关闭弹窗并清空当前编辑的游戏数据
+ */
+function closeEditModal() {
+  showEditModal.value = false
+  currentGame.value = null
+}
+
+/**
+ * 保存游戏编辑
+ * @param {Object} gameData - 更新后的游戏数据
+ * @description 保存游戏数据并更新列表
+ */
+function saveGameEdit(gameData) {
+  const updatedGame = updateGame(currentGame.value.id, gameData)
+  if (updatedGame) {
+    // 更新本地游戏配置列表
+    gameConfigs.value = getAllGames()
+    // 关闭弹窗
+    closeEditModal()
+    // 显示成功提示
+    alert('游戏配置已更新')
+  }
+}
+
+/**
+ * 格式化日期时间
+ * @param {string} dateString - ISO格式的日期字符串
+ * @returns {string} 格式化后的日期时间字符串
+ * @description 将ISO日期格式化为本地化的日期时间显示
+ */
+function formatDateTime(dateString) {
+  if (!dateString) return '-'
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return '-'
+  
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}`
 }
 </script>
 
 <style scoped>
+/* ==================== 布局样式 ==================== */
+
+/**
+ * 管理后台容器
+ * 采用flex布局，左侧固定宽度侧边栏，右侧自适应内容区
+ */
 .admin-container {
   width: 100%;
   height: 100%;
@@ -290,506 +511,418 @@ function addNewGame() {
   display: flex;
 }
 
-/* 左侧菜单样式 */
+/* ==================== 左侧菜单样式 ==================== */
+
+/**
+ * 左侧侧边栏
+ * 固定宽度240px，亮色系背景
+ */
 .left-sidebar {
-  width: 300px;
-  background-color: #1e1e1e;
-  color: white;
+  width: 240px;
+  background-color: #ffffff;
+  color: #1f2937;
   padding: 20px;
-  border-right: 1px solid #333;
+  border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
 }
 
 .left-sidebar h2 {
   margin-top: 0;
   font-size: 18px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #e5e7eb;
   padding-bottom: 10px;
+  color: #1f2937;
+  font-weight: 600;
 }
 
 .backend-menu {
   margin: 20px 0;
 }
 
-.backend-menu button {
+/**
+ * 菜单项按钮
+ * 亮色系风格，有hover和active状态
+ */
+.menu-item {
   display: flex;
   align-items: center;
   width: 100%;
   padding: 12px 16px;
   margin-bottom: 8px;
-  background-color: var(--color-surface);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-md);
+  background-color: #fafafa;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   cursor: pointer;
   text-align: left;
-  transition: all var(--transition-normal);
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  font-size: 14px;
+  gap: 8px;
 }
 
-.backend-menu button:hover {
-  background-color: var(--color-surface-hover);
-  border-color: var(--color-primary);
-  transform: translateX(5px);
+.menu-item:hover {
+  background-color: #f0f0f0;
+  border-color: #3b82f6;
+  color: #3b82f6;
 }
 
-.backend-menu button::after {
+.menu-item.active {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+
+.menu-item.active:hover {
+  background-color: #2563eb;
+}
+
+.menu-item::after {
   content: '';
   position: absolute;
   left: 0;
   top: 0;
   width: 4px;
   height: 100%;
-  background-color: var(--color-primary);
+  background-color: #3b82f6;
   transform: scaleY(0);
   transform-origin: top;
-  transition: transform var(--transition-normal);
+  transition: transform 0.3s ease;
 }
 
-.backend-menu button:hover::after {
+.menu-item:hover::after,
+.menu-item.active::after {
   transform: scaleY(1);
 }
 
-.menu-item {
-  gap: var(--spacing-2);
+.menu-item.active::after {
+  background-color: #ffffff;
 }
 
-/* 右侧内容样式 */
+.mr-2 {
+  margin-right: 8px;
+}
+
+/* ==================== 右侧内容样式 ==================== */
+
+/**
+ * 右侧内容区域
+ * 自适应宽度，亮色系背景
+ */
 .right-content {
   flex: 1;
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
-  padding: var(--spacing-6);
+  background-color: #f5f5f5;
+  color: #1f2937;
+  padding: 24px;
   overflow-y: auto;
 }
 
-.right-content h3 {
-  margin-top: 0;
-  font-size: var(--font-size-xl);
-  margin-bottom: var(--spacing-6);
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-semibold);
-}
+/* ==================== 页面头部样式 ==================== */
 
-/* 仪表盘容器样式 */
-.dashboard-container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-8);
-}
-
-/* 仪表盘头部 */
-.dashboard-header {
+/**
+ * 页面头部
+ * flex布局，标题和按钮两端对齐
+ */
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-4);
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.dashboard-actions {
-  display: flex;
-  gap: var(--spacing-4);
-}
-
-/* 统计卡片容器 */
-.dashboard-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--spacing-6);
-}
-
-/* 统计卡片 */
-.stat-card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-6);
+.header-left {
   display: flex;
   align-items: center;
-  gap: var(--spacing-4);
-  transition: all var(--transition-normal);
-  box-shadow: var(--shadow-sm);
+  gap: 12px;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-primary);
-}
-
-/* 统计图标 */
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--border-radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.stat-icon.bg-primary {
-  background-color: rgba(100, 108, 255, 0.2);
-  color: var(--color-primary);
-}
-
-.stat-icon.bg-success {
-  background-color: rgba(40, 167, 69, 0.2);
-  color: var(--color-success);
-}
-
-.stat-icon.bg-warning {
-  background-color: rgba(255, 189, 46, 0.2);
-  color: var(--color-warning);
-}
-
-.stat-icon.bg-info {
-  background-color: rgba(23, 162, 184, 0.2);
-  color: var(--color-info);
-}
-
-/* 统计内容 */
-.stat-content {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-primary);
-  margin-bottom: 4px;
-}
-
-.stat-label {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-tertiary);
-  font-weight: var(--font-weight-medium);
-}
-
-/* 统计趋势 */
-.stat-trend {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-}
-
-.stat-trend.positive {
-  color: var(--color-success);
-}
-
-.stat-trend.negative {
-  color: var(--color-danger);
-}
-
-/* 仪表盘 sections */
-.dashboard-sections {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: var(--spacing-6);
-}
-
-/* 区块卡片 */
-.section-card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-6);
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-normal);
-}
-
-.section-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-border-light);
-}
-
-/* 区块头部 */
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-4);
-  padding-bottom: var(--spacing-4);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.section-header h4 {
+.page-header h3 {
   margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
+  font-size: 20px;
+  color: #1f2937;
+  font-weight: 600;
 }
 
-/* 文本按钮 */
-.btn-text {
-  padding: var(--spacing-2) var(--spacing-4);
-  background-color: transparent;
-  color: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--border-radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-normal);
+/**
+ * 环境标签
+ * 显示当前激活的环境（test/online）
+ */
+.env-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
 }
 
-.btn-text:hover {
-  background-color: var(--color-primary);
-  color: white;
+.env-badge.test {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
 }
 
-/* 最近配置列表 */
-.recent-configs {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-4);
+.env-badge.online {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid #10b981;
 }
 
-/* 最近配置项 */
-.recent-config-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: var(--spacing-4);
-  background-color: var(--color-surface-hover);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-md);
-  transition: all var(--transition-normal);
-  cursor: pointer;
-}
+/* ==================== 表格样式 ==================== */
 
-.recent-config-item:hover {
-  background-color: var(--color-surface);
-  border-color: var(--color-primary);
-  transform: translateX(4px);
-}
-
-/* 配置信息 */
-.config-info {
-  flex: 1;
-}
-
-.config-info h5 {
-  margin: 0 0 4px 0;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-}
-
-.config-info p {
-  margin: 0 0 8px 0;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-tertiary);
-  line-height: var(--line-height-normal);
-}
-
-/* 配置元数据 */
-.config-meta {
-  display: flex;
-  gap: var(--spacing-3);
-  align-items: center;
-}
-
-.config-version {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-tertiary);
-  background-color: var(--color-surface);
-  padding: 2px 8px;
-  border-radius: var(--border-radius-sm);
-  border: 1px solid var(--color-border);
-}
-
-/* 配置操作 */
-.config-actions {
-  display: flex;
-  gap: var(--spacing-2);
-}
-
-/* 图标按钮 */
-.btn-icon {
-  width: 32px;
-  height: 32px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  color: var(--color-text-secondary);
-}
-
-.btn-icon:hover {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
-}
-
-/* 系统状态 */
-.system-status {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-4);
-}
-
-/* 状态项 */
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-4);
-  padding: var(--spacing-3);
-  background-color: var(--color-surface-hover);
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--color-border);
-}
-
-.status-label {
-  flex: 1;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-}
-
-/* 状态指示器 */
-.status-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.status-indicator.online {
-  background-color: var(--color-success);
-  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
-}
-
-.status-indicator.warning {
-  background-color: var(--color-warning);
-  box-shadow: 0 0 0 2px rgba(255, 189, 46, 0.3);
-}
-
-.status-indicator.offline {
-  background-color: var(--color-danger);
-  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3);
-}
-
-.status-text {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  font-weight: var(--font-weight-medium);
-}
-
-/* 游戏配置列表样式 */
+/**
+ * 配置表格容器
+ * 圆角边框，阴影效果
+ */
 .config-table-container {
-  margin-top: var(--spacing-6);
+  margin-top: 0;
   overflow-x: auto;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
 }
 
 .config-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
+  background-color: #ffffff;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
 }
 
 .config-table th,
 .config-table td {
-  padding: var(--spacing-4) var(--spacing-5);
+  padding: 8px 12px;
   text-align: left;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .config-table th {
-  background-color: var(--color-surface-hover);
-  font-weight: var(--font-weight-medium);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
+  background-color: #fafafa;
+  font-weight: 600;
+  font-size: 13px;
+  color: #4b5563;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .config-table-row {
   cursor: pointer;
-  transition: background-color var(--transition-normal);
+  transition: background-color 0.3s ease;
 }
 
 .config-table-row:hover {
-  background-color: var(--color-surface-hover);
+  background-color: #f0f0f0;
 }
 
 .config-table-row:last-child td {
   border-bottom: none;
 }
 
-.config-status {
-  padding: 6px 12px;
-  border-radius: var(--border-radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  display: inline-flex;
+/**
+ * 游戏名称样式
+ */
+.game-name {
+  display: flex;
   align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.game-icon {
+  color: #3b82f6;
+}
+
+/**
+ * 游戏描述样式
+ */
+.game-description {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/**
+ * 时间文本样式
+ */
+.time-text {
+  color: #6b7280;
+  font-size: 13px;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/**
+ * 信息单元格样式
+ */
+.info-cell {
+  display: flex;
+  flex-direction: column;
   gap: 4px;
 }
 
-.config-status.启用 {
-  background-color: rgba(40, 167, 69, 0.2);
-  color: var(--color-success);
-  border: 1px solid var(--color-success);
+.info-user {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
 }
 
-.config-status.禁用 {
-  background-color: rgba(220, 53, 69, 0.2);
-  color: var(--color-danger);
-  border: 1px solid var(--color-danger);
+.info-time {
+  font-size: 12px;
+  color: #6b7280;
+  font-family: 'Monaco', 'Menlo', monospace;
 }
 
+/**
+ * 操作按钮组样式
+ */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/**
+ * 小按钮样式
+ */
+.action-btn.small {
+  padding: 6px 12px;
+  font-size: 12px;
+  gap: 4px;
+}
+
+/**
+ * 次要按钮样式
+ */
+.action-btn.small.secondary {
+  background-color: #f59e0b;
+  box-shadow: 0 1px 2px rgba(245, 158, 11, 0.2);
+}
+
+.action-btn.small.secondary:hover {
+  background-color: #d97706;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/**
+ * 轮廓按钮样式
+ */
+.action-btn.small.outline {
+  background-color: transparent;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  box-shadow: none;
+}
+
+.action-btn.small.outline:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  transform: translateY(-1px);
+}
+
+/**
+ * 危险按钮样式
+ */
+.action-btn.small.danger {
+  background-color: #ef4444;
+  box-shadow: 0 1px 2px rgba(239, 68, 68, 0.2);
+}
+
+.action-btn.small.danger:hover {
+  background-color: #dc2626;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* ==================== 空状态样式 ==================== */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+}
+
+.empty-icon {
+  margin-bottom: 16px;
+  color: #d1d5db;
+}
+
+.empty-state p {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+}
+
+/* ==================== 按钮样式 ==================== */
+
+/**
+ * 主要操作按钮
+ * 亮色系蓝色主题
+ */
 .action-btn {
-  padding: var(--spacing-2) var(--spacing-4);
-  background-color: var(--color-primary);
-  color: white;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 20px;
+  background-color: #3b82f6;
+  color: #ffffff;
   border: none;
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-normal);
-  border: 1px solid var(--color-primary);
-  margin-right: var(--spacing-2);
-}
-
-.action-btn-importentent {
-  padding: var(--spacing-2) var(--spacing-4);
-  background-color: var(--color-danger);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  border: 1px solid var(--color-danger);
-  margin-right: var(--spacing-2);
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.2);
 }
 
 .action-btn:hover {
-  background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
+  background-color: #2563eb;
   transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* 弹窗样式 */
+.action-btn:active {
+  background-color: #1d4ed8;
+  transform: translateY(0);
+}
+
+.action-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.mr-1 {
+  margin-right: 4px;
+}
+
+/**
+ * 文本按钮
+ */
+.btn-text {
+  padding: 10px 20px;
+  background-color: transparent;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-text:hover {
+  background-color: #f0f0f0;
+  border-color: #d1d5db;
+}
+
+/* ==================== 弹窗样式 ==================== */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -801,103 +934,121 @@ function addNewGame() {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(4px);
 }
 
 .modal-content {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-6);
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
   width: 90%;
-  max-width: 500px;
-  box-shadow: var(--shadow-lg);
+  max-width: 480px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-6);
-  padding-bottom: var(--spacing-4);
-  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .modal-header h4 {
   margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 .modal-close-btn {
   width: 32px;
   height: 32px;
   background-color: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-md);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--transition-fast);
-  color: var(--color-text-secondary);
+  transition: all 0.3s ease;
+  color: #6b7280;
 }
 
 .modal-close-btn:hover {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
+  background-color: #f0f0f0;
+  border-color: #d1d5db;
+  color: #1f2937;
 }
 
 .modal-body {
-  margin-bottom: var(--spacing-6);
-}
-
-.form-group {
-  margin-bottom: var(--spacing-4);
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: var(--spacing-2);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-}
-
-.form-input {
-  width: 100%;
-  padding: var(--spacing-3) var(--spacing-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-md);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
-  background-color: var(--color-background);
-  transition: all var(--transition-normal);
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.1);
+  margin-bottom: 20px;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: var(--spacing-4);
-  padding-top: var(--spacing-4);
-  border-top: 1px solid var(--color-border);
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
 }
 
-/* Loading动画样式 */
+/* ==================== 表单样式 ==================== */
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 4px;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1f2937;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+/* ==================== Loading动画样式 ==================== */
+
 .loading-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(20, 20, 40, 0.95) 100%);
+  background: rgba(255, 255, 255, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -910,14 +1061,12 @@ function addNewGame() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-6);
-  padding: var(--spacing-8);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(100, 108, 255, 0.3);
-  border-radius: var(--border-radius-lg);
-  box-shadow: 
-    0 0 30px rgba(100, 108, 255, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  gap: 24px;
+  padding: 48px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   min-width: 320px;
   text-align: center;
   position: relative;
@@ -927,23 +1076,18 @@ function addNewGame() {
 .loading-content::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(100, 108, 255, 0.1),
-    transparent
-  );
-  transform: rotate(45deg);
-  animation: shine 3s linear infinite;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
+  background-size: 200% 100%;
+  animation: gradientSlide 2s linear infinite;
 }
 
 .loading-spinner {
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   position: relative;
   display: flex;
   align-items: center;
@@ -955,151 +1099,94 @@ function addNewGame() {
   position: absolute;
   width: 100%;
   height: 100%;
-  border: 4px solid rgba(100, 108, 255, 0.1);
+  border: 4px solid #e5e7eb;
   border-radius: 50%;
-  animation: spin 2s linear infinite;
 }
 
 .loading-spinner::after {
   content: '';
   position: absolute;
-  width: 80%;
-  height: 80%;
+  width: 100%;
+  height: 100%;
   border: 4px solid transparent;
-  border-top: 4px solid var(--color-primary);
-  border-right: 4px solid var(--color-primary);
+  border-top: 4px solid #3b82f6;
+  border-right: 4px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  box-shadow: 0 0 20px rgba(100, 108, 255, 0.5);
 }
 
 .spinner-core {
-  width: 60%;
-  height: 60%;
+  width: 50%;
+  height: 50%;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary), #8b5cf6);
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
   animation: pulse 2s ease-in-out infinite;
-  position: relative;
-  overflow: hidden;
-}
-
-.spinner-core::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
-  animation: slide 3s ease-in-out infinite;
 }
 
 .loading-text {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 500;
+  color: #374151;
   margin: 0;
-  animation: fadeInOut 2s ease-in-out infinite;
-  text-shadow: 0 0 10px rgba(100, 108, 255, 0.5);
-  position: relative;
-  z-index: 1;
 }
 
 .loading-dots {
   display: flex;
-  gap: var(--spacing-2);
-  margin-top: var(--spacing-2);
-  position: relative;
-  z-index: 1;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary), #8b5cf6);
-  animation: dotPulse 2s ease-in-out infinite;
-  box-shadow: 0 0 10px rgba(100, 108, 255, 0.7);
+  background-color: #3b82f6;
+  animation: dotPulse 1.4s ease-in-out infinite;
 }
 
 .dot:nth-child(2) {
-  animation-delay: 0.3s;
+  animation-delay: 0.2s;
 }
 
 .dot:nth-child(3) {
-  animation-delay: 0.6s;
+  animation-delay: 0.4s;
 }
 
-/* 动画关键帧 */
+/* ==================== 动画关键帧 ==================== */
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
 @keyframes pulse {
-  0% {
+  0%, 100% {
     transform: scale(0.9);
-    box-shadow: 0 0 15px rgba(100, 108, 255, 0.5);
+    opacity: 0.8;
   }
   50% {
     transform: scale(1.1);
-    box-shadow: 0 0 25px rgba(100, 108, 255, 0.8);
-  }
-  100% {
-    transform: scale(0.9);
-    box-shadow: 0 0 15px rgba(100, 108, 255, 0.5);
+    opacity: 1;
   }
 }
 
 @keyframes dotPulse {
-  0% {
-    transform: scale(0.7);
-    opacity: 0.5;
-    box-shadow: 0 0 5px rgba(100, 108, 255, 0.5);
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 1;
-    box-shadow: 0 0 15px rgba(100, 108, 255, 0.8);
-  }
-  100% {
-    transform: scale(0.7);
-    opacity: 0.5;
-    box-shadow: 0 0 5px rgba(100, 108, 255, 0.5);
-  }
-}
-
-@keyframes fadeInOut {
   0%, 100% {
-    opacity: 0.7;
-    text-shadow: 0 0 5px rgba(100, 108, 255, 0.3);
+    transform: scale(0.6);
+    opacity: 0.4;
   }
   50% {
+    transform: scale(1);
     opacity: 1;
-    text-shadow: 0 0 15px rgba(100, 108, 255, 0.8);
   }
 }
 
-@keyframes shine {
+@keyframes gradientSlide {
   0% {
-    transform: translateX(-100%) rotate(45deg);
+    background-position: 0% 50%;
   }
   100% {
-    transform: translateX(100%) rotate(45deg);
-  }
-}
-
-@keyframes slide {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 100%;
+    background-position: 200% 50%;
   }
 }
 </style>

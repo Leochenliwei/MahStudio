@@ -1096,8 +1096,8 @@ function handleButtonClick(property) {
   height: 100%;
   overflow: hidden;
   display: flex;
-  background-color: #1e1e1e;
-  color: white;
+  background-color: var(--color-background-secondary);
+  color: var(--color-text-primary);
 }
 
 /* 左侧组件列表样式 */
@@ -1670,13 +1670,13 @@ input:focus + .toggle-slider {
 .workbench-canvas {
   flex: 1;
   position: relative;
-  background-color: var(--color-surface);
+  background-color: var(--color-background-secondary);
   overflow: auto;
   cursor: default;
-  /* 添加网格背景 */
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  /* 添加网格背景 - 亮色系 */
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
   background-size: 20px 20px;
   padding: var(--spacing-6);
 }
@@ -1713,13 +1713,13 @@ input:focus + .toggle-slider {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background-color: #646cff;
-  border: 2px solid #fff;
+  background-color: var(--color-primary);
+  border: 2px solid var(--color-background);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 /* 步骤数字样式 */
@@ -1734,9 +1734,9 @@ input:focus + .toggle-slider {
   position: relative;
   width: 220px;
   height: 420px;
-  border: 2px dashed #666;
+  border: 2px dashed var(--color-border-dark);
   border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: rgba(255, 255, 255, 0.6);
   z-index: 1;
   transition: all 0.3s ease;
   backdrop-filter: blur(4px);
@@ -1747,24 +1747,24 @@ input:focus + .toggle-slider {
   position: absolute;
   top: 34px;
   height: 2px;
-  background-color: #646cff;
+  background-color: var(--color-primary);
   z-index: 0;
   margin-top: 1px;
 }
 
 .category-container:hover {
-  border-color: #646cff;
-  background-color: rgba(100, 108, 255, 0.05);
-  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.1);
+  border-color: var(--color-primary);
+  background-color: rgba(59, 130, 246, 0.05);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
 .category-header {
   padding: 12px;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px dashed #666;
+  background-color: var(--color-surface-hover);
+  border-bottom: 1px dashed var(--color-border-dark);
   text-align: center;
   font-weight: 500;
-  color: #fff;
+  color: var(--color-text-primary);
   border-radius: 6px 6px 0 0;
   font-size: 14px;
 }
@@ -1779,7 +1779,7 @@ input:focus + .toggle-slider {
 }
 
 .category-component-item {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
   padding: 10px;
@@ -1790,7 +1790,7 @@ input:focus + .toggle-slider {
 }
 
 .category-component-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--color-surface-hover);
   border-color: var(--color-primary);
 }
 

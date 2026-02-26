@@ -1,29 +1,35 @@
 :root {
-  /* ========== 色彩系统 ========== */
-  /* 主色调 */
-  --color-primary: #646cff;
-  --color-primary-hover: #535bf2;
-  --color-primary-active: #4f46e5;
+  /* ========== 色彩系统 - 亮色系 ========== */
+  /* 主色调 - 清爽蓝色 */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-active: #1d4ed8;
+  --color-primary-light: rgba(59, 130, 246, 0.1);
   
   /* 辅助色 */
-  --color-success: #28a745;
-  --color-warning: #ffbd2e;
-  --color-danger: #dc3545;
-  --color-info: #17a2b8;
+  --color-success: #10b981;
+  --color-success-hover: #059669;
+  --color-warning: #f59e0b;
+  --color-warning-hover: #d97706;
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-info: #3b82f6;
   
-  /* 中性色 - 深色主题 */
-  --color-background: #1e1e1e;
-  --color-surface: #242424;
-  --color-surface-hover: #2a2a2a;
-  --color-surface-active: #2f2f2f;
-  --color-border: #333333;
-  --color-border-light: #3e3e42;
+  /* 中性色 - 亮色系 */
+  --color-background: #ffffff;
+  --color-background-secondary: #f5f5f5;
+  --color-surface: #fafafa;
+  --color-surface-hover: #f0f0f0;
+  --color-surface-active: #e8e8e8;
+  --color-border: #e5e7eb;
+  --color-border-light: #f3f4f6;
+  --color-border-dark: #d1d5db;
   
-  /* 文本颜色 */
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #cccccc;
-  --color-text-tertiary: #999999;
-  --color-text-disabled: #666666;
+  /* 文本颜色 - 深色系 */
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #4b5563;
+  --color-text-tertiary: #9ca3af;
+  --color-text-disabled: #d1d5db;
   
   /* 灰度色阶 */
   --color-gray-50: #f9fafb;
@@ -80,7 +86,7 @@
   --border-radius-xl: 0.75rem;   /* 12px */
   --border-radius-full: 9999px;
 
-  /* ========== 阴影系统 ========== */
+  /* ========== 阴影系统 - 适配亮色系 ========== */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -98,7 +104,7 @@
   line-height: var(--line-height-normal);
   font-weight: var(--font-weight-normal);
 
-  color-scheme: dark;
+  color-scheme: light;
   color: var(--color-text-primary);
   background-color: var(--color-background);
 
@@ -252,7 +258,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 /* ========== 卡片样式 ========== */
@@ -267,7 +273,7 @@ input:focus, select:focus, textarea:focus {
 
 .card:hover {
   box-shadow: var(--shadow-md);
-  border-color: var(--color-border-light);
+  border-color: var(--color-border-dark);
 }
 
 /* ========== 滚动条样式 ========== */
@@ -282,13 +288,13 @@ input:focus, select:focus, textarea:focus {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: var(--color-border-dark);
   border-radius: var(--border-radius-full);
   transition: background var(--transition-normal);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border-light);
+  background: var(--color-gray-400);
 }
 
 /* ========== 工具类 ========== */
@@ -495,7 +501,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .hover-glow:hover {
-  box-shadow: 0 0 15px rgba(100, 108, 255, 0.3);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
 }
 
 /* ========== 焦点效果增强 ========== */
@@ -506,7 +512,7 @@ input:focus, select:focus, textarea:focus {
 
 .focus-ring:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.3);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
 }
 
 /* ========== 可访问性支持 ========== */
@@ -550,8 +556,8 @@ input:focus, select:focus, textarea:focus {
 /* 高对比度模式支持 */
 @media (prefers-contrast: high) {
   :root {
-    --color-border: #666666;
-    --color-text-secondary: #ffffff;
+    --color-border: #9ca3af;
+    --color-text-secondary: #1f2937;
   }
   
   .card {

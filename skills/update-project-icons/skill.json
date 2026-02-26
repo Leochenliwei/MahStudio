@@ -1,0 +1,8 @@
+{
+  "name": "更新项目内所有图标",
+  "description": "通过执行一系列脚本更新项目中的图标系统",
+  "author": "System",
+  "version": "1.0.0",
+  "executable": "update_icons.sh",
+  "parameters": []
+}

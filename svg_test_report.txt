@@ -1,0 +1,111 @@
+
+SVG图标测试报告
+================
+
+测试时间: 2026-02-26 19:02:16
+
+Sprite SVG 测试结果:
+- 总图标数: 45
+- 可见图标数: 45
+- 不可见图标数: 0
+
+单个SVG 文件测试结果:
+- 总图标数: 45
+- 可见图标数: 38
+- 不可见图标数: 7
+
+详细结果:
+
+Sprite SVG 详细结果:
+- alert-circle: ✓ 可见
+- alert-triangle: ✓ 可见
+- arrow-down: ✓ 可见
+- arrow-left: ✓ 可见
+- arrow-redo: ✓ 可见
+- arrow-undo: ✓ 可见
+- arrow-up: ✓ 可见
+- box: ✓ 可见
+- check: ✓ 可见
+- check-square: ✓ 可见
+- chevron-down: ✓ 可见
+- clock: ✓ 可见
+- close: ✓ 可见
+- coin: ✓ 可见
+- coins: ✓ 可见
+- copy: ✓ 可见
+- down: ✓ 可见
+- edit: ✓ 可见
+- file-text: ✓ 可见
+- folder: ✓ 可见
+- grid: ✓ 可见
+- home: ✓ 可见
+- inbox: ✓ 可见
+- info-circle: ✓ 可见
+- layers: ✓ 可见
+- layout-dashboard: ✓ 可见
+- link: ✓ 可见
+- lock: ✓ 可见
+- minus: ✓ 可见
+- more: ✓ 可见
+- plus: ✓ 可见
+- radio: ✓ 可见
+- rocket: ✓ 可见
+- save: ✓ 可见
+- search: ✓ 可见
+- send: ✓ 可见
+- setting: ✓ 可见
+- share: ✓ 可见
+- sliders: ✓ 可见
+- square: ✓ 可见
+- swap: ✓ 可见
+- trash-2: ✓ 可见
+- users: ✓ 可见
+- x: ✓ 可见
+- x-circle: ✓ 可见
+
+单个SVG 详细结果:
+- alert-circle: ✓ 可见
+- alert-triangle: ✓ 可见
+- arrow-down: ✗ 不可见
+- arrow-left: ✓ 可见
+- arrow-redo: ✓ 可见
+- arrow-undo: ✓ 可见
+- arrow-up: ✗ 不可见
+- box: ✓ 可见
+- check: ✓ 可见
+- check-square: ✓ 可见
+- chevron-down: ✓ 可见
+- clock: ✓ 可见
+- close: ✗ 不可见
+- coin: ✓ 可见
+- coins: ✓ 可见
+- copy: ✓ 可见
+- down: ✗ 不可见
+- edit: ✓ 可见
+- file-text: ✓ 可见
+- folder: ✓ 可见
+- grid: ✓ 可见
+- home: ✓ 可见
+- inbox: ✓ 可见
+- info-circle: ✗ 不可见
+- layers: ✗ 不可见
+- layout-dashboard: ✓ 可见
+- link: ✓ 可见
+- lock: ✓ 可见
+- minus: ✓ 可见
+- more: ✓ 可见
+- plus: ✓ 可见
+- radio: ✓ 可见
+- rocket: ✓ 可见
+- save: ✓ 可见
+- search: ✓ 可见
+- send: ✓ 可见
+- setting: ✓ 可见
+- share: ✓ 可见
+- sliders: ✓ 可见
+- square: ✓ 可见
+- swap: ✓ 可见
+- trash-2: ✗ 不可见
+- users: ✓ 可见
+- x: ✓ 可见
+- x-circle: ✓ 可见

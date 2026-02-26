@@ -18,7 +18,7 @@
           @click="switchTab('home')"
         >
           <div class="tab-icon">
-            <Icon name="Home" size="16" />
+            <Icon name="home" size="16" />
           </div>
           <div class="tab-title">首页</div>
         </div>
@@ -32,7 +32,7 @@
           @click="switchTab(tab.id)"
         >
           <div class="tab-icon">
-            <Icon name="LayoutDashboard" size="16" />
+            <Icon name="layout-dashboard" size="16" />
           </div>
           <div class="tab-title">{{ tab.name }}</div>
           <div class="tab-close" @click.stop="closeTab(tab.id)">
@@ -42,7 +42,7 @@
         
         <!-- 添加标签按钮 -->
         <div class="tab-add" @click="addTab">
-          <Icon name="Plus" size="16" />
+          <Icon name="plus" size="16" />
         </div>
       </div>
     </div>
@@ -179,6 +179,13 @@ onMounted(() => {
   color: var(--color-text-primary);
 }
 
+/* 定义缺失的辅助色变量 */
+:root {
+  --color-danger-hover: #dc2626;
+  --color-warning-hover: #d97706;
+  --color-success-hover: #059669;
+}
+
 /* 顶部标签栏 */
 .tab-bar {
   height: 48px;
@@ -197,7 +204,8 @@ onMounted(() => {
   margin-right: var(--spacing-4);
   padding: var(--spacing-2);
   border-radius: var(--border-radius-md);
-  background-color: var(--color-surface-hover);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 
 .control-btn {
