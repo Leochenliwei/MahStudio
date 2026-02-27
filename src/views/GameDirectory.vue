@@ -54,12 +54,12 @@
     <div v-if="game" class="file-list-container">
       <!-- 测试区域容器（两列布局） -->
       <div class="test-sections-container">
-        <!-- 测试约局区域 -->
+        <!-- 测试约局/灰度约局区域 -->
         <div class="file-section">
           <div class="section-header">
             <h3 class="section-title">
               <Icon name="layout-dashboard" size="16" class="mr-2" />
-              测试约局
+              {{ activeEnv === 'online' ? '灰度约局' : '测试约局' }}
               <span class="meta-item">游戏ID：10001</span>
             </h3>
           </div>
@@ -68,6 +68,7 @@
             :key="testMatchFile.id || 'testMatch'"
             :file="testMatchFile"
             :environment="activeEnv"
+            @view="viewFile"
             @copy="copyFile"
             @copy-to="showCopyToModal"
             @publish="publishFile"
@@ -80,12 +81,12 @@
           </div>
         </div>
 
-        <!-- 测试金币区域 -->
+        <!-- 测试金币/灰度金币区域 -->
         <div class="file-section">
           <div class="section-header">
             <h3 class="section-title">
               <Icon name="layout-dashboard" size="16" class="mr-2" />
-              测试金币
+              {{ activeEnv === 'online' ? '灰度金币' : '测试金币' }}
               <span class="meta-item">游戏ID：10002</span>
             </h3>
           </div>
@@ -94,6 +95,7 @@
             :key="testGoldFile.id || 'testGold'"
             :file="testGoldFile"
             :environment="activeEnv"
+            @view="viewFile"
             @copy="copyFile"
             @copy-to="showCopyToModal"
             @publish="publishFile"
@@ -107,8 +109,63 @@
         </div>
       </div>
 
+      <!-- 正式模块区域（仅在线环境显示） -->
+      <div v-if="activeEnv === 'online'" class="test-sections-container">
+        <!-- 正式约局区域 -->
+        <div class="file-section">
+          <div class="section-header">
+            <h3 class="section-title">
+              <Icon name="layout-dashboard" size="16" class="mr-2" />
+              正式约局
+              <span class="meta-item">游戏ID：10003</span>
+            </h3>
+          </div>
+          <FileCard 
+            v-if="officialMatchFile" 
+            :key="officialMatchFile.id || 'officialMatch'"
+            :file="officialMatchFile"
+            :environment="activeEnv"
+            @view="viewFile"
+            @copy="copyFile"
+            @copy-to="showCopyToModal"
+            @view-history="handleViewHistory"
+          />
+          <div v-else class="empty-file-card">
+            <Icon name="inbox" size="32" class="empty-icon" />
+            <p>暂无正式约局配置</p>
+            <p class="empty-hint">请从灰度发布创建</p>
+          </div>
+        </div>
+
+        <!-- 正式金币区域 -->
+        <div class="file-section">
+          <div class="section-header">
+            <h3 class="section-title">
+              <Icon name="layout-dashboard" size="16" class="mr-2" />
+              正式金币
+              <span class="meta-item">游戏ID：10004</span>
+            </h3>
+          </div>
+          <FileCard 
+            v-if="officialGoldFile" 
+            :key="officialGoldFile.id || 'officialGold'"
+            :file="officialGoldFile"
+            :environment="activeEnv"
+            @view="viewFile"
+            @copy="copyFile"
+            @copy-to="showCopyToModal"
+            @view-history="handleViewHistory"
+          />
+          <div v-else class="empty-file-card">
+            <Icon name="inbox" size="32" class="empty-icon" />
+            <p>暂无正式金币配置</p>
+            <p class="empty-hint">请从灰度发布创建</p>
+          </div>
+        </div>
+      </div>
+
       <!-- 草稿区域 -->
-      <div class="file-section">
+      <div v-if="activeEnv === 'test'" class="file-section">
         <div class="section-header">
           <h3 class="section-title">
             <Icon name="file-text" size="16" class="mr-2" />
@@ -248,7 +305,7 @@ import FileCard from '../components/FileCard.vue'
 import CopyToModal from '../components/CopyToModal.vue'
 import SubmitTestModal from '../components/SubmitTestModal.vue'
 import SubmitHistoryModal from '../components/SubmitHistoryModal.vue'
-import { FileType, getGameById, getOtherGames, updateGame } from '../data/mockData.js'
+import { FileType, getGameById, getOtherGames, updateGame, createGameFile, updateGameFile, createSubmitHistory } from '../api/gameApi.js'
 
 // ==================== 路由相关 ====================
 const router = useRouter()
@@ -328,6 +385,12 @@ const showSubmitHistoryModal = ref(false)
  */
 const currentViewFile = ref(null)
 
+/**
+ * 其他游戏列表
+ * @type {Ref<Array>}
+ */
+const otherGames = ref([])
+
 // ==================== 数据模型 ====================
 
 // ==================== 计算属性 ====================
@@ -360,12 +423,21 @@ const testGoldFile = computed(() => {
 })
 
 /**
- * 其他游戏列表
- * @type {ComputedRef<Array>}
+ * 正式约局文件
+ * @type {ComputedRef<Object|null>}
  */
-const otherGames = computed(() => {
-  if (!game.value) return []
-  return getOtherGames(game.value.id)
+const officialMatchFile = computed(() => {
+  if (!game.value?.files) return null
+  return game.value.files.find(file => file.type === FileType.OFFICIAL_MATCH) || null
+})
+
+/**
+ * 正式金币文件
+ * @type {ComputedRef<Object|null>}
+ */
+const officialGoldFile = computed(() => {
+  if (!game.value?.files) return null
+  return game.value.files.find(file => file.type === FileType.OFFICIAL_GOLD) || null
 })
 
 // ==================== 生命周期钩子 ====================
@@ -397,24 +469,53 @@ onMounted(() => {
 /**
  * 加载游戏数据
  */
-function loadGameData() {
+async function loadGameData() {
   loading.value = true
   error.value = null
   
   try {
     const gameId = route.params.gameId
-    // 模拟API请求延迟
-    setTimeout(() => {
-      const gameData = getGameById(gameId)
-      if (gameData) {
-        game.value = gameData
-      } else {
-        error.value = '游戏不存在'
+    const gameData = await getGameById(gameId)
+    if (gameData) {
+      // 转换字段命名：蛇形命名 -> 驼峰命名
+      game.value = {
+        ...gameData,
+        uniqueId: gameData.unique_id,
+        createdBy: gameData.created_by,
+        updatedBy: gameData.updated_by,
+        createdAt: gameData.created_at,
+        updatedAt: gameData.updated_at,
+        // 转换文件数组中的字段命名
+        files: gameData.files?.map(file => ({
+          ...file,
+          updatedBy: file.updated_by,
+          createdAt: file.created_at,
+          updatedAt: file.updated_at
+        })) || [],
+        // 转换提测记录中的字段命名
+        submitHistory: gameData.submitHistory?.map(history => ({
+          ...history,
+          createdBy: history.created_by,
+          createdAt: history.created_at
+        })) || []
       }
-      loading.value = false
-    }, 500)
+      
+      // 加载其他游戏列表
+      const games = await getOtherGames(gameId)
+      otherGames.value = games.map(g => ({
+        ...g,
+        createdBy: g.created_by,
+        updatedBy: g.updated_by,
+        createdAt: g.created_at,
+        updatedAt: g.updated_at
+      }))
+    } else {
+      error.value = '游戏不存在'
+    }
   } catch (err) {
     error.value = '加载失败，请重试'
+    console.error('加载游戏数据失败:', err)
+  } finally {
     loading.value = false
   }
 }
@@ -429,6 +530,8 @@ function switchEnv(env) {
   router.replace({
     query: { ...route.query, env }
   })
+  // 重新加载游戏数据，确保UI正确显示
+  loadGameData()
 }
 
 /**
@@ -446,25 +549,84 @@ function goBack() {
  * @param {Object} file - 文件对象
  */
 function editFile(file) {
-  router.push({
-    name: 'Workbench',
-    params: { id: game.value.id },
-    query: {
-      fileId: file.id,
-      fileType: file.type,
-      env: activeEnv.value
-    }
-  })
+  // 调用全局的openGameTab方法打开新标签页
+  if (window.openGameTab) {
+    window.openGameTab(
+      game.value.id,
+      game.value.name,
+      file.id,
+      file.type,
+      activeEnv.value
+    )
+  } else {
+    // 兼容处理：如果openGameTab方法不存在，使用原有的路由跳转
+    router.push({
+      name: 'Workbench',
+      params: { id: game.value.id },
+      query: {
+        fileId: file.id,
+        fileType: file.type,
+        env: activeEnv.value,
+        gameName: game.value.name
+      }
+    })
+  }
+}
+
+/**
+ * 查看文件配置
+ * @param {Object} file - 文件对象
+ */
+function viewFile(file) {
+  // 调用全局的openGameTab方法打开新标签页
+  if (window.openGameTab) {
+    window.openGameTab(
+      game.value.id,
+      game.value.name,
+      file.id,
+      file.type,
+      activeEnv.value
+    )
+  } else {
+    // 兼容处理：如果openGameTab方法不存在，使用原有的路由跳转
+    router.push({
+      name: 'Workbench',
+      params: { id: game.value.id },
+      query: {
+        fileId: file.id,
+        fileType: file.type,
+        env: activeEnv.value,
+        gameName: game.value.name
+      }
+    })
+  }
 }
 
 /**
  * 复制文件
  * @param {Object} file - 文件对象
  */
-function copyFile(file) {
-  // 模拟复制操作
-  alert(`复制文件：${file.name}`)
-  // 实际实现：创建文件副本并添加到游戏的files数组
+async function copyFile(file) {
+  try {
+    // 使用API创建文件副本（复制为草稿类型）
+    const now = new Date().toISOString()
+    const copyFileData = {
+      type: FileType.DRAFT, // 所有复制的文件都成为草稿
+      name: `${file.name} (副本)`,
+      content: file.content,
+      updatedBy: 'admin'
+    }
+    
+    await createGameFile(game.value.id, copyFileData)
+    
+    // 重新加载游戏数据以更新UI
+    await loadGameData()
+    
+    alert(`复制文件成功：${file.name}`)
+  } catch (error) {
+    console.error('复制文件失败:', error)
+    alert('复制文件失败: ' + error.message)
+  }
 }
 
 /**
@@ -480,11 +642,26 @@ function showCopyToModal(file) {
  * 处理复制到操作
  * @param {number} targetGameId - 目标游戏ID
  */
-function handleCopyTo(targetGameId) {
-  // 模拟复制到操作
-  alert(`复制到游戏ID：${targetGameId}`)
-  showCopyToModalVisible.value = false
-  currentCopyFile.value = null
+async function handleCopyTo(targetGameId) {
+  try {
+    // 使用API将文件复制到目标游戏
+    const now = new Date().toISOString()
+    const copyFileData = {
+      type: currentCopyFile.value.type,
+      name: currentCopyFile.value.name,
+      content: currentCopyFile.value.content,
+      updatedBy: 'admin'
+    }
+    
+    await createGameFile(targetGameId, copyFileData)
+    
+    alert(`复制到游戏成功：游戏ID ${targetGameId}`)
+    showCopyToModalVisible.value = false
+    currentCopyFile.value = null
+  } catch (error) {
+    console.error('复制到游戏失败:', error)
+    alert('复制到游戏失败: ' + error.message)
+  }
 }
 
 /**
@@ -498,39 +675,64 @@ function showSubmitTestModal(draft) {
 
 /**
  * 处理提测操作
- * @param {string} targetType - 目标类型（testMatch/testGold）
+ * @param {Object|string} targetType - 目标类型对象或字符串
  */
-function handleSubmitTest(targetType) {
-  if (!currentSubmitDraft.value) return
-  
-  const now = new Date().toISOString()
-  const submitRecord = {
-    id: `submit-${Date.now()}`,
-    draftId: currentSubmitDraft.value.id,
-    targetType: targetType,
-    createdAt: now,
-    createdBy: 'admin'
+async function handleSubmitTest(targetType) {
+  if (!currentSubmitDraft.value) {
+    alert('请选择要提测的草稿')
+    return
   }
   
-  // 添加提测记录到游戏的submitHistory数组
-  if (game.value) {
-    const updatedSubmitHistory = [...(game.value.submitHistory || []), submitRecord]
-    // 按时间倒序排序
-    updatedSubmitHistory.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  try {
+    const now = new Date().toISOString()
     
-    const updatedGame = updateGame(game.value.id, {
-      submitHistory: updatedSubmitHistory,
-      updatedAt: now
-    })
-    if (updatedGame) {
-      game.value = updatedGame
+    // 提取目标类型字符串（处理对象或直接字符串）
+    const targetTypeValue = typeof targetType === 'object' && targetType.targetType ? targetType.targetType : targetType
+    
+    console.log('提测目标类型:', targetTypeValue)
+    
+    // 1. 创建提测记录
+    const submitRecord = {
+      draftId: currentSubmitDraft.value.id,
+      targetType: targetTypeValue,
+      createdBy: 'admin'
     }
+    
+    console.log('提测记录数据:', submitRecord)
+    console.log('游戏ID:', game.value.id)
+    console.log('草稿ID:', currentSubmitDraft.value.id)
+    console.log('目标类型:', targetTypeValue)
+    
+    await createSubmitHistory(game.value.id, submitRecord)
+    
+    // 2. 创建或更新测试文件
+    const testFileData = {
+      type: targetTypeValue,
+      name: targetTypeValue === FileType.TEST_MATCH ? '测试约局配置' : '测试金币配置',
+      content: currentSubmitDraft.value.content,
+      updatedBy: 'admin'
+    }
+    
+    // 检查是否已存在对应的测试文件
+    const existingTestFile = game.value.files.find(f => f.type === targetTypeValue)
+    if (existingTestFile) {
+      // 更新现有测试文件
+      await updateGameFile(game.value.id, existingTestFile.id, testFileData)
+    } else {
+      // 创建新的测试文件
+      await createGameFile(game.value.id, testFileData)
+    }
+    
+    // 重新加载游戏数据以更新UI
+    await loadGameData()
+    
+    alert(`提测成功：已提测到 ${targetTypeValue}`)
+    showSubmitTestModalVisible.value = false
+    currentSubmitDraft.value = null
+  } catch (error) {
+    console.error('提测失败:', error)
+    alert('提测失败: ' + error.message)
   }
-  
-  // 模拟提测操作
-  alert(`提测到：${targetType}`)
-  showSubmitTestModalVisible.value = false
-  currentSubmitDraft.value = null
 }
 
 /**
@@ -551,12 +753,60 @@ function closeSubmitHistoryModal() {
 }
 
 /**
- * 发布文件（发灰度）
+ * 发布文件（发灰度/发布到正式）
  * @param {Object} file - 文件对象
  */
-function publishFile(file) {
-  // 模拟发布操作
-  alert(`发布文件：${file.name}`)
+async function publishFile(file) {
+  if (!game.value) return
+  
+  try {
+    const now = new Date().toISOString()
+    let targetType = ''
+    let targetName = ''
+    
+    // 根据当前文件类型确定目标正式文件类型
+    if (file.type === FileType.TEST_MATCH) {
+      targetType = FileType.OFFICIAL_MATCH
+      targetName = '正式约局配置'
+    } else if (file.type === FileType.TEST_GOLD) {
+      targetType = FileType.OFFICIAL_GOLD
+      targetName = '正式金币配置'
+    } else {
+      alert('只能发布灰度文件到正式环境')
+      return
+    }
+    
+    // 检查是否已存在对应的正式文件
+    const existingOfficialFile = game.value.files.find(f => f.type === targetType)
+    
+    if (existingOfficialFile) {
+      // 更新现有正式文件
+      const testFileData = {
+        type: targetType,
+        name: targetName,
+        content: file.content,
+        updatedBy: 'admin'
+      }
+      await updateGameFile(game.value.id, existingOfficialFile.id, testFileData)
+    } else {
+      // 创建新的正式文件
+      const testFileData = {
+        type: targetType,
+        name: targetName,
+        content: file.content,
+        updatedBy: 'admin'
+      }
+      await createGameFile(game.value.id, testFileData)
+    }
+    
+    // 重新加载游戏数据以更新UI
+    await loadGameData()
+    
+    alert(`发布成功：${file.name} 已发布到 ${targetName}`)
+  } catch (error) {
+    console.error('发布失败:', error)
+    alert('发布失败: ' + error.message)
+  }
 }
 
 /**
@@ -570,41 +820,42 @@ function closeCreateDraftModal() {
 /**
  * 创建草稿
  */
-function createDraft() {
+async function createDraft() {
   if (!newDraftName.value.trim()) {
     alert('请输入草稿名称')
     return
   }
   
   const now = new Date().toISOString()
-  const newDraft = {
-    id: `draft-${Date.now()}`,
+  const newDraftData = {
     type: FileType.DRAFT,
     name: newDraftName.value.trim(),
     content: '{}',
-    createdAt: now,
-    updatedAt: now,
     updatedBy: 'admin'
   }
   
-  // 添加到游戏的files数组并更新全局数据
-  if (game.value) {
-    const updatedFiles = [...game.value.files, newDraft]
-    const updatedGame = updateGame(game.value.id, {
-      files: updatedFiles,
-      updatedAt: now
-    })
-    if (updatedGame) {
-      game.value = updatedGame
-    }
+  try {
+    // 使用API创建新草稿
+    const newDraft = await createGameFile(game.value.id, newDraftData)
+    
+    // 重新加载游戏数据以更新UI
+    await loadGameData()
+    
+    closeCreateDraftModal()
+    
+    // 跳转到工作台编辑
+    setTimeout(() => {
+      editFile({
+        ...newDraft,
+        updatedBy: newDraft.updated_by,
+        createdAt: newDraft.created_at,
+        updatedAt: newDraft.updated_at
+      })
+    }, 300)
+  } catch (error) {
+    console.error('创建草稿失败:', error)
+    alert('创建草稿失败: ' + error.message)
   }
-  
-  closeCreateDraftModal()
-  
-  // 跳转到工作台编辑
-  setTimeout(() => {
-    editFile(newDraft)
-  }, 300)
 }
 
 /**

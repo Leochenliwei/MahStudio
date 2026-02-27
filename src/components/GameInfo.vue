@@ -1,5 +1,5 @@
 <template>
-  <div class="modal-overlay" @click="closeModal">
+  <div v-if="visible" class="modal-overlay" @click="closeModal">
     <div class="modal-content" @click.stop>
       <div class="modal-header">
         <h4>游戏属性编辑</h4>
@@ -99,7 +99,7 @@
 
 <script setup>
 /**
- * gameinfo.vue - 游戏属性编辑弹窗组件
+ * GameInfo.vue - 游戏属性编辑弹窗组件
  * 
  * 需求关联：
  * 1. 点击编辑按钮时弹出游戏属性编辑弹窗
@@ -111,7 +111,6 @@
  */
 
 import { ref, reactive, watch } from 'vue'
-import Icon from '../components/Icon.vue'
 
 // ==================== Props ====================
 

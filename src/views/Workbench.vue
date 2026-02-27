@@ -113,16 +113,16 @@
           </div>
         </div>
         
-        <!-- 发布功能 -->
+        <!-- 提测功能 -->
         <div class="toolbar-section publish-section">
           <button class="toolbar-btn save-btn" @click="save" title="保存 (Ctrl+S)">
             <Icon name="save" size="16" />
             <span>保存</span>
           </button>
           
-          <button class="toolbar-btn publish-btn" @click="publish" title="发布 (Ctrl+Enter)">
+          <button class="toolbar-btn publish-btn" @click="publish" title="提测 (Ctrl+Enter)">
             <Icon name="send" size="16" />
-            <span>发布</span>
+            <span>提测</span>
           </button>
         </div>
       </div>
@@ -377,6 +377,14 @@
       </div>
     </div>
 
+    <!-- 提测弹窗 -->
+    <SubmitTestModal 
+      :visible="showSubmitTestModalVisible"
+      :source-draft="currentSubmitDraft"
+      @close="showSubmitTestModalVisible = false"
+      @submit-test="handleSubmitTest"
+    />
+
   </div>
 </template>
 
@@ -387,6 +395,7 @@ import VueDraggableResizable from 'vue-draggable-resizable'
 import Icon from '../components/Icon.vue'
 import VariableManagementModal from '../components/VariableManagementModal.vue'
 import CalcScoreConfig from '../components/CalcScoreConfig.vue'
+import SubmitTestModal from '../components/SubmitTestModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -570,6 +579,10 @@ const isVariableManagementModalVisible = ref(false)
 // 算分规则配置弹窗状态
 const isCalcScoreConfigModalVisible = ref(false)
 
+// 提测弹窗状态
+const showSubmitTestModalVisible = ref(false)
+const currentSubmitDraft = ref(null)
+
 // 切换左侧组件侧边栏
 function toggleComponentsSidebar() {
   isComponentsSidebarCollapsed.value = !isComponentsSidebarCollapsed.value
@@ -640,7 +653,7 @@ function setupKeyboardShortcuts() {
       event.preventDefault()
       preview()
     }
-    // 发布: Ctrl+Enter
+    // 提测: Ctrl+Enter
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       event.preventDefault()
       publish()
@@ -820,12 +833,27 @@ function preview() {
   alert('预览功能开发中')
 }
 
-// 发布
+// 提测
 function publish() {
-  console.log('发布配置')
-  // 这里可以实现发布到生产环境的逻辑
-  addHistory('发布配置')
-  alert('配置已发布')
+  console.log('提测配置')
+  // 准备提测的草稿数据
+  currentSubmitDraft.value = {
+    id: `draft-${Date.now()}`,
+    name: selectedConfig.value?.name || '当前配置',
+    type: 'DRAFT'
+  }
+  // 显示提测弹窗
+  showSubmitTestModalVisible.value = true
+  addHistory('提测配置')
+}
+
+// 处理提测操作
+function handleSubmitTest({ targetType }) {
+  console.log('处理提测操作:', targetType)
+  // 这里可以实现提测到生产环境的逻辑
+  showSubmitTestModalVisible.value = false
+  currentSubmitDraft.value = null
+  alert(`配置已提测到${targetType === 'testMatch' ? '测试约局' : '测试金币'}`)
 }
 
 // 加载分类列表

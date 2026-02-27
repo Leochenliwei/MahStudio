@@ -3,11 +3,11 @@
     <!-- 顶部标签栏 -->
     <div class="tab-bar">
       <!-- 窗口控制按钮 -->
-      <div class="window-controls">
+      <!-- <div class="window-controls">
         <div class="control-btn close"></div>
         <div class="control-btn minimize"></div>
         <div class="control-btn maximize"></div>
-      </div>
+      </div> -->
       
       <!-- 标签列表 -->
       <div class="tab-list">
@@ -82,18 +82,24 @@ watch(() => route.path, (newPath) => {
     const tabId = newPath.split('/').pop()
     activeTab.value = tabId
     
-    // 如果是工作台路由，更新标签名称
-    if (newPath.includes('/workbench/')) {
-      const gameName = route.query.gameName || `游戏配置 ${tabId}`
+    // 只有游戏目录路由才创建项目标签页，工作台路由使用浏览器标签页
+    if (newPath.includes('/game-directory/')) {
+      const gameName = route.query.gameName || `游戏目录 ${tabId}`
       const existingTab = workbenchTabs.value.find(tab => tab.id === tabId)
       if (existingTab) {
         existingTab.name = gameName
       } else {
-        workbenchTabs.value.push({
-          id: tabId,
-          name: gameName,
-          path: newPath
-        })
+        // 只有当没有通过openGameDirectoryTab触发的路由变化时，才在这里创建
+        // 检查是否是通过这些方法触发的路由变化
+        if (!window._isOpeningGameTab) {
+          workbenchTabs.value.push({
+            id: tabId,
+            name: gameName,
+            path: newPath
+          })
+        }
+        // 重置标志
+        window._isOpeningGameTab = false
       }
     }
   }
@@ -104,7 +110,15 @@ const switchTab = (tabId) => {
   if (tabId === 'home') {
     router.push('/')
   } else {
-    router.push(`/workbench/${tabId}`)
+    // 查找标签页对应的路径
+    const tab = workbenchTabs.value.find(t => t.id === tabId)
+    if (tab) {
+      // 根据标签页的path属性来跳转，保留原来的路径
+      router.push(tab.path)
+    } else {
+      // 如果标签页不存在，默认跳转到工作台页面
+      router.push(`/workbench/${tabId}`)
+    }
   }
 }
 
@@ -121,6 +135,78 @@ const addTab = () => {
   workbenchTabs.value.push(newTab)
   switchTab(newId)
 }
+
+// 打开游戏配置标签页（在新浏览器标签页中打开）
+const openGameTab = (gameId, gameName, fileId, fileType, env) => {
+  // 构建完整的URL，包括所有必要的参数
+  const url = new URL(window.location.href)
+  
+  // 保留基础路径，确保包含正确的公共基础URL
+  const basePath = url.pathname.split('/').filter(Boolean)[0]
+  if (basePath) {
+    url.pathname = `/${basePath}/workbench/${gameId}`
+  } else {
+    url.pathname = `/workbench/${gameId}`
+  }
+  
+  // 清空现有的查询参数，然后添加新的参数
+  url.search = ''
+  if (fileId) url.searchParams.set('fileId', fileId)
+  if (fileType) url.searchParams.set('fileType', fileType)
+  if (env) url.searchParams.set('env', env)
+  if (gameName) url.searchParams.set('gameName', gameName)
+  
+  // 在新的浏览器标签页中打开工作台页面
+  window.open(url.toString(), '_blank')
+}
+
+// 打开游戏目录标签页
+const openGameDirectoryTab = (gameId, gameName, env) => {
+  // 检查是否已经存在相同游戏配置的标签页
+  const existingTab = workbenchTabs.value.find(tab => tab.id === gameId)
+  
+  if (existingTab) {
+    // 更新标签页的路径为GameDirectory页面
+    existingTab.path = `/game-directory/${gameId}`
+    existingTab.name = gameName || `游戏目录 ${gameId}`
+    
+    // 跳转到GameDirectory页面
+    router.push({
+      name: 'GameDirectory',
+      params: { gameId: gameId },
+      query: {
+        env: env,
+        gameName: gameName
+      }
+    })
+  } else {
+    // 设置标志，标识这是通过openGameDirectoryTab触发的路由变化
+    window._isOpeningGameTab = true
+    
+    // 创建新的标签页
+    const newTab = {
+      id: gameId,
+      name: gameName || `游戏目录 ${gameId}`,
+      path: `/game-directory/${gameId}`
+    }
+    
+    workbenchTabs.value.push(newTab)
+    
+    // 跳转到新标签页并传递参数
+    router.push({
+      name: 'GameDirectory',
+      params: { gameId: gameId },
+      query: {
+        env: env,
+        gameName: gameName
+      }
+    })
+  }
+}
+
+// 暴露方法给全局
+window.openGameTab = openGameTab
+window.openGameDirectoryTab = openGameDirectoryTab
 
 // 关闭标签
 const closeTab = (tabId) => {
@@ -145,22 +231,25 @@ onMounted(() => {
     const tabId = route.path.split('/').pop()
     activeTab.value = tabId
     
-    // 检查标签是否存在，不存在则添加
-    const tabExists = workbenchTabs.value.some(tab => tab.id === tabId)
-    if (!tabExists) {
-      const gameName = route.query.gameName || `游戏配置 ${tabId}`
-      workbenchTabs.value.push({
-        id: tabId,
-        name: gameName,
-        path: route.path
-      })
-    } else {
-      // 如果标签已存在，更新名称
-      const gameName = route.query.gameName
-      if (gameName) {
-        const existingTab = workbenchTabs.value.find(tab => tab.id === tabId)
-        if (existingTab) {
-          existingTab.name = gameName
+    // 只有游戏目录路由才创建项目标签页，工作台路由使用浏览器标签页
+    if (route.path.includes('/game-directory/')) {
+      // 检查标签是否存在，不存在则添加
+      const tabExists = workbenchTabs.value.some(tab => tab.id === tabId)
+      if (!tabExists) {
+        const gameName = route.query.gameName || `游戏目录 ${tabId}`
+        workbenchTabs.value.push({
+          id: tabId,
+          name: gameName,
+          path: route.path
+        })
+      } else {
+        // 如果标签已存在，更新名称
+        const gameName = route.query.gameName
+        if (gameName) {
+          const existingTab = workbenchTabs.value.find(tab => tab.id === tabId)
+          if (existingTab) {
+            existingTab.name = gameName
+          }
         }
       }
     }

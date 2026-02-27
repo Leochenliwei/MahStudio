@@ -209,8 +209,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Icon from '../components/Icon.vue'
-import GameInfoModal from './gameinfo.vue'
-import { FileType, getAllGames, addNewGame as addNewGameToMock, updateGame } from '../data/mockData.js'
+import GameInfoModal from '../components/GameInfo.vue'
+import { FileType, getAllGames, addNewGame as addNewGameToMock, updateGame, createGameFile, deleteGame as deleteGameApi } from '../api/gameApi'
 
 // ==================== 路由相关 ====================
 const router = useRouter()
@@ -273,7 +273,7 @@ const currentGame = ref(null)
  * 数据模型：包含files数组，每个文件有type、name、content、updatedAt等字段
  * @type {Ref<Array<Object>>}
  */
-const gameConfigs = ref(getAllGames())
+const gameConfigs = ref([])
 
 // ==================== 计算属性 ====================
 
@@ -302,15 +302,42 @@ const recentUpdates = computed(() => {
 
 /**
  * 组件挂载时初始化
- * 从路由参数中读取环境设置
+ * 从路由参数中读取环境设置，并加载游戏列表
  */
-onMounted(() => {
+onMounted(async () => {
   // 从路由query中读取环境参数
   const env = route.query.env
   if (env && (env === 'test' || env === 'online')) {
     activeEnv.value = env
   }
+  
+  // 加载游戏列表
+  await loadGames()
 })
+
+// ==================== 方法函数 ====================
+
+/**
+ * 加载游戏列表
+ * @description 从API获取所有游戏配置，并将蛇形命名转换为驼峰命名
+ */
+async function loadGames() {
+  try {
+    const games = await getAllGames()
+    // 转换字段命名：蛇形命名 -> 驼峰命名
+    gameConfigs.value = games.map(game => ({
+      ...game,
+      uniqueId: game.unique_id,
+      createdBy: game.created_by,
+      updatedBy: game.updated_by,
+      createdAt: game.created_at,
+      updatedAt: game.updated_at
+    }))
+  } catch (error) {
+    console.error('加载游戏列表失败:', error)
+    alert('加载游戏列表失败，请检查后端服务是否启动')
+  }
+}
 
 // ==================== 方法函数 ====================
 
@@ -333,11 +360,25 @@ function switchEnv(env) {
  * @description 点击游戏行跳转到目录详情页，携带环境参数
  */
 function enterGameDirectory(gameId) {
-  router.push({
-    name: 'GameDirectory',
-    params: { gameId: gameId.toString() },
-    query: { env: activeEnv.value }
-  })
+  // 调用全局的openGameDirectoryTab方法在新标签页中打开GameDirectory页面
+  if (window.openGameDirectoryTab) {
+    // 查找当前游戏的名称
+    const game = gameConfigs.value.find(g => g.id === gameId)
+    const gameName = game ? game.name : null
+    
+    window.openGameDirectoryTab(
+      gameId.toString(),
+      gameName,
+      activeEnv.value
+    )
+  } else {
+    // 兼容处理：如果openGameDirectoryTab方法不存在，使用原有的路由跳转
+    router.push({
+      name: 'GameDirectory',
+      params: { gameId: gameId.toString() },
+      query: { env: activeEnv.value }
+    })
+  }
 }
 
 /**
@@ -350,68 +391,57 @@ function closeAddGameModal() {
   newGameDescription.value = ''
 }
 
-/**
- * 创建默认草稿文件
- * @returns {Object} 默认草稿文件对象
- * @description 为新游戏创建默认草稿配置
- */
-function createDefaultDraft() {
-  const now = new Date().toISOString()
-  return {
-    type: FileType.DRAFT,
-    name: '默认草稿',
-    content: JSON.stringify({
-      gameName: newGameName.value,
-      description: newGameDescription.value,
-      createdAt: now
-    }, null, 2),
-    updatedAt: now,
-    updatedBy: 'admin'
-  }
-}
+
 
 /**
  * 新增游戏
  * @description 创建新游戏配置，自动添加默认草稿，完成后进入目录详情页
  */
-function addNewGame() {
+async function addNewGame() {
   if (!newGameName.value.trim()) {
     alert('请输入游戏名称')
     return
   }
   
-  const now = new Date().toISOString()
-  
-  // 创建新游戏配置对象，包含files数组和默认草稿
-  const newGameData = {
-    name: newGameName.value.trim(),
-    description: newGameDescription.value.trim(),
-    createdBy: 'admin', // 默认为admin用户
-    updatedBy: 'admin', // 默认为admin用户
-    // 自动创建默认草稿
-    files: [createDefaultDraft()]
-  }
-  
-  // 添加到全局mock数据
-  const newGame = addNewGameToMock(newGameData)
-  
-  // 更新本地游戏配置列表
-  gameConfigs.value = getAllGames()
-  
-  // 关闭弹窗并清空输入
-  closeAddGameModal()
-  
-  // 显示loading动画
-  showLoading.value = true
-  
-  // 延迟一段时间后进入目录详情页，以展示loading动画
-  setTimeout(() => {
-    // 关闭loading动画
-    showLoading.value = false
+  try {
+    const now = new Date().toISOString()
     
-    // 进入目录详情页
-    enterGameDirectory(newGame.id)
-  }, 1500) // 1.5秒延迟，展示动画效果
+    const newGameData = {
+      name: newGameName.value.trim(),
+      description: newGameDescription.value.trim(),
+      createdBy: 'admin',
+      updatedBy: 'admin'
+    }
+    
+    const newGame = await addNewGameToMock(newGameData)
+    
+    const defaultDraft = {
+      type: FileType.DRAFT,
+      name: '默认草稿',
+      content: JSON.stringify({
+        gameName: newGameName.value,
+        description: newGameDescription.value,
+        createdAt: now
+      }, null, 2),
+      updatedBy: 'admin'
+    }
+    
+    await createGameFile(newGame.id, defaultDraft)
+    
+    await loadGames()
+    
+    closeAddGameModal()
+    
+    showLoading.value = true
+    
+    setTimeout(() => {
+      showLoading.value = false
+      enterGameDirectory(newGame.id)
+    }, 1500)
+  } catch (error) {
+    console.error('创建游戏失败:', error)
+    alert('创建游戏失败: ' + error.message)
+  }
 }
 
 /**
@@ -440,13 +470,15 @@ function viewGame(game) {
  * @param {number} gameId - 游戏ID
  * @description 删除指定ID的游戏配置
  */
-function deleteGame(gameId) {
+async function deleteGame(gameId) {
   if (confirm('确定要删除这个游戏配置吗？')) {
-    const index = gameConfigs.value.findIndex(config => config.id === gameId)
-    if (index !== -1) {
-      gameConfigs.value.splice(index, 1)
-      console.log('删除游戏ID:', gameId)
+    try {
+      await deleteGameApi(gameId)
+      await loadGames()
       alert('游戏配置已删除')
+    } catch (error) {
+      console.error('删除游戏失败:', error)
+      alert('删除游戏失败: ' + error.message)
     }
   }
 }
@@ -465,15 +497,17 @@ function closeEditModal() {
  * @param {Object} gameData - 更新后的游戏数据
  * @description 保存游戏数据并更新列表
  */
-function saveGameEdit(gameData) {
-  const updatedGame = updateGame(currentGame.value.id, gameData)
-  if (updatedGame) {
-    // 更新本地游戏配置列表
-    gameConfigs.value = getAllGames()
-    // 关闭弹窗
-    closeEditModal()
-    // 显示成功提示
-    alert('游戏配置已更新')
+async function saveGameEdit(gameData) {
+  try {
+    const updatedGame = await updateGame(currentGame.value.id, gameData)
+    if (updatedGame) {
+      await loadGames()
+      closeEditModal()
+      alert('游戏配置已更新')
+    }
+  } catch (error) {
+    console.error('更新游戏失败:', error)
+    alert('更新游戏失败: ' + error.message)
   }
 }
 

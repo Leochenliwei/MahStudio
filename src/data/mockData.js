@@ -12,7 +12,9 @@
 export const FileType = {
   DRAFT: 'draft',       // 草稿，可以有多个
   TEST_MATCH: 'testMatch',   // 测试比赛配置，只有一个
-  TEST_GOLD: 'testGold'      // 测试金币配置，只有一个
+  TEST_GOLD: 'testGold',      // 测试金币配置，只有一个
+  OFFICIAL_MATCH: 'officialMatch', // 正式约局配置，只有一个
+  OFFICIAL_GOLD: 'officialGold'    // 正式金币配置，只有一个
 };
 
 /**

@@ -7,9 +7,15 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "update-icons": "./skills/update-project-icons/update_icons.sh"
+    "update-icons": "./skills/update-project-icons/update_icons.sh",
+    "server": "node server/server.js",
+    "dev:all": "concurrently \"npm run server\" \"npm run dev\""
   },
   "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "lucide-vue-next": "^0.563.0",
     "pinia": "^3.0.4",
     "vue": "^3.4.0",
@@ -18,6 +24,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.4",
+    "concurrently": "^9.2.1",
     "playwright": "^1.58.2",
     "vite": "^7.3.1"
   }

@@ -9,59 +9,62 @@
     <div class="card-body">
       <h4 class="file-name" :title="file.name">{{ file.name }}</h4>
       <p v-if="file.description" class="file-description">{{ file.description }}</p>
-      <p class="file-id" v-if="file.type === 'draft'">ID: {{ file.id }}</p>
     </div>
     
     
     <!-- 卡片头部：更新时间和操作人 -->
     <div class="card-header">
-      <button class="action-btn small copy-to" @click="handleViewHistory" title="查看提测记录">
-          <Icon name="clock" size="14" />
-      </button>
-      <span class="update-time">提测于：{{ formatTime(file.updatedAt) }}</span>
+      
+      <span class="update-time">最新版本：{{ formatTime(file.updatedAt) }}</span>
       <span class="updated-by">|</span>
       <span class="updated-by">操作人：{{ file.updatedBy || '未知' }}</span>
-      
+      <span class="updated-by">|</span>
+      <span class="updated-by">草稿ID：{{ file.id || '未知' }}</span>
+      <button class="action-btn small-icon history" @click="handleViewHistory" title="查看提测记录">
+          <Icon name="clock" size="14" />
+          更多记录
+      </button>
     </div>
 
     
 
     <!-- 卡片底部：操作按钮 -->
     <div class="card-footer">
-      <!-- 草稿类型操作按钮 -->
-      <template v-if="file.type === 'draft'">
-        <button class="action-btn edit" @click="handleEdit" title="编辑">
-          <Icon name="edit" size="14" />
-          <span>编辑</span>
+
+
+      <!-- 测试/灰度类型操作按钮 -->
+      <template v-if="file.type === 'testMatch' || file.type === 'testGold'">
+        <button class="action-btn copy" @click="handleView" title="查看配置">
+          <Icon name="eye" size="14" />
+          <span>查看</span>
         </button>
         <button class="action-btn copy" @click="handleCopy" title="复制">
           <Icon name="copy" size="14" />
           <span>复制</span>
         </button>
-        <button class="action-btn copy-to" @click="handleCopyTo" title="复制到">
-          <Icon name="share" size="14" />
-          <span>复制到</span>
+        <button class="action-btn copy" @click="handleCopyTo" title="复制">
+          <Icon name="copy" size="14" />
+          <span>复制到..</span>
         </button>
-        <button class="action-btn submit" @click="handleSubmit" title="提测">
-          <Icon name="send" size="14" />
-          <span>提测</span>
+        <button class="action-btn gray" @click="handleGrayRelease" :title="environment === 'online' ? '发布' : '发灰度'">
+          <Icon name="rocket" size="14" />
+          <span>{{ environment === 'online' ? '发布' : '发灰度' }}</span>
         </button>
       </template>
-
-      <!-- 测试类型操作按钮 -->
-      <template v-else-if="file.type === 'testMatch' || file.type === 'testGold'">
+      
+      <!-- 正式类型操作按钮（无发布按钮） -->
+      <template v-if="file.type === 'officialMatch' || file.type === 'officialGold'">
+        <button class="action-btn copy" @click="handleView" title="查看配置">
+          <Icon name="eye" size="14" />
+          <span>查看</span>
+        </button>
         <button class="action-btn copy" @click="handleCopy" title="复制">
           <Icon name="copy" size="14" />
           <span>复制</span>
         </button>
-        <button class="action-btn copy-to" @click="handleCopyTo" title="复制到">
-          <Icon name="share" size="14" />
-          <span>复制到</span>
-        </button>
-        
-        <button class="action-btn gray" @click="handleGrayRelease" title="发灰度">
-          <Icon name="rocket" size="14" />
-          <span>发灰度</span>
+        <button class="action-btn copy" @click="handleCopyTo" title="复制">
+          <Icon name="copy" size="14" />
+          <span>复制到..</span>
         </button>
       </template>
     </div>
@@ -74,23 +77,21 @@
  * 
  * 功能说明：
  * 用于展示游戏配置文件的基本信息和操作按钮
- * 根据文件类型（草稿/测试约局/测试金币）显示不同的样式和操作按钮
+ * 根据文件类型（测试约局/测试金币）显示不同的样式和操作按钮
  * 
  * Props:
  * @property {Object} file - 文件对象
  *   @property {string} file.id - 文件唯一标识
  *   @property {string} file.name - 文件名称
- *   @property {string} file.type - 文件类型 (draft/test/gold)
+ *   @property {string} file.type - 文件类型 (testMatch/testGold)
  *   @property {string|number} file.updatedAt - 更新时间戳
  *   @property {string} [file.description] - 文件描述（可选）
  * @property {string} environment - 环境标识 (test/online)
  * 
  * Events:
- * @event edit - 编辑文件，携带文件ID
  * @event copy - 复制文件，携带文件对象
- * @event copy-to - 复制到目标游戏，携带文件对象
- * @event submit-test - 提交测试，携带文件对象
  * @event gray-release - 发布灰度，携带文件对象
+ * @event view-history - 查看提测记录，携带文件对象
  */
 
 import Icon from './Icon.vue'
@@ -122,7 +123,7 @@ const props = defineProps({
 })
 
 // 定义事件
-const emit = defineEmits(['edit', 'copy', 'copy-to', 'submit-test', 'gray-release', 'view-history'])
+const emit = defineEmits(['view','copy','copy-to', 'publish', 'view-history'])
 
 /**
  * 获取类型标签文本
@@ -131,7 +132,6 @@ const emit = defineEmits(['edit', 'copy', 'copy-to', 'submit-test', 'gray-releas
  */
 function getTypeLabel(type) {
   const typeMap = {
-    draft: '草稿',
     testMatch: '测试约局',
     testGold: '测试金币'
   }
@@ -175,11 +175,11 @@ function formatTime(timestamp) {
 }
 
 /**
- * 处理编辑按钮点击
- * 关联需求：文件管理 - 编辑草稿文件
+ * 处理查看按钮点击
+ * 关联需求：文件管理 - 查看文件配置
  */
-function handleEdit() {
-  emit('edit', props.file.id)
+function handleView() {
+  emit('view', props.file)
 }
 
 /**
@@ -192,26 +192,18 @@ function handleCopy() {
 
 /**
  * 处理复制到按钮点击
- * 关联需求：文件管理 - 复制到其他游戏
+ * 关联需求：文件管理 - 复制文件到指定目录
  */
 function handleCopyTo() {
   emit('copy-to', props.file)
 }
 
 /**
- * 处理提测按钮点击
- * 关联需求：文件管理 - 提交测试
- */
-function handleSubmit() {
-  emit('submit-test', props.file)
-}
-
-/**
- * 处理发灰度按钮点击
- * 关联需求：文件管理 - 发布灰度
+ * 处理发布按钮点击
+ * 关联需求：文件管理 - 发布灰度/发布到正式
  */
 function handleGrayRelease() {
-  emit('gray-release', props.file)
+  emit('publish', props.file)
 }
 
 /**
@@ -341,19 +333,6 @@ function handleViewHistory() {
   transform: translateY(-1px);
 }
 
-/* 编辑按钮 */
-.action-btn.edit {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  border-color: rgba(59, 130, 246, 0.2);
-}
-
-.action-btn.edit:hover {
-  background: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
-}
-
 /* 复制按钮 */
 .action-btn.copy {
   background: var(--color-surface-hover);
@@ -362,35 +341,9 @@ function handleViewHistory() {
 }
 
 .action-btn.copy:hover {
-  background: var(--color-surface-active);
-  color: var(--color-text-primary);
-  border-color: var(--color-border-dark);
-}
-
-/* 复制到按钮 */
-.action-btn.copy-to {
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
-  border-color: rgba(139, 92, 246, 0.2);
-}
-
-.action-btn.copy-to:hover {
   background: #8b5cf6;
   color: white;
   border-color: #8b5cf6;
-}
-
-/* 提测按钮 */
-.action-btn.submit {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--color-success);
-  border-color: rgba(16, 185, 129, 0.2);
-}
-
-.action-btn.submit:hover {
-  background: var(--color-success);
-  color: white;
-  border-color: var(--color-success);
 }
 
 /* 发灰度按钮 */
@@ -411,6 +364,7 @@ function handleViewHistory() {
   background: rgba(139, 92, 246, 0.1);
   color: #8b5cf6;
   border-color: rgba(139, 92, 246, 0.2);
+  margin-left: 16px;
 }
 
 .action-btn.history:hover {
@@ -424,7 +378,7 @@ function handleViewHistory() {
   padding: var(--spacing-2);
   min-width: auto;
   flex: none;
-  width: 32px;
+  /* width: 32px; */
   height: 32px;
 }
 

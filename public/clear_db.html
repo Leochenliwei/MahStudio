@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清空数据库</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            min-height: 100px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #da190b;
+        }
+        .warning {
+            color: #f44336;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>清空数据库</h1>
+        <div class="warning">
+            <strong>警告：</strong>此操作将清空数据库中的所有数据，包括游戏、文件、提交历史和APK数据。此操作不可恢复！
+        </div>
+        <button onclick="clearDatabase()">确认清空数据库</button>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script type="module">
+        // 导入模块
+        import { gameService, fileService, historyService } from '/MahStudio/src/services/dbService.js';
+        import { initDatabase } from '/MahStudio/src/utils/db.js';
+
+        const resultElement = document.getElementById('result');
+
+        function showResult(message) {
+            resultElement.textContent = message;
+            console.log(message);
+        }
+
+        async function clearDatabase() {
+            if (!confirm('确定要清空所有数据库数据吗？此操作不可恢复！')) {
+                return;
+            }
+
+            try {
+                showResult('开始清空数据库数据...');
+                
+                // 初始化数据库
+                await initDatabase();
+                showResult('数据库初始化成功');
+                
+                // 获取所有游戏
+                const games = await gameService.getAllGames();
+                showResult(`找到 ${games.length} 个游戏`);
+                
+                // 删除每个游戏
+                for (const game of games) {
+                    await gameService.deleteGame(game.id);
+                    showResult(`删除游戏: ${game.id} - ${game.name}`);
+                }
+                
+                showResult('数据库数据清空完成！');
+            } catch (error) {
+                showResult(`清空数据库数据失败: ${error.message}`);
+                console.error('清空数据库数据失败:', error);
+            }
+        }
+    </script>
+</body>
+</html>
