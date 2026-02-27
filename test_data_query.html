@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试数据查询</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.delete {
+            background-color: #f44336;
+        }
+        button.delete:hover {
+            background-color: #da190b;
+        }
+        .button-group {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>测试数据查询</h1>
+        <div class="button-group">
+            <button onclick="migrateData()">执行数据迁移</button>
+            <button onclick="getAllGames()">获取所有游戏</button>
+            <button onclick="getGameById('1')">获取游戏ID=1</button>
+            <button onclick="getFilesByGameId('1')">获取游戏1的文件</button>
+            <button onclick="clearAllData()" class="delete">清空所有数据</button>
+        </div>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script type="module">
+        // 导入模块
+        import { initDatabase, getDatabase } from './src/utils/db.js';
+        import { migrateMockData, hasData } from './src/utils/dataMigrator.js';
+        import { gameService, fileService, historyService } from './src/services/dbService.js';
+
+        const resultElement = document.getElementById('result');
+
+        function showResult(message) {
+            resultElement.textContent = message;
+        }
+
+        async function migrateData() {
+            try {
+                showResult('开始数据迁移...');
+                await initDatabase();
+                const result = await migrateMockData();
+                showResult(`数据迁移成功:\n${JSON.stringify(result, null, 2)}`);
+            } catch (error) {
+                showResult(`数据迁移失败: ${error.message}`);
+                console.error('数据迁移失败:', error);
+            }
+        }
+
+        async function getAllGames() {
+            try {
+                showResult('开始获取所有游戏...');
+                await initDatabase();
+                const games = await gameService.getAllGames();
+                showResult(`获取游戏列表成功:\n${JSON.stringify(games, null, 2)}`);
+            } catch (error) {
+                showResult(`获取游戏列表失败: ${error.message}`);
+                console.error('获取游戏列表失败:', error);
+            }
+        }
+
+        async function getGameById(gameId) {
+            try {
+                showResult(`开始获取游戏ID=${gameId}...`);
+                await initDatabase();
+                const game = await gameService.getGameById(gameId);
+                showResult(`获取游戏成功:\n${JSON.stringify(game, null, 2)}`);
+            } catch (error) {
+                showResult(`获取游戏失败: ${error.message}`);
+                console.error('获取游戏失败:', error);
+            }
+        }
+
+        async function getFilesByGameId(gameId) {
+            try {
+                showResult(`开始获取游戏ID=${gameId}的文件...`);
+                await initDatabase();
+                const files = await fileService.getFilesByGameId(gameId);
+                showResult(`获取文件列表成功:\n${JSON.stringify(files, null, 2)}`);
+            } catch (error) {
+                showResult(`获取文件列表失败: ${error.message}`);
+                console.error('获取文件列表失败:', error);
+            }
+        }
+
+        async function clearAllData() {
+            if (!confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                return;
+            }
+            try {
+                showResult('开始清空数据...');
+                await initDatabase();
+                const games = await gameService.getAllGames();
+                for (const game of games) {
+                    await gameService.deleteGame(game.id);
+                }
+                showResult('数据清空成功！');
+            } catch (error) {
+                showResult(`清空数据失败: ${error.message}`);
+                console.error('清空数据失败:', error);
+            }
+        }
+
+        // 初始化数据库
+        initDatabase().then(() => {
+            showResult('数据库初始化成功，准备就绪！');
+        }).catch(error => {
+            showResult(`数据库初始化失败: ${error.message}`);
+            console.error('数据库初始化失败:', error);
+        });
+    </script>
+</body>
+</html>
