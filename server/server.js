@@ -1,12 +1,16 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import dotenv from 'dotenv';
 import { init, getDatabase } from './database.js';
 import createGamesRoutes from './routes/games.js';
 import createApkRoutes from './routes/apks.js';
 
+// 加载环境变量
+dotenv.config();
+
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8001;
 
 app.use(cors());
 app.use(bodyParser.json());

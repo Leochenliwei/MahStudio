@@ -1,0 +1,38 @@
+# Checklist
+
+- [x] SQLite数据库服务启动成功
+- [x] games表结构创建成功，包含所有必要字段
+- [x] game_files表结构创建成功，包含所有必要字段
+- [x] submit_history表结构创建成功，包含所有必要字段
+- [x] apk_list表结构创建成功，包含所有必要字段
+- [x] mockData.js中的游戏数据成功导入到SQLite数据库
+- [x] apkid.json中的APK数据成功导入到SQLite数据库
+- [x] 后端API服务启动成功，监听指定端口
+- [x] GET /api/games接口返回正确的游戏列表数据（包含files和submitHistory）
+- [x] GET /api/games/:id接口返回正确的单个游戏数据
+- [x] POST /api/games接口成功创建游戏并返回游戏ID和uniqueId
+- [x] PUT /api/games/:id接口成功更新游戏数据
+- [x] DELETE /api/games/:id接口成功删除游戏数据
+- [x] GET /api/games/:id/files接口返回正确的游戏文件列表
+- [x] POST /api/games/:id/files接口成功创建游戏文件
+- [x] PUT /api/games/:id/files/:fileId接口成功更新游戏文件
+- [x] DELETE /api/games/:id/files/:fileId接口成功删除游戏文件
+- [x] GET /api/games/:id/submit-history接口返回正确的提测记录列表
+- [x] POST /api/games/:id/submit-history接口成功创建提测记录
+- [x] GET /api/apks接口返回正确的APK列表数据
+- [x] 前端gameApi.js模块创建完成，包含所有游戏相关API调用方法
+- [x] 前端apkApi.js模块创建完成，包含所有APK相关API调用方法
+- [x] Admin.vue成功替换mockData为gameApi
+- [x] Admin.vue页面加载时正确显示游戏列表（来自SQLite数据库）
+- [x] 新增游戏功能正常，数据成功保存到SQLite数据库
+- [x] 编辑游戏功能正常，数据成功更新到SQLite数据库
+- [x] 删除游戏功能正常，数据成功从SQLite数据库删除
+- [x] 刷新页面后，游戏数据依然存在（验证持久化）
+- [x] 游戏文件CRUD操作正常，数据正确关联到对应游戏
+- [x] 提测记录CRUD操作正常，数据正确关联到对应游戏
+- [x] APK列表展示正常，数据来自apkid.json
+- [x] 所有API接口包含错误处理，异常情况下返回友好的错误信息
+- [x] 数据库操作包含事务处理，确保数据一致性
+- [x] 外键约束正确设置，删除游戏时级联删除相关文件和提测记录
+- [x] 代码包含完整的函数级注释，符合项目规范
+- [x] 项目启动脚本配置完成，可以一键启动前后端服务

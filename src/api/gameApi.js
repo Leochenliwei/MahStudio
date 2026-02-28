@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:3001/api';
+// 使用环境变量中的端口配置
+const API_PORT = import.meta.env.VITE_API_PORT || '8001';
+const API_BASE_URL = `http://localhost:${API_PORT}/api`;
 
 export const FileType = {
   DRAFT: 'draft',
