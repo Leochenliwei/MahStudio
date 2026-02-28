@@ -43,8 +43,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on http://0.0.0.0:${PORT}`);
   console.log(`API endpoints available at:`);
   console.log(`  - GET    /api/games`);
   console.log(`  - GET    /api/games/:id`);
