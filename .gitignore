@@ -118,3 +118,7 @@ dist
 # 忽略测试结果和截图目录
 test_results/
 test_screenshots/
+
+# 忽略数据库临时文件
+*.db-shm
+*.db-wal
