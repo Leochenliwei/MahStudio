@@ -161,6 +161,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { ElNotification } from 'element-plus'
 import Icon from './Icon.vue'
 import CustomSelect from './CustomSelect.vue'
 
@@ -334,12 +335,22 @@ function closeModal() {
 function saveVariable() {
   // 表单验证
   if (!formData.value.name.trim()) {
-    alert('请输入变量名称')
+    ElNotification({
+      title: '警告',
+      message: '请输入变量名称',
+      type: 'warning',
+      duration: 3000
+    })
     return
   }
   
   if (!formData.value.type) {
-    alert('请选择变量类型')
+    ElNotification({
+      title: '警告',
+      message: '请选择变量类型',
+      type: 'warning',
+      duration: 3000
+    })
     return
   }
   

@@ -1,0 +1,10 @@
+- [x] Checkpoint 1: 穿梭框组件已创建并能正常工作
+- [x] Checkpoint 2: GameInfo.vue 已集成穿梭框组件
+- [x] Checkpoint 3: 三个 APK ID 字段（test_apk_ids、gray_apk_ids、pro_apk_ids）已添加到表单
+- [x] Checkpoint 4: 成功集成 getAllApks() API 获取 APK 数据
+- [x] Checkpoint 5: 穿梭框能够正确显示和选择 APK
+- [x] Checkpoint 6: 数据保存功能正常，包含新增的 APK ID 字段
+- [x] Checkpoint 7: 编辑已有游戏时，已保存的 APK ID 正确显示
+- [x] Checkpoint 8: 界面布局符合设计规范
+- [x] Checkpoint 9: 交互流畅，响应时间合理
+- [x] Checkpoint 10: 代码结构清晰，注释完整

@@ -21,12 +21,12 @@
             > 
             <span class="option-text">{{ option }}人</span>
           </label>
-          <label class="checkbox-option">
-            <input 
-              type="checkbox" 
-              v-model="basicConfig.playerCount.allowLess"
+          <label v-if="basicConfig.playerCount.allowLess" class="checkbox-option">
+            <input
+              type="checkbox"
+              v-model="basicConfig.playerCount.allowLessStart"
               @change="$emit('update-basic-config')"
-            > 
+            >
             <span class="option-text">少人开局</span>
           </label>
         </div>

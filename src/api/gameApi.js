@@ -1,7 +1,4 @@
-// 使用环境变量中的主机和端口配置
-const API_HOST = import.meta.env.VITE_API_HOST || 'localhost';
-const API_PORT = import.meta.env.VITE_API_PORT || '8001';
-const API_BASE_URL = `http://${API_HOST}:${API_PORT}/api`;
+import * as storageService from '../storage/localStorageService';
 
 export const FileType = {
   DRAFT: 'draft',
@@ -11,84 +8,78 @@ export const FileType = {
   OFFICIAL_GOLD: 'officialGold'
 };
 
-async function request(url, options = {}) {
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || 'Request failed');
-  }
-
-  return response.json();
-}
+storageService.initializeData();
 
 export async function getAllGames() {
-  return request(`${API_BASE_URL}/games`);
+  return storageService.getAllGames();
 }
 
 export async function getGameById(gameId) {
-  return request(`${API_BASE_URL}/games/${gameId}`);
+  return storageService.getGame(gameId);
 }
 
 export async function createGame(gameData) {
-  return request(`${API_BASE_URL}/games`, {
-    method: 'POST',
-    body: JSON.stringify(gameData),
-  });
+  const newGame = storageService.addGame(gameData);
+  if (!newGame) {
+    throw new Error('创建游戏失败');
+  }
+  return newGame;
 }
 
 export async function updateGame(gameId, gameData) {
-  return request(`${API_BASE_URL}/games/${gameId}`, {
-    method: 'PUT',
-    body: JSON.stringify(gameData),
-  });
+  const updatedGame = storageService.updateGame(gameId, gameData);
+  if (!updatedGame) {
+    throw new Error('游戏不存在或更新失败');
+  }
+  return updatedGame;
 }
 
 export async function deleteGame(gameId) {
-  return request(`${API_BASE_URL}/games/${gameId}`, {
-    method: 'DELETE',
-  });
+  const success = storageService.deleteGame(gameId);
+  if (!success) {
+    throw new Error('删除游戏失败');
+  }
+  return { success: true, message: 'Game deleted successfully' };
 }
 
 export async function getGameFiles(gameId) {
-  return request(`${API_BASE_URL}/games/${gameId}/files`);
+  return storageService.getGameFiles(gameId);
 }
 
 export async function createGameFile(gameId, fileData) {
-  return request(`${API_BASE_URL}/games/${gameId}/files`, {
-    method: 'POST',
-    body: JSON.stringify(fileData),
-  });
+  const newFile = storageService.addGameFile(gameId, fileData);
+  if (!newFile) {
+    throw new Error('创建文件失败');
+  }
+  return newFile;
 }
 
 export async function updateGameFile(gameId, fileId, fileData) {
-  return request(`${API_BASE_URL}/games/${gameId}/files/${fileId}`, {
-    method: 'PUT',
-    body: JSON.stringify(fileData),
-  });
+  const updatedFile = storageService.updateGameFile(gameId, fileId, fileData);
+  if (!updatedFile) {
+    throw new Error('文件不存在或更新失败');
+  }
+  return updatedFile;
 }
 
 export async function deleteGameFile(gameId, fileId) {
-  return request(`${API_BASE_URL}/games/${gameId}/files/${fileId}`, {
-    method: 'DELETE',
-  });
+  const success = storageService.deleteGameFile(gameId, fileId);
+  if (!success) {
+    throw new Error('删除文件失败');
+  }
+  return { success: true, message: 'File deleted successfully' };
 }
 
 export async function getSubmitHistory(gameId) {
-  return request(`${API_BASE_URL}/games/${gameId}/submit-history`);
+  return storageService.getSubmitHistory(gameId);
 }
 
 export async function createSubmitHistory(gameId, historyData) {
-  return request(`${API_BASE_URL}/games/${gameId}/submit-history`, {
-    method: 'POST',
-    body: JSON.stringify(historyData),
-  });
+  const newHistory = storageService.addSubmitHistory(gameId, historyData);
+  if (!newHistory) {
+    throw new Error('创建提交历史失败');
+  }
+  return newHistory;
 }
 
 export async function getOtherGames(currentGameId) {

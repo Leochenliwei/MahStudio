@@ -300,6 +300,7 @@
 
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElNotification } from 'element-plus'
 import Icon from '../components/Icon.vue'
 import FileCard from '../components/FileCard.vue'
 import CopyToModal from '../components/CopyToModal.vue'
@@ -622,10 +623,20 @@ async function copyFile(file) {
     // 重新加载游戏数据以更新UI
     await loadGameData()
     
-    alert(`复制文件成功：${file.name}`)
+    ElNotification({
+      title: '成功',
+      message: `复制文件成功：${file.name}`,
+      type: 'success',
+      duration: 3000
+    })
   } catch (error) {
     console.error('复制文件失败:', error)
-    alert('复制文件失败: ' + error.message)
+    ElNotification({
+      title: '错误',
+      message: '复制文件失败: ' + error.message,
+      type: 'error',
+      duration: 3000
+    })
   }
 }
 
@@ -655,12 +666,22 @@ async function handleCopyTo(targetGameId) {
     
     await createGameFile(targetGameId, copyFileData)
     
-    alert(`复制到游戏成功：游戏ID ${targetGameId}`)
+    ElNotification({
+      title: '成功',
+      message: `复制到游戏成功：游戏ID ${targetGameId}`,
+      type: 'success',
+      duration: 3000
+    })
     showCopyToModalVisible.value = false
     currentCopyFile.value = null
   } catch (error) {
     console.error('复制到游戏失败:', error)
-    alert('复制到游戏失败: ' + error.message)
+    ElNotification({
+      title: '错误',
+      message: '复制到游戏失败: ' + error.message,
+      type: 'error',
+      duration: 3000
+    })
   }
 }
 
@@ -679,7 +700,12 @@ function showSubmitTestModal(draft) {
  */
 async function handleSubmitTest(targetType) {
   if (!currentSubmitDraft.value) {
-    alert('请选择要提测的草稿')
+    ElNotification({
+      title: '警告',
+      message: '请选择要提测的草稿',
+      type: 'warning',
+      duration: 3000
+    })
     return
   }
   
@@ -726,12 +752,22 @@ async function handleSubmitTest(targetType) {
     // 重新加载游戏数据以更新UI
     await loadGameData()
     
-    alert(`提测成功：已提测到 ${targetTypeValue}`)
+    ElNotification({
+      title: '成功',
+      message: `提测成功：已提测到 ${targetTypeValue}`,
+      type: 'success',
+      duration: 3000
+    })
     showSubmitTestModalVisible.value = false
     currentSubmitDraft.value = null
   } catch (error) {
     console.error('提测失败:', error)
-    alert('提测失败: ' + error.message)
+    ElNotification({
+      title: '错误',
+      message: '提测失败: ' + error.message,
+      type: 'error',
+      duration: 3000
+    })
   }
 }
 
@@ -772,7 +808,12 @@ async function publishFile(file) {
       targetType = FileType.OFFICIAL_GOLD
       targetName = '正式金币配置'
     } else {
-      alert('只能发布灰度文件到正式环境')
+      ElNotification({
+        title: '警告',
+        message: '只能发布灰度文件到正式环境',
+        type: 'warning',
+        duration: 3000
+      })
       return
     }
     
@@ -802,10 +843,20 @@ async function publishFile(file) {
     // 重新加载游戏数据以更新UI
     await loadGameData()
     
-    alert(`发布成功：${file.name} 已发布到 ${targetName}`)
+    ElNotification({
+      title: '成功',
+      message: `发布成功：${file.name} 已发布到 ${targetName}`,
+      type: 'success',
+      duration: 3000
+    })
   } catch (error) {
     console.error('发布失败:', error)
-    alert('发布失败: ' + error.message)
+    ElNotification({
+      title: '错误',
+      message: '发布失败: ' + error.message,
+      type: 'error',
+      duration: 3000
+    })
   }
 }
 
@@ -822,7 +873,12 @@ function closeCreateDraftModal() {
  */
 async function createDraft() {
   if (!newDraftName.value.trim()) {
-    alert('请输入草稿名称')
+    ElNotification({
+      title: '警告',
+      message: '请输入草稿名称',
+      type: 'warning',
+      duration: 3000
+    })
     return
   }
   
@@ -854,7 +910,12 @@ async function createDraft() {
     }, 300)
   } catch (error) {
     console.error('创建草稿失败:', error)
-    alert('创建草稿失败: ' + error.message)
+    ElNotification({
+      title: '错误',
+      message: '创建草稿失败: ' + error.message,
+      type: 'error',
+      duration: 3000
+    })
   }
 }
 

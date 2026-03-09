@@ -169,6 +169,7 @@
         v-if="showEditModal"
         :game="currentGame"
         :visible="showEditModal"
+        :is-read-only="isReadOnly"
         @close="closeEditModal"
         @save="saveGameEdit"
       />
@@ -208,6 +209,7 @@
 
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElNotification } from 'element-plus'
 import Icon from '../components/Icon.vue'
 import GameInfoModal from '../components/GameInfo.vue'
 import { FileType, getAllGames, addNewGame as addNewGameToMock, updateGame, createGameFile, deleteGame as deleteGameApi } from '../api/gameApi'
@@ -259,6 +261,12 @@ const showLoading = ref(false)
  * @type {Ref<boolean>}
  */
 const showEditModal = ref(false)
+
+/**
+ * 弹窗是否为只读态
+ * @type {Ref<boolean>}
+ */
+const isReadOnly = ref(false)
 
 /**
  * 当前编辑的游戏数据
@@ -331,11 +339,20 @@ async function loadGames() {
       createdBy: game.created_by,
       updatedBy: game.updated_by,
       createdAt: game.created_at,
-      updatedAt: game.updated_at
+      updatedAt: game.updated_at,
+      test_apk_ids: game.test_apk_ids || [],
+      gray_apk_ids: game.gray_apk_ids || [],
+      pro_apk_ids: game.pro_apk_ids || []
     }))
+    console.log('Games loaded:', gameConfigs.value)
   } catch (error) {
     console.error('加载游戏列表失败:', error)
-    alert('加载游戏列表失败，请检查后端服务是否启动')
+    ElNotification({
+      title: '错误',
+      message: '加载游戏列表失败，请检查后端服务是否启动',
+      type: 'error',
+      duration: 3000
+    })
   }
 }
 
@@ -399,7 +416,12 @@ function closeAddGameModal() {
  */
 async function addNewGame() {
   if (!newGameName.value.trim()) {
-    alert('请输入游戏名称')
+    ElNotification({
+      title: '警告',
+      message: '请输入游戏名称',
+      type: 'warning',
+      duration: 3000
+    })
     return
   }
   
@@ -440,7 +462,12 @@ async function addNewGame() {
     }, 1500)
   } catch (error) {
     console.error('创建游戏失败:', error)
-    alert('创建游戏失败: ' + error.message)
+    ElNotification({
+      title: '错误',
+      message: '创建游戏失败: ' + error.message,
+      type: 'error',
+      duration: 3000
+    })
   }
 }
 
@@ -450,19 +477,34 @@ async function addNewGame() {
  * @description 打开编辑游戏的弹窗，传递游戏数据
  */
 function editGame(game) {
-  currentGame.value = game
+  // 确保游戏数据包含 APK ID 字段
+  currentGame.value = {
+    ...game,
+    test_apk_ids: game.test_apk_ids || [],
+    gray_apk_ids: game.gray_apk_ids || [],
+    pro_apk_ids: game.pro_apk_ids || []
+  }
+  console.log('Edit game data:', currentGame.value)
+  isReadOnly.value = false
   showEditModal.value = true
 }
 
 /**
  * 查看游戏
  * @param {Object} game - 游戏配置对象
- * @description 查看游戏的详细信息
+ * @description 查看游戏的详细信息，打开只读态弹窗
  */
 function viewGame(game) {
-  // 这里可以实现查看游戏详情的逻辑
-  console.log('查看游戏:', game)
-  alert(`查看游戏: ${game.name}\n描述: ${game.description}\n创建人: ${game.createdBy}\n创建时间: ${formatDateTime(game.createdAt)}\n编辑人: ${game.updatedBy}\n编辑时间: ${formatDateTime(game.updatedAt)}`)
+  // 确保游戏数据包含 APK ID 字段
+  currentGame.value = {
+    ...game,
+    test_apk_ids: game.test_apk_ids || [],
+    gray_apk_ids: game.gray_apk_ids || [],
+    pro_apk_ids: game.pro_apk_ids || []
+  }
+  console.log('View game data:', currentGame.value)
+  isReadOnly.value = true
+  showEditModal.value = true
 }
 
 /**
@@ -475,10 +517,20 @@ async function deleteGame(gameId) {
     try {
       await deleteGameApi(gameId)
       await loadGames()
-      alert('游戏配置已删除')
+      ElNotification({
+        title: '成功',
+        message: '游戏配置已删除',
+        type: 'success',
+        duration: 3000
+      })
     } catch (error) {
       console.error('删除游戏失败:', error)
-      alert('删除游戏失败: ' + error.message)
+      ElNotification({
+        title: '错误',
+        message: '删除游戏失败: ' + error.message,
+        type: 'error',
+        duration: 3000
+      })
     }
   }
 }
@@ -490,6 +542,7 @@ async function deleteGame(gameId) {
 function closeEditModal() {
   showEditModal.value = false
   currentGame.value = null
+  isReadOnly.value = false
 }
 
 /**
@@ -499,15 +552,73 @@ function closeEditModal() {
  */
 async function saveGameEdit(gameData) {
   try {
-    const updatedGame = await updateGame(currentGame.value.id, gameData)
+    console.log('Game data received:', gameData)
+    
+    // 将驼峰命名转换为蛇形命名
+    const snakeCaseGameData = {
+      name: gameData.name,
+      description: gameData.description,
+      region: gameData.region,
+      collaborators: gameData.collaborators,
+      test_apk_ids: gameData.test_apk_ids,
+      gray_apk_ids: gameData.gray_apk_ids,
+      pro_apk_ids: gameData.pro_apk_ids,
+      unique_id: gameData.uniqueId
+    }
+    
+    console.log('Snake case game data:', snakeCaseGameData)
+    
+    const updatedGame = await updateGame(currentGame.value.id, snakeCaseGameData)
+    console.log('Updated game:', updatedGame)
+    
     if (updatedGame) {
-      await loadGames()
+      // 确保 gameData 包含 APK ID 字段
+      const gameDataWithApkIds = {
+        ...gameData,
+        test_apk_ids: gameData.test_apk_ids || [],
+        gray_apk_ids: gameData.gray_apk_ids || [],
+        pro_apk_ids: gameData.pro_apk_ids || []
+      }
+      
+      // 直接更新前端游戏列表，不依赖后端返回的数据
+      const updatedGameIndex = gameConfigs.value.findIndex(game => game.id === currentGame.value.id)
+      if (updatedGameIndex > -1) {
+        gameConfigs.value[updatedGameIndex] = {
+          ...gameConfigs.value[updatedGameIndex],
+          name: gameDataWithApkIds.name,
+          description: gameDataWithApkIds.description,
+          region: gameDataWithApkIds.region,
+          collaborators: gameDataWithApkIds.collaborators,
+          test_apk_ids: gameDataWithApkIds.test_apk_ids,
+          gray_apk_ids: gameDataWithApkIds.gray_apk_ids,
+          pro_apk_ids: gameDataWithApkIds.pro_apk_ids,
+          uniqueId: gameDataWithApkIds.uniqueId,
+          updatedAt: new Date().toISOString()
+        }
+        console.log('Game list updated:', {
+          id: gameConfigs.value[updatedGameIndex].id,
+          name: gameConfigs.value[updatedGameIndex].name,
+          test_apk_ids: gameConfigs.value[updatedGameIndex].test_apk_ids,
+          gray_apk_ids: gameConfigs.value[updatedGameIndex].gray_apk_ids,
+          pro_apk_ids: gameConfigs.value[updatedGameIndex].pro_apk_ids
+        })
+      }
       closeEditModal()
-      alert('游戏配置已更新')
+      ElNotification({
+        title: '成功',
+        message: '游戏配置已更新',
+        type: 'success',
+        duration: 3000
+      })
     }
   } catch (error) {
     console.error('更新游戏失败:', error)
-    alert('更新游戏失败: ' + error.message)
+    ElNotification({
+      title: '错误',
+      message: '更新游戏失败: ' + error.message,
+      type: 'error',
+      duration: 3000
+    })
   }
 }
 

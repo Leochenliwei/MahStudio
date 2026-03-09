@@ -255,6 +255,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { ElNotification } from 'element-plus'
 import Icon from './Icon.vue'
 
 // Props
@@ -440,7 +441,12 @@ function getComponentTypeText(type) {
 
 // 打开选项联动编辑器
 function openDependencyEditor() {
-  alert('选项联动功能开发中')
+  ElNotification({
+    title: '信息',
+    message: '选项联动功能开发中',
+    type: 'info',
+    duration: 3000
+  })
 }
 
 // 打开详细规则页面

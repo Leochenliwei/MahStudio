@@ -391,6 +391,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElNotification } from 'element-plus'
 import VueDraggableResizable from 'vue-draggable-resizable'
 import Icon from '../components/Icon.vue'
 import VariableManagementModal from '../components/VariableManagementModal.vue'
@@ -612,7 +613,12 @@ function isCategoryExpanded(category) {
 
 // 打开模板库
 function openTemplateLibrary() {
-  alert('模板库功能暂未开发')
+  ElNotification({
+    title: '信息',
+    message: '模板库功能暂未开发',
+    type: 'info',
+    duration: 3000
+  })
 }
 
 // 打开变量管理
@@ -822,7 +828,12 @@ function save() {
   console.log('保存配置')
   // 这里可以实现保存到本地存储或服务器的逻辑
   addHistory('保存配置')
-  alert('配置已保存')
+  ElNotification({
+    title: '成功',
+    message: '配置已保存',
+    type: 'success',
+    duration: 3000
+  })
 }
 
 // 预览
@@ -830,7 +841,12 @@ function preview() {
   console.log('预览配置')
   // 这里可以实现预览功能的逻辑
   addHistory('预览配置')
-  alert('预览功能开发中')
+  ElNotification({
+    title: '信息',
+    message: '预览功能开发中',
+    type: 'info',
+    duration: 3000
+  })
 }
 
 // 提测
@@ -853,7 +869,12 @@ function handleSubmitTest({ targetType }) {
   // 这里可以实现提测到生产环境的逻辑
   showSubmitTestModalVisible.value = false
   currentSubmitDraft.value = null
-  alert(`配置已提测到${targetType === 'testMatch' ? '测试约局' : '测试金币'}`)
+  ElNotification({
+    title: '成功',
+    message: `配置已提测到${targetType === 'testMatch' ? '测试约局' : '测试金币'}`,
+    type: 'success',
+    duration: 3000
+  })
 }
 
 // 加载分类列表
@@ -915,7 +936,12 @@ function toggleComponent(component) {
     // 检查是否有相同ID的组件已经启用
     const isDuplicate = components.value.some(c => c.id === component.id && c.enabled && c !== component)
     if (isDuplicate) {
-      alert('该组件已经启用，不能重复启用！')
+      ElNotification({
+        title: '警告',
+        message: '该组件已经启用，不能重复启用！',
+        type: 'warning',
+        duration: 3000
+      })
       component.enabled = false
       return
     }

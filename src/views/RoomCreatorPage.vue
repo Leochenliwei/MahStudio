@@ -70,18 +70,19 @@
       </div>
     </div>
 
-    <!-- 抽屉组件 -->
-    <Drawer 
+    <!-- 基础创房面板抽屉 -->
+    <BasicParamsDrawer
       :active-drawer="activeDrawer"
       :player-count-templates="playerCountTemplates"
       :selected-player-count-template="selectedPlayerCountTemplate"
       :round-count-templates="roundCountTemplates"
+      :circle-count-templates="circleCountTemplates"
       :selected-round-count-template="selectedRoundCountTemplate"
       :base-score-templates="baseScoreTemplates"
       :selected-base-score-template="selectedBaseScoreTemplate"
       :round-mode="roomConfig.basic.roundCount.mode"
-      :editing-component="editingComponent"
-      @close-all-drawers="closeAllDrawers"
+      :allow-less="roomConfig.basic.playerCount.allowLess"
+      @close="closeAllDrawers"
       @select-player-count-template="selectPlayerCountTemplate"
       @save-player-count-config="savePlayerCountConfig"
       @switch-round-mode="switchRoundMode"
@@ -89,18 +90,23 @@
       @save-round-count-config="saveRoundCountConfig"
       @select-base-score-template="selectBaseScoreTemplate"
       @save-base-score-config="saveBaseScoreConfig"
+      @toggle-allow-less="toggleAllowLess"
+    />
+
+    <!-- 选项配置抽屉 -->
+    <Drawer
+      :active-drawer="activeDrawer"
+      :editing-component="editingComponent"
+      :show-component-selector="showComponentSelector"
+      :components="components"
+      :editing-option-index="selectedOptionIndex"
+      @close-all-drawers="closeAllDrawers"
       @add-option="addOption"
       @remove-option="removeOption"
       @save-component-config="saveComponentConfig"
       @open-advanced-rules="openAdvancedRules"
       @open-component-selector="openComponentSelector"
-    />
-    
-    <!-- 组件选择器抽屉 -->
-    <ComponentSelectorDrawer 
-      :active="showComponentSelector"
-      :components="components"
-      @close="closeComponentSelector"
+      @close-component-selector="closeComponentSelector"
       @confirm-component-selection="confirmComponentSelection"
       @toggle-component-status="toggleComponentStatus"
       @update-component-property="updateComponentProperty"
@@ -111,11 +117,12 @@
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElNotification } from 'element-plus'
 import Icon from '../components/Icon.vue'
 import BasicParams from '../components/BasicParams.vue'
 import GroupManager from '../components/GroupManager.vue'
+import BasicParamsDrawer from '../components/BasicParamsDrawer.vue'
 import Drawer from '../components/Drawer.vue'
-import ComponentSelectorDrawer from '../components/ComponentSelectorDrawer.vue'
 import DependencyEditor from '../components/DependencyEditor.vue'
 
 const router = useRouter()
@@ -129,7 +136,8 @@ const roomConfig = ref({
     playerCount: {
       options: [4, 3, 2],
       default: 4,
-      allowLess: false
+      allowLess: false,
+      allowLessStart: false
     },
     roundCount: {
       mode: 'round',
@@ -167,9 +175,16 @@ const playerCountTemplates = ref([
   { label: '2人，默认值2人', options: [2], default: 2 }
 ])
 
+// 打局模式模板
 const roundCountTemplates = ref([
   { label: '4/8/16局，默认4局', options: [4, 8, 16], default: 4 },
   { label: '8/16/32局，默认8局', options: [8, 16, 32], default: 8 }
+])
+
+// 打圈模式模板
+const circleCountTemplates = ref([
+  { label: '1/2/4圈，默认1圈', options: [1, 2, 4], default: 1 },
+  { label: '2/4/8圈，默认2圈', options: [2, 4, 8], default: 2 }
 ])
 
 const baseScoreTemplates = ref([
@@ -194,7 +209,7 @@ const selectedOptionIndex = ref(-1)
 // 加载组件列表数据
 async function loadComponents() {
   try {
-    const response = await fetch('/components_list.json')
+    const response = await fetch('/MahStudio/components_list.json')
     const data = await response.json()
     // 为每个组件添加默认图标、启用状态和锁定状态
     components.value = data.components.map(component => ({
@@ -228,25 +243,38 @@ function updateComponentProperty(component, propertyId, value) {
   // 这里可以添加属性更新的逻辑
 }
 
-// 确认组件选择
+/**
+ * 确认组件选择
+ * @param {Array} components - 选中的组件数组
+ */
 function confirmComponentSelection(components) {
-  // 处理从新组件传来的组件数组
-  const selectedComponent = Array.isArray(components) ? components[0] : components
+  // 确保 components 是数组
+  const selectedComponents = Array.isArray(components) ? components : [components]
   
-  if (editingComponent.value && selectedOptionIndex.value !== -1 && selectedComponent) {
-    // 处理组件选择逻辑
+  if (editingComponent.value && selectedOptionIndex.value !== -1 && selectedComponents.length > 0) {
     // 将选中的组件关联到当前选项
     const option = editingComponent.value.options[selectedOptionIndex.value]
     if (option) {
-      // 为选项添加组件关联
-      option.componentId = selectedComponent.id
-      option.componentName = selectedComponent.name
-      option.componentEnabled = selectedComponent.enabled
+      // 为选项添加组件关联（支持多组件）
+      option.selectedComponents = selectedComponents
+      option.componentIds = selectedComponents.map(c => c.id)
+      option.componentNames = selectedComponents.map(c => c.name)
+      
+      // 兼容单组件的旧字段
+      option.componentId = selectedComponents[0].id
+      option.componentName = selectedComponents[0].name
+      option.componentEnabled = selectedComponents[0].enabled
       
       // 显示成功提示
-      alert(`已为选项 "${option.label}" 关联组件 "${selectedComponent.name}"`)
+      const componentNames = selectedComponents.map(c => c.name).join('、')
+      ElNotification({
+        title: '成功',
+        message: `已为选项 "${option.label}" 关联 ${selectedComponents.length} 个组件：${componentNames}`,
+        type: 'success',
+        duration: 3000
+      })
       
-      console.log('选中组件:', selectedComponent)
+      console.log('选中组件:', selectedComponents)
       console.log('选项索引:', selectedOptionIndex.value)
       console.log('关联结果:', option)
     }
@@ -266,7 +294,12 @@ function toggleComponentStatus(component) {
     // 检查是否有相同ID的组件已经启用
     const isDuplicate = components.value.some(c => c.id === component.id && c.enabled && c !== component)
     if (isDuplicate) {
-      alert('该组件已经启用，不能重复启用！')
+      ElNotification({
+        title: '警告',
+        message: '该组件已经启用，不能重复启用！',
+        type: 'warning',
+        duration: 3000
+      })
       component.enabled = false
       return
     }
@@ -294,10 +327,20 @@ function saveConfig() {
   try {
     const gameId = route.params.id
     localStorage.setItem(`roomConfig_${gameId}`, JSON.stringify(roomConfig.value))
-    alert('配置已保存')
+    ElNotification({
+      title: '成功',
+      message: '配置已保存',
+      type: 'success',
+      duration: 3000
+    })
   } catch (error) {
     console.error('保存配置失败:', error)
-    alert('保存配置失败')
+    ElNotification({
+      title: '错误',
+      message: '保存配置失败',
+      type: 'error',
+      duration: 3000
+    })
   }
 }
 
@@ -412,6 +455,11 @@ function updateBasicConfig() {
   // 基础配置已通过v-model双向绑定更新
 }
 
+// 切换允许少人开局
+function toggleAllowLess(value) {
+  roomConfig.value.basic.playerCount.allowLess = value
+}
+
 // 选择人数模板
 function selectPlayerCountTemplate(index) {
   selectedPlayerCountTemplate.value = index
@@ -506,7 +554,12 @@ function openAdvancedRules() {
 
 // 打开选项联动编辑器
 function openDependencyEditor() {
-  alert('选项联动功能开发中')
+  ElNotification({
+    title: '信息',
+    message: '选项联动功能开发中',
+    type: 'info',
+    duration: 3000
+  })
 }
 
 // 组件挂载时初始化

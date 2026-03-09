@@ -166,6 +166,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { ElNotification } from 'element-plus'
 import Icon from './Icon.vue'
 import VariableEditor from './VariableEditor.vue'
 
@@ -411,7 +412,12 @@ function saveVariable(variableData) {
       variables.value.push(newVariable)
     } catch (error) {
       console.error('新增变量失败:', error)
-      alert('新增变量失败，请重试')
+      ElNotification({
+        title: '错误',
+        message: '新增变量失败，请重试',
+        type: 'error',
+        duration: 3000
+      })
       return
     }
   }
@@ -466,7 +472,12 @@ function deleteVariable() {
       closeDeleteDialog()
     } catch (error) {
       console.error('删除变量失败:', error)
-      alert('删除变量失败，请重试')
+      ElNotification({
+        title: '错误',
+        message: '删除变量失败，请重试',
+        type: 'error',
+        duration: 3000
+      })
     }
   }
 }
@@ -480,9 +491,14 @@ function toggleVariableStatus(variable) {
     variable.enabled = !variable.enabled
     variable.updatedAt = new Date().toLocaleString('zh-CN')
   } catch (error) {
-    console.error('切换变量状态失败:', error)
-    alert('切换变量状态失败，请重试')
-  }
+      console.error('切换变量状态失败:', error)
+      ElNotification({
+        title: '错误',
+        message: '切换变量状态失败，请重试',
+        type: 'error',
+        duration: 3000
+      })
+    }
 }
 
 /**

@@ -39,23 +39,23 @@
     </div>
 
     <!-- 抽屉组件 -->
-    <Drawer 
+    <Drawer
       :active-drawer="activeDrawer"
-      :player-count-templates="playerCountTemplates"
-      :selected-player-count-template="selectedPlayerCountTemplate"
-      :round-count-templates="roundCountTemplates"
-      :selected-round-count-template="selectedRoundCountTemplate"
-      :round-mode="roomConfig.basic.roundCount.mode"
       :editing-component="editingComponent"
+      :show-component-selector="showComponentSelector"
+      :components="components"
+      :editing-option-index="selectedOptionIndex"
       @close-all-drawers="closeAllDrawers"
-      @select-player-count-template="selectPlayerCountTemplate"
-      @save-player-count-config="savePlayerCountConfig"
-      @switch-round-mode="switchRoundMode"
-      @select-round-count-template="selectRoundCountTemplate"
-      @save-round-count-config="saveRoundCountConfig"
       @add-option="addOption"
+      @remove-option="removeOption"
       @save-component-config="saveComponentConfig"
       @open-advanced-rules="openAdvancedRules"
+      @open-component-selector="openComponentSelector"
+      @close-component-selector="closeComponentSelector"
+      @confirm-component-selection="confirmComponentSelection"
+      @toggle-component-status="toggleComponentStatus"
+      @update-component-property="updateComponentProperty"
+      @reorder-options="reorderOptions"
     />
 
     <!-- 依赖编辑器组件 -->
@@ -150,9 +150,16 @@ const selectedRoundCountTemplate = ref(0)
 // 编辑状态
 const editingComponent = ref(null)
 const editingGroupId = ref(null)
+const selectedOptionIndex = ref(-1)
 
 // 依赖编辑器状态
 const showDependencyEditor = ref(false)
+
+// 组件选择器状态
+const showComponentSelector = ref(false)
+
+// 组件列表
+const components = ref([])
 
 // 加载配置
 function loadConfig() {
@@ -326,6 +333,60 @@ function addOption() {
       isDefault: false
     })
   }
+}
+
+/**
+ * 重新排序选项
+ * @param {number} fromIndex - 原始索引
+ * @param {number} toIndex - 目标索引
+ */
+function reorderOptions(fromIndex, toIndex) {
+  if (editingComponent.value && editingComponent.value.options) {
+    const options = editingComponent.value.options
+    const [movedOption] = options.splice(fromIndex, 1)
+    options.splice(toIndex, 0, movedOption)
+  }
+}
+
+// 删除选项
+function removeOption(index) {
+  if (editingComponent.value && editingComponent.value.options.length > 1) {
+    editingComponent.value.options.splice(index, 1)
+  }
+}
+
+// 打开组件选择器
+function openComponentSelector(optionIndex) {
+  selectedOptionIndex.value = optionIndex
+  showComponentSelector.value = true
+}
+
+// 关闭组件选择器
+function closeComponentSelector() {
+  showComponentSelector.value = false
+  selectedOptionIndex.value = -1
+}
+
+// 确认组件选择
+function confirmComponentSelection(selectedComponents) {
+  if (editingComponent.value && selectedOptionIndex.value !== -1) {
+    const option = editingComponent.value.options[selectedOptionIndex.value]
+    if (option && selectedComponents.length > 0) {
+      option.componentId = selectedComponents[0].id
+      option.componentName = selectedComponents[0].name
+    }
+  }
+  closeComponentSelector()
+}
+
+// 切换组件状态
+function toggleComponentStatus(component) {
+  console.log('切换组件状态:', component)
+}
+
+// 更新组件属性
+function updateComponentProperty(component, propertyId, value) {
+  console.log('更新组件属性:', component, propertyId, value)
 }
 
 // 保存组件配置

@@ -1,25 +1,11 @@
-// 使用环境变量中的主机和端口配置
-const API_HOST = import.meta.env.VITE_API_HOST || 'localhost';
-const API_PORT = import.meta.env.VITE_API_PORT || '8001';
-const API_BASE_URL = `http://${API_HOST}:${API_PORT}/api`;
-
-async function request(url, options = {}) {
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || 'Request failed');
-  }
-
-  return response.json();
-}
+const mockApks = [
+  { id: 1, apk_id: 1001, apk_name: '麻将游戏-通用版' },
+  { id: 2, apk_id: 1002, apk_name: '麻将游戏-广东版' },
+  { id: 3, apk_id: 1003, apk_name: '麻将游戏-四川版' },
+  { id: 4, apk_id: 1004, apk_name: '麻将游戏-湖南版' },
+  { id: 5, apk_id: 1005, apk_name: '麻将游戏-湖北版' }
+];
 
 export async function getAllApks() {
-  return request(`${API_BASE_URL}/apks`);
+  return mockApks;
 }

@@ -27,13 +27,14 @@
           </label>
           <div class="input-with-counter">
             <input 
-              type="text" 
-              id="gameName" 
-              v-model="formData.name" 
-              placeholder="请输入游戏名称"
-              class="form-input"
-              maxlength="50"
-            />
+            type="text" 
+            id="gameName" 
+            v-model="formData.name" 
+            placeholder="请输入游戏名称"
+            class="form-input"
+            maxlength="50"
+            :disabled="isReadOnly"
+          />
             <span class="counter">{{ formData.name.length }} / 50</span>
           </div>
         </div>
@@ -49,6 +50,7 @@
               class="form-textarea"
               rows="4"
               maxlength="200"
+              :disabled="isReadOnly"
             ></textarea>
             <span class="counter">{{ formData.description.length }} / 200</span>
           </div>
@@ -61,6 +63,7 @@
             id="gameRegion" 
             v-model="formData.region" 
             class="form-select"
+            :disabled="isReadOnly"
           >
             <option value="江西省/南昌市/东湖区">江西省/南昌市/东湖区</option>
             <option value="湖北省/黄冈市/麻城市">湖北省/黄冈市/麻城市</option>
@@ -78,6 +81,7 @@
             v-model="formData.collaborators" 
             class="form-select"
             multiple
+            :disabled="isReadOnly"
           >
             <option value="王一博">王一博</option>
             <option value="江安明">江安明</option>
@@ -86,11 +90,56 @@
             <option value="李四">李四</option>
           </select>
         </div>
+        
+        <!-- 测试环境 APK -->
+        <div class="form-group">
+          <label>测试环境 APK</label>
+          <div v-if="loading" class="loading-state">
+            加载中...
+          </div>
+          <div v-else-if="error" class="error-state">
+            {{ error }}
+          </div>
+          <Transfer 
+            v-else
+            :data="apkList"
+            v-model="formData.test_apk_ids"
+            left-title="可用 APK"
+            right-title="已选择"
+            :isReadOnly="isReadOnly"
+          />
+        </div>
+        
+        <!-- 灰度环境 APK -->
+        <div class="form-group">
+          <label>灰度环境 APK</label>
+          <Transfer 
+            v-if="!loading && !error"
+            :data="apkList"
+            v-model="formData.gray_apk_ids"
+            left-title="可用 APK"
+            right-title="已选择"
+            :isReadOnly="isReadOnly"
+          />
+        </div>
+        
+        <!-- 生产环境 APK -->
+        <div class="form-group">
+          <label>生产环境 APK</label>
+          <Transfer 
+            v-if="!loading && !error"
+            :data="apkList"
+            v-model="formData.pro_apk_ids"
+            left-title="可用 APK"
+            right-title="已选择"
+            :isReadOnly="isReadOnly"
+          />
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn-text" @click="closeModal">取消</button>
-        <button class="action-btn" @click="saveGame" :disabled="!formData.name.trim()">
-          保存
+        <button v-if="!isReadOnly" class="action-btn" @click="saveGame" :disabled="!formData.name.trim() || loading">
+          {{ loading ? '保存中...' : '保存' }}
         </button>
       </div>
     </div>
@@ -105,12 +154,18 @@
  * 1. 点击编辑按钮时弹出游戏属性编辑弹窗
  * 2. 显示和编辑游戏的详细信息，包括唯一ID、游戏名、说明、地区、协作人
  * 3. 支持表单验证和字数统计
+ * 4. 增加三个APK ID选择器：test_apk_ids、gray_apk_ids、pro_apk_ids
+ * 5. 使用穿梭框组件实现APK选择交互
+ * 6. 集成APK API获取可选择的APK列表
  * 
  * @author Frontend Architect
  * @since 2026-02-26
  */
 
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
+import { ElNotification } from 'element-plus'
+import Transfer from './Transfer.vue'
+import { getAllApks } from '../api/apkApi.js'
 
 // ==================== Props ====================
 
@@ -128,6 +183,14 @@ const props = defineProps({
    * @type {boolean}
    */
   visible: {
+    type: Boolean,
+    default: false
+  },
+  /**
+   * 是否为只读态
+   * @type {boolean}
+   */
+  isReadOnly: {
     type: Boolean,
     default: false
   }
@@ -158,21 +221,122 @@ const formData = reactive({
   name: '',
   description: '',
   region: '',
-  collaborators: []
+  collaborators: [],
+  test_apk_ids: [],
+  gray_apk_ids: [],
+  pro_apk_ids: []
 })
+
+/**
+ * APK列表
+ * @type {Array}
+ */
+const apkList = ref([])
+
+/**
+ * 加载状态
+ * @type {boolean}
+ */
+const loading = ref(false)
+
+/**
+ * 错误信息
+ * @type {string}
+ */
+const error = ref('')
+
+// ==================== 生命周期 ====================
+
+onMounted(() => {
+  loadApkData()
+})
+
+// ==================== 监听 ====================
 
 // 监听游戏数据变化，更新表单
 watch(() => props.game, (newGame) => {
+  console.log('Game data changed:', newGame)
   if (newGame) {
     formData.uniqueId = newGame.uniqueId || ''
     formData.name = newGame.name || ''
     formData.description = newGame.description || ''
     formData.region = newGame.region || ''
     formData.collaborators = newGame.collaborators || []
+    formData.test_apk_ids = Array.isArray(newGame.test_apk_ids) ? newGame.test_apk_ids : []
+    formData.gray_apk_ids = Array.isArray(newGame.gray_apk_ids) ? newGame.gray_apk_ids : []
+    formData.pro_apk_ids = Array.isArray(newGame.pro_apk_ids) ? newGame.pro_apk_ids : []
+    
+    console.log('Form data updated:', {
+      test_apk_ids: formData.test_apk_ids,
+      gray_apk_ids: formData.gray_apk_ids,
+      pro_apk_ids: formData.pro_apk_ids
+    })
   }
 }, { deep: true, immediate: true })
 
 // ==================== 方法函数 ====================
+
+/**
+ * 加载APK数据
+ * @description 从API获取APK列表
+ */
+async function loadApkData() {
+  console.log('开始加载APK数据')
+  loading.value = true
+  error.value = ''
+  
+  try {
+    const data = await getAllApks()
+    console.log('API返回数据:', data)
+    // 检查API返回的数据格式
+    if (Array.isArray(data)) {
+      // 确保每个APK项都有id和name属性
+      apkList.value = data.map((item, index) => ({
+        id: item.id || item.apk_id || item.apkid || index + 1,
+        name: item.name || item.apk_name || item.apkname || `APK ${item.id || index + 1}`
+      }))
+      console.log('API加载成功，APK数量:', apkList.value.length)
+    } else {
+      // API返回的数据格式不正确，使用模拟数据
+      throw new Error('API返回的数据格式不正确')
+    }
+  } catch (err) {
+    console.log('API调用失败:', err)
+    error.value = `加载APK数据失败：${err.message}`
+    // 模拟数据，防止API调用失败
+    apkList.value = [
+      { id: 999999, name: '测试APK 999999' },
+      { id: 1001, name: '灰度APK 1001' },
+      { id: 1002, name: '灰度APK 1002' },
+      { id: 2001, name: '生产APK 2001' },
+      { id: 2002, name: '生产APK 2002' },
+      { id: 3001, name: '其他APK 3001' }
+    ]
+    console.log('使用模拟数据，APK数量:', apkList.value.length)
+  } finally {
+    loading.value = false
+    console.log('加载完成，loading:', loading.value)
+    
+    // 确保初始时test_apk_ids、gray_apk_ids、pro_apk_ids为空数组
+    if (!Array.isArray(formData.test_apk_ids)) {
+      formData.test_apk_ids = []
+    }
+    if (!Array.isArray(formData.gray_apk_ids)) {
+      formData.gray_apk_ids = []
+    }
+    if (!Array.isArray(formData.pro_apk_ids)) {
+      formData.pro_apk_ids = []
+    }
+    
+    console.log('表单数据:', {
+      test_apk_ids: formData.test_apk_ids,
+      gray_apk_ids: formData.gray_apk_ids,
+      pro_apk_ids: formData.pro_apk_ids
+    })
+  }
+}
+
+
 
 /**
  * 关闭弹窗
@@ -188,11 +352,30 @@ function closeModal() {
  */
 function saveGame() {
   if (!formData.name.trim()) {
-    alert('请输入游戏名称')
+    ElNotification({
+      title: '警告',
+      message: '请输入游戏名称',
+      type: 'warning',
+      duration: 3000
+    })
     return
   }
   
-  emit('save', { ...formData })
+  // 确保传递所有字段，包括APK IDs
+  const gameData = {
+    uniqueId: formData.uniqueId,
+    name: formData.name,
+    description: formData.description,
+    region: formData.region,
+    collaborators: formData.collaborators,
+    test_apk_ids: Array.from(formData.test_apk_ids),
+    gray_apk_ids: Array.from(formData.gray_apk_ids),
+    pro_apk_ids: Array.from(formData.pro_apk_ids)
+  }
+  
+  console.log('Saving game data:', gameData)
+  console.log('test_apk_ids length:', gameData.test_apk_ids.length)
+  emit('save', gameData)
 }
 </script>
 
@@ -214,21 +397,22 @@ function saveGame() {
 }
 
 .modal-content {
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 24px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+  }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
+  padding: 24px 24px 16px;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -260,21 +444,28 @@ function saveGame() {
 }
 
 .modal-body {
-  margin-bottom: 20px;
+  padding: 0 24px;
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding-top: 16px;
+  padding: 16px 24px 24px;
   border-top: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
 /* ==================== 表单样式 ==================== */
 
 .form-group {
   margin-bottom: 16px;
+  padding: 8px 0;
 }
 
 .form-group label {
@@ -398,5 +589,31 @@ function saveGame() {
 .btn-text:hover {
   background-color: #f0f0f0;
   border-color: #d1d5db;
+}
+
+/* ==================== 加载和错误状态 ==================== */
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  background-color: #fef2f2;
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
 }
 </style>

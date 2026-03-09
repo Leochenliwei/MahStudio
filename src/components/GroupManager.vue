@@ -6,7 +6,7 @@
         <p class="section-description">配置创房面板的分组与选项</p>
       </div>
       <button class="action-btn" @click="$emit('add-group')">
-        <Icon name="plus" size="16" />
+        <Icon name="plus" size="16" color="#409eff" />
         添加分组
       </button>
     </div>

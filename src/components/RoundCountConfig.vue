@@ -100,6 +100,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { ElNotification } from 'element-plus'
 import Icon from './Icon.vue'
 
 // Props
@@ -211,7 +212,12 @@ function updateDefault(value) {
 // 处理保存
 function handleSave() {
   if (localConfig.value.options.length === 0) {
-    alert('至少选择一个局数选项')
+    ElNotification({
+      title: '警告',
+      message: '至少选择一个局数选项',
+      type: 'warning',
+      duration: 3000
+    })
     return
   }
   emit('update:config', { ...localConfig.value })
