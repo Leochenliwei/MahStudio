@@ -439,13 +439,6 @@ function handleDeleteGroup(group) {
   transition: all var(--transition-normal);
 }
 
-.edit-icon {
-  color: var(--color-text-tertiary);
-  opacity: 0.6;
-  transition: all var(--transition-normal);
-  cursor: pointer;
-}
-
 /* 头部操作图标样式 */
 .group-header-right {
   display: flex;
@@ -453,24 +446,39 @@ function handleDeleteGroup(group) {
   gap: var(--spacing-2);
 }
 
-.header-action-icon {
-  color: var(--color-text-tertiary);
+.group-header-right .header-action-icon {
   cursor: pointer;
   transition: all var(--transition-normal);
   padding: var(--spacing-2);
   border-radius: var(--border-radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.header-action-icon:hover {
+.group-header-right .header-action-icon {
+  color: var(--color-text-tertiary);
+  width: 18px;
+  height: 18px;
+}
+
+.group-header-right .header-action-icon :deep(svg) {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.group-header-right .header-action-icon:hover,
+.group-header-right .header-action-icon:hover :deep(.el-icon) {
   color: var(--color-primary);
+}
+
+.group-header-right .header-action-icon:hover {
   background: rgba(100, 108, 255, 0.1);
 }
 
-.header-action-icon.delete-icon:hover {
+.group-header-right .header-action-icon.delete-icon:hover,
+.group-header-right .header-action-icon.delete-icon:hover :deep(.el-icon) {
   color: var(--color-danger);
+}
+
+.group-header-right .header-action-icon.delete-icon:hover {
   background: rgba(239, 68, 68, 0.1);
 }
 

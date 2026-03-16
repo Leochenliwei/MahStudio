@@ -597,3 +597,11 @@ input:focus, select:focus, textarea:focus {
     padding: 8px;
   }
 }
+
+/* Element Plus el-icon SVG 尺寸修复 */
+.el-icon svg {
+  width: 1em !important;
+  height: 1em !important;
+  min-width: 1em !important;
+  min-height: 1em !important;
+}
