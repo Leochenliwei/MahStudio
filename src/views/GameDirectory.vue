@@ -5,7 +5,7 @@
       <!-- 面包屑导航 -->
       <div class="breadcrumb">
         <a href="#" @click.prevent="goBack" class="breadcrumb-item">
-          <Icon name="arrow-left" size="14" class="mr-1" />
+          <el-icon :size="14" class="mr-1"><ArrowLeft /></el-icon>
           游戏管理
         </a>
         <span class="breadcrumb-separator">/</span>
@@ -21,11 +21,11 @@
         <h2 class="game-title">{{ game.name }}</h2>
         <div class="game-meta">
           <span class="meta-item">
-            <Icon name="clock" size="14" class="mr-1" />
+            <el-icon :size="14" class="mr-1"><Clock /></el-icon>
             创建于 {{ formatDateTime(game.createdAt) }}
           </span>
           <span class="meta-item">
-            <Icon name="clock" size="14" class="mr-1" />
+            <el-icon :size="14" class="mr-1"><Clock /></el-icon>
             更新于 {{ formatDateTime(game.updatedAt) }}
           </span>
         </div>
@@ -45,7 +45,7 @@
 
     <!-- 错误状态 -->
     <div v-if="error" class="error-container">
-      <Icon name="alert-circle" size="48" class="error-icon" />
+      <el-icon :size="48" class="error-icon"><Warning /></el-icon>
       <p>{{ error }}</p>
       <button class="action-btn" @click="loadGameData">重新加载</button>
     </div>
@@ -58,7 +58,7 @@
         <div class="file-section">
           <div class="section-header">
             <h3 class="section-title">
-              <Icon name="layout-dashboard" size="16" class="mr-2" />
+              <el-icon :size="16" class="mr-2"><Grid /></el-icon>
               {{ activeEnv === 'online' ? '灰度约局' : '测试约局' }}
               <span class="meta-item">游戏ID：10001</span>
             </h3>
@@ -75,7 +75,7 @@
             @view-history="handleViewHistory"
           />
           <div v-else class="empty-file-card">
-            <Icon name="inbox" size="32" class="empty-icon" />
+            <el-icon :size="32" class="empty-icon"><Box /></el-icon>
             <p>暂无测试约局配置</p>
             <p class="empty-hint">请从草稿提测创建</p>
           </div>
@@ -85,7 +85,7 @@
         <div class="file-section">
           <div class="section-header">
             <h3 class="section-title">
-              <Icon name="layout-dashboard" size="16" class="mr-2" />
+              <el-icon :size="16" class="mr-2"><Grid /></el-icon>
               {{ activeEnv === 'online' ? '灰度金币' : '测试金币' }}
               <span class="meta-item">游戏ID：10002</span>
             </h3>
@@ -102,7 +102,7 @@
             @view-history="handleViewHistory"
           />
           <div v-else class="empty-file-card">
-            <Icon name="inbox" size="32" class="empty-icon" />
+            <el-icon :size="32" class="empty-icon"><Box /></el-icon>
             <p>暂无测试金币配置</p>
             <p class="empty-hint">请从草稿提测创建</p>
           </div>
@@ -115,7 +115,7 @@
         <div class="file-section">
           <div class="section-header">
             <h3 class="section-title">
-              <Icon name="layout-dashboard" size="16" class="mr-2" />
+              <el-icon :size="16" class="mr-2"><Grid /></el-icon>
               正式约局
               <span class="meta-item">游戏ID：10003</span>
             </h3>
@@ -131,7 +131,7 @@
             @view-history="handleViewHistory"
           />
           <div v-else class="empty-file-card">
-            <Icon name="inbox" size="32" class="empty-icon" />
+            <el-icon :size="32" class="empty-icon"><Box /></el-icon>
             <p>暂无正式约局配置</p>
             <p class="empty-hint">请从灰度发布创建</p>
           </div>
@@ -141,7 +141,7 @@
         <div class="file-section">
           <div class="section-header">
             <h3 class="section-title">
-              <Icon name="layout-dashboard" size="16" class="mr-2" />
+              <el-icon :size="16" class="mr-2"><Grid /></el-icon>
               正式金币
               <span class="meta-item">游戏ID：10004</span>
             </h3>
@@ -157,7 +157,7 @@
             @view-history="handleViewHistory"
           />
           <div v-else class="empty-file-card">
-            <Icon name="inbox" size="32" class="empty-icon" />
+            <el-icon :size="32" class="empty-icon"><Box /></el-icon>
             <p>暂无正式金币配置</p>
             <p class="empty-hint">请从灰度发布创建</p>
           </div>
@@ -168,7 +168,7 @@
       <div v-if="activeEnv === 'test'" class="file-section">
         <div class="section-header">
           <h3 class="section-title">
-            <Icon name="file-text" size="16" class="mr-2" />
+            <el-icon :size="16" class="mr-2"><Document /></el-icon>
             草稿
             <span class="section-count">({{ draftFiles.length }})</span>
           </h3>
@@ -195,25 +195,25 @@
             </div>
             <div class="file-list-item-actions">
               <button class="action-btn small" @click="editFile(file)">
-                <Icon name="edit" size="14" class="mr-1" />
+                <el-icon :size="14" class="mr-1"><Edit /></el-icon>
                 编辑
               </button>
               <button class="action-btn small outline" @click="copyFile(file)">
-                <Icon name="copy" size="14" class="mr-1" />
+                <el-icon :size="14" class="mr-1"><CopyDocument /></el-icon>
                 复制
               </button>
               <button class="action-btn small outline" @click="showCopyToModal(file)">
-                <Icon name="send" size="14" class="mr-1" />
+                <el-icon :size="14" class="mr-1"><Promotion /></el-icon>
                 复制到
               </button>
               <button class="action-btn small danger" @click="showSubmitTestModal(file)">
-                <Icon name="send" size="14" class="mr-1" />
+                <el-icon :size="14" class="mr-1"><Promotion /></el-icon>
                 提测
               </button>
             </div>
           </div>
           <div v-if="draftFiles.length === 0" class="empty-list-item">
-            <Icon name="inbox" size="24" class="empty-icon" />
+            <el-icon :size="24" class="empty-icon"><Box /></el-icon>
             <p>暂无草稿文件</p>
             <p class="empty-hint">点击"新建草稿"按钮创建</p>
           </div>
@@ -227,7 +227,7 @@
         <div class="modal-header">
           <h4>新建草稿</h4>
           <button class="modal-close-btn" @click="closeCreateDraftModal">
-            <Icon name="x" size="16" />
+            <el-icon :size="16"><Close /></el-icon>
           </button>
         </div>
         <div class="modal-body">
@@ -301,7 +301,18 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElNotification } from 'element-plus'
-import Icon from '../components/Icon.vue'
+import { 
+  ArrowLeft,
+  Clock,
+  Warning,
+  Grid,
+  Box,
+  Document,
+  Edit,
+  CopyDocument,
+  Promotion,
+  Close
+} from '@element-plus/icons-vue'
 import FileCard from '../components/FileCard.vue'
 import CopyToModal from '../components/CopyToModal.vue'
 import SubmitTestModal from '../components/SubmitTestModal.vue'

@@ -1,0 +1,8 @@
+- [x] SimpleDependencyPage.vue 添加了 formSchema prop 定义
+- [x] SimpleDependencyPage.vue 优先使用 prop 传入的 formSchema 数据
+- [x] SimpleDependencyPage.vue 在 prop 变化时更新 formSchema
+- [x] RoomCreatorPage.vue 将 roomConfig.groups 传递给 SimpleDependencyPage
+- [x] RuleEditorModalPro 正确计算 flatComponents 并传递给 ConditionTree
+- [x] ConditionTree 正确显示组件列表（field-select 有选项）
+- [x] ConditionTree 正确显示组件选项（value-select 根据组件变化）
+- [x] 端到端测试通过：从创房面板到弹窗的数据流正常工作

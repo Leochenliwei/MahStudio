@@ -1,0 +1,21 @@
+# 验收清单
+
+- [x] ComponentSelector.vue 组件已创建
+- [x] 组件模板结构正确（左侧组件列表+右侧属性面板+底部按钮）
+- [x] Props 定义正确（show、components、editingOptionIndex、editingOptionLabel）
+- [x] Events 定义正确（close、confirm、toggle-component-status、update-component-property）
+- [x] 组件搜索过滤功能正常工作
+- [x] 分类文件夹展开/折叠功能正常工作
+- [x] 组件多选功能正常工作
+- [x] 组件启用/禁用切换功能正常工作
+- [x] 属性勾选功能正常工作
+- [x] 属性编辑功能正常工作
+- [x] 属性类型支持完整（switch、toggle、select、checkbox、text）
+- [x] 视觉连接线动态定位正确
+- [x] Drawer.vue 已导入 ComponentSelector 组件
+- [x] Drawer.vue 已移除原有的组件选择器模板代码
+- [x] Drawer.vue 已移除原有的组件选择器 script 逻辑
+- [x] Drawer.vue 使用 ComponentSelector 组件替换原有代码
+- [x] 选项配置功能保持正常
+- [x] 组件选择器显示/隐藏逻辑正常
+- [x] 组件选择器与选项行的联动（视觉连接线）正常

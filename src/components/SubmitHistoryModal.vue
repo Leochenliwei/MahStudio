@@ -11,11 +11,11 @@
           <!-- 弹窗头部 -->
           <div class="modal-header">
             <h3 class="modal-title">
-              <Icon name="history" size="18" />
+              <el-icon :size="18"><Clock /></el-icon>
               提测记录
             </h3>
             <button class="close-btn" @click="handleClose" title="关闭">
-              <Icon name="x" size="18" />
+              <el-icon :size="18"><Close /></el-icon>
             </button>
           </div>
 
@@ -24,7 +24,7 @@
             <!-- 提测记录列表 -->
             <div class="history-list">
               <div v-if="filteredHistory.length === 0" class="empty-state">
-                <Icon name="inbox" size="48" class="empty-icon" />
+                <el-icon :size="48" class="empty-icon"><Box /></el-icon>
                 <p>暂无提测记录</p>
               </div>
               <div v-else class="history-items">
@@ -86,7 +86,7 @@
  */
 
 import { ref, computed } from 'vue'
-import Icon from './Icon.vue'
+import { Clock, Close, Box } from '@element-plus/icons-vue'
 
 // 定义Props
 const props = defineProps({
@@ -238,7 +238,7 @@ function handleClose() {
   gap: var(--spacing-2);
 }
 
-.modal-title :deep(svg) {
+.modal-title :deep(.el-icon) {
   color: var(--color-primary);
 }
 

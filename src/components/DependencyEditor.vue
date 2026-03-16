@@ -156,11 +156,12 @@
 
           <!-- 右：动作列表 -->
           <div class="panel-actions">
-            <ActionConfig 
-              :targets="currentRule.targets"
+            <ActionConfig
+              v-model:targets="currentRule.targets"
+              v-model:tooltip="currentRule.tooltip"
+              v-model:description="currentRule.description"
               :form-schema="formSchema"
               :all-components="flatComponents"
-              @update:targets="(updatedTargets) => currentRule.targets = updatedTargets"
             />
           </div>
         </div>
@@ -171,7 +172,6 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import Icon from './Icon.vue'
 import ConditionTree from './ConditionTree.vue'
 import ActionConfig from './ActionConfig.vue'
 
@@ -267,13 +267,15 @@ function getTargetClass(target) {
 function createNew() {
   // 检查是否有组件
   const firstComponentId = flatComponents.value.length > 0 ? flatComponents.value[0].id : ''
-  
+
   currentRule.value = {
     id: Date.now(),
     triggers: [],
     desc: '新规则 (未保存)',
     conditionTree: { id: 'root', logic: 'and', children: [{ type: 'rule', id: Date.now(), field: firstComponentId, op: 'eq', val: '' }] },
-    targets: []
+    targets: [],
+    tooltip: '',
+    description: ''
   }
   showEditorModal.value = true
 }

@@ -5,17 +5,17 @@
     </div>
     <div class="sidebar-content">
       <button class="btn btn-primary btn-block" @click="$emit('add-group')">
-        <Icon name="plus" size="16" />
+        <el-icon :size="16"><Plus /></el-icon>
         添加分组
       </button>
       <button class="btn btn-outline btn-block" @click="$emit('open-dependency-editor')">
-        <Icon name="link" size="16" />
+        <el-icon :size="16"><Link /></el-icon>
         选项联动
       </button>
     </div>
     <div class="sidebar-footer">
       <div class="sidebar-info">
-        <Icon name="info-circle" size="14" />
+        <el-icon :size="14"><InfoFilled /></el-icon>
         <span>拖动组件调整顺序</span>
       </div>
     </div>
@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import Icon from './Icon.vue'
+import { Plus, Link, InfoFilled } from '@element-plus/icons-vue'
 
 // 定义事件
 const emit = defineEmits(['add-group', 'open-dependency-editor'])
@@ -135,23 +135,23 @@ const emit = defineEmits(['add-group', 'open-dependency-editor'])
     flex-direction: row;
     height: auto;
   }
-  
+
   .sidebar-header {
     margin-bottom: 0;
     padding-bottom: 0;
     border-bottom: none;
     margin-right: 24px;
   }
-  
+
   .sidebar-content {
     flex-direction: row;
     flex: 1;
   }
-  
+
   .btn {
     flex: 1;
   }
-  
+
   .sidebar-footer {
     display: none;
   }

@@ -177,7 +177,6 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
-import Icon from './Icon.vue';
 import ScoreModifierModal from './ScoreModifierModal.vue';
 
 // 定义props和emit

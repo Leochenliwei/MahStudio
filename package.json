@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "update-icons": "./skills/update-project-icons/update_icons.sh"
+    "update-icons": "./skills/update-project-icons/update_icons.sh",
+    "server": "node server/server.js"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
     "element-plus": "^2.13.3",
     "lucide-vue-next": "^0.563.0",
     "pinia": "^3.0.4",

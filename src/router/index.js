@@ -3,6 +3,7 @@ import Admin from '../views/Admin.vue'
 import Workbench from '../views/Workbench.vue'
 import RoomCreatorPage from '../views/RoomCreatorPage.vue'
 import GameDirectory from '../views/GameDirectory.vue'
+import SimpleDependencyPage from '../views/SimpleDependencyPage.vue'
 
 /**
  * 路由配置
@@ -41,6 +42,15 @@ const routes = [
     path: '/game-directory/:gameId',
     name: 'GameDirectory',
     component: GameDirectory,
+    props: true
+  },
+  {
+    // 简版联动规则管理页面
+    // params参数:
+    //   - id: 游戏ID
+    path: '/workbench/:id/simple-dependency',
+    name: 'SimpleDependency',
+    component: SimpleDependencyPage,
     props: true
   }
 ]

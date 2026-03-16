@@ -1,7 +1,7 @@
 <template>
   <div class="basic-params">
     <div class="section-header">
-      <h3>基础选项配置</h3>
+      <h3>预设分组</h3>
       <p class="section-description">设置游戏的必备的创房面板选项</p>
     </div>
     
@@ -31,7 +31,7 @@
           </label>
         </div>
         <button class="rule-action" @click="$emit('open-drawer', 'drawer-people')" title="配置人数选项">
-          ⚙️
+          <el-icon :size="16"><Setting /></el-icon>
         </button>
       </div>
 
@@ -52,7 +52,7 @@
           </label>
         </div>
         <button class="rule-action" @click="$emit('open-drawer', 'drawer-rounds')" title="配置局数选项">
-          ⚙️
+          <el-icon :size="16"><Setting /></el-icon>
         </button>
       </div>
 
@@ -73,7 +73,7 @@
           </select>
         </div>
         <button class="rule-action" @click="$emit('open-drawer', 'drawer-base-score')" title="配置底分选项">
-          ⚙️
+          <el-icon :size="16"><Setting /></el-icon>
         </button>
       </div>
     </div>
@@ -81,6 +81,8 @@
 </template>
 
 <script setup>
+import { Setting } from '@element-plus/icons-vue'
+
 // 定义props
 const props = defineProps({
   basicConfig: {

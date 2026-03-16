@@ -5,7 +5,7 @@
       <div class="modal-header">
         <h2>变量管理</h2>
         <button class="close-btn" @click="closeModal">
-          <Icon name="x" size="20" />
+          <el-icon :size="20"><Close /></el-icon>
         </button>
       </div>
       
@@ -100,7 +100,7 @@
       <div class="modal-header">
         <h2>变量详情</h2>
         <button class="close-btn" @click="closeViewDialog">
-          <Icon name="x" size="20" />
+          <el-icon :size="20"><Close /></el-icon>
         </button>
       </div>
       <div class="modal-content">
@@ -147,7 +147,7 @@
       <div class="modal-header">
         <h2>确认删除</h2>
         <button class="close-btn" @click="closeDeleteDialog">
-          <Icon name="x" size="20" />
+          <el-icon :size="20"><Close /></el-icon>
         </button>
       </div>
       <div class="modal-content">
@@ -167,7 +167,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { ElNotification } from 'element-plus'
-import Icon from './Icon.vue'
+import { Close } from '@element-plus/icons-vue'
 import VariableEditor from './VariableEditor.vue'
 
 /**

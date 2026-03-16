@@ -1,0 +1,399 @@
+# 项目组件关系文档
+
+> 本文档记录了项目中所有Vue组件的调用关系和层级结构
+> 最后更新时间: 2026-03-13
+
+---
+
+## 目录
+
+1. [组件层级总览](#组件层级总览)
+2. [页面组件 (Views)](#页面组件-views)
+3. [业务组件 (Components)](#业务组件-components)
+4. [组件依赖关系图](#组件依赖关系图)
+5. [更新规范](#更新规范)
+
+---
+
+## 组件层级总览
+
+```
+App.vue (根组件)
+├── 顶部标签栏 (Tab Bar)
+└── <router-view />
+    ├── Admin.vue (游戏管理后台)
+    ├── GameDirectory.vue (游戏目录详情)
+    ├── Workbench.vue (规则配置工作台)
+    ├── RoomCreatorPage.vue (创房面板配置)
+    └── SimpleDependencyPage.vue (选项联动简版)
+```
+
+---
+
+## 页面组件 (Views)
+
+### 1. Admin.vue - 游戏管理后台
+
+**功能**: 游戏列表展示、新增游戏、环境切换(test/online)
+
+**导入的子组件**:
+| 组件名 | 路径 | 用途 |
+|--------|------|------|
+| GameInfo.vue | `../components/GameInfo.vue` | 游戏属性编辑弹窗 |
+
+**API依赖**:
+- `gameApi.js` - 游戏数据操作
+
+---
+
+### 2. GameDirectory.vue - 游戏目录详情
+
+**功能**: 展示游戏基本信息、文件列表(草稿/测试/正式)
+
+**导入的子组件**:
+| 组件名 | 路径 | 用途 |
+|--------|------|------|
+| FileCard.vue | `../components/FileCard.vue` | 文件卡片展示 |
+| CopyToModal.vue | `../components/CopyToModal.vue` | 复制到弹窗 |
+| SubmitTestModal.vue | `../components/SubmitTestModal.vue` | 提测弹窗 |
+| SubmitHistoryModal.vue | `../components/SubmitHistoryModal.vue` | 提测记录弹窗 |
+
+**API依赖**:
+- `gameApi.js` - 游戏文件操作
+
+---
+
+### 3. Workbench.vue - 规则配置工作台
+
+**功能**: 三栏式布局(组件列表/画布/属性面板)、规则配置
+
+**导入的子组件**:
+| 组件名 | 路径 | 用途 |
+|--------|------|------|
+| VariableManagementModal.vue | `../components/VariableManagementModal.vue` | 变量管理弹窗 |
+| CalcScoreConfig.vue | `../components/CalcScoreConfig.vue` | 算分规则配置弹窗 |
+| SubmitTestModal.vue | `../components/SubmitTestModal.vue` | 提测弹窗 |
+
+**第三方库**:
+- `vue-draggable-resizable` - 可拖拽面板
+
+---
+
+### 4. RoomCreatorPage.vue - 创房面板配置
+
+**功能**: 创房面板选项配置、分组管理、选项联动
+
+**导入的子组件**:
+| 组件名 | 路径 | 用途 |
+|--------|------|------|
+| BasicParams.vue | `../components/BasicParams.vue` | 基础参数配置 |
+| GroupManager.vue | `../components/GroupManager.vue` | 分组管理 |
+| BasicParamsDrawer.vue | `../components/BasicParamsDrawer.vue` | 基础参数抽屉 |
+| Drawer.vue | `../components/Drawer.vue` | 选项配置抽屉 |
+| DependencyEditor.vue | `../components/DependencyEditor.vue` | 依赖编辑器 |
+| SimpleDependencyPage.vue | `./SimpleDependencyPage.vue` | 简版选项联动 |
+| AddGroupModal.vue | `../components/AddGroupModal.vue` | 添加分组弹窗 |
+
+---
+
+### 5. SimpleDependencyPage.vue - 选项联动简版
+
+**功能**: 简版选项联动规则列表、增删改查
+
+**导入的子组件**:
+| 组件名 | 路径 | 用途 |
+|--------|------|------|
+| RuleEditorModalPro.vue | `../components/RuleEditorModalPro.vue` | 规则编辑器弹窗 |
+
+**使用方式**:
+- 独立页面: `/simple-dependency/:id`
+- 嵌入模式: 被 RoomCreatorPage.vue 引用
+
+---
+
+## 业务组件 (Components)
+
+### 核心组件
+
+#### Sidebar.vue - 侧边栏
+**被引用**: RoomCreator.vue
+**功能**: 添加分组、打开选项联动编辑器
+
+#### RoomCreator.vue - 创房面板
+**被引用**: (已整合到 RoomCreatorPage.vue)
+**导入组件**: Sidebar, BasicParams, GroupManager, Drawer, DependencyEditor
+**注意**: 使用 Element Plus 的 el-icon 替代了原来的 Icon.vue 组件
+
+#### GameInfo.vue - 游戏信息编辑
+**被引用**: Admin.vue
+**导入组件**: Transfer.vue
+**功能**: 游戏属性编辑、APK选择
+
+#### FileCard.vue - 文件卡片
+**被引用**: GameDirectory.vue
+**功能**: 展示文件信息、操作按钮(查看/复制/发布)
+
+---
+
+### 分组与组件管理
+
+#### GroupManager.vue - 分组管理
+**被引用**: RoomCreatorPage.vue, RoomCreator.vue
+**功能**: 分组展示、添加组件、编辑分组
+
+#### BasicParams.vue - 基础参数
+**被引用**: RoomCreatorPage.vue, RoomCreator.vue
+**功能**: 人数/局数/底分配置
+
+#### AddGroupModal.vue - 添加分组弹窗
+**被引用**: RoomCreatorPage.vue
+**功能**: 创建/编辑分组
+
+---
+
+### 抽屉组件
+
+#### Drawer.vue - 选项配置抽屉
+**被引用**: RoomCreatorPage.vue, RoomCreator.vue
+**功能**: 组件选项配置、组件选择器
+
+#### BasicParamsDrawer.vue - 基础参数抽屉
+**被引用**: RoomCreatorPage.vue
+**功能**: 人数/局数/底分模板选择
+
+---
+
+### 弹窗组件
+
+#### CopyToModal.vue - 复制到弹窗
+**被引用**: GameDirectory.vue
+**功能**: 复制文件到其他游戏
+
+#### SubmitTestModal.vue - 提测弹窗
+**被引用**: GameDirectory.vue, Workbench.vue
+**功能**: 提交测试、选择目标环境
+
+#### SubmitHistoryModal.vue - 提测记录弹窗
+**被引用**: GameDirectory.vue
+**功能**: 展示提测历史记录
+
+#### VariableManagementModal.vue - 变量管理弹窗
+**被引用**: Workbench.vue
+**功能**: 变量列表管理
+
+#### CalcScoreConfig.vue - 算分规则配置
+**被引用**: Workbench.vue
+**导入组件**: ScoreModifierModal.vue
+**功能**: 算分规则编辑
+
+#### RuleEditorModalPro.vue - 规则编辑器Pro
+**被引用**: SimpleDependencyPage.vue
+**导入组件**: ConditionTree.vue, ActionConfig.vue
+**功能**: 选项联动规则编辑（替代旧版 RuleEditorModal）
+
+#### ScoreModifierModal.vue - 分数修正弹窗
+**被引用**: CalcScoreConfig.vue
+**功能**: 分数修正配置
+
+---
+
+### 功能组件
+
+#### Transfer.vue - 穿梭框
+**被引用**: GameInfo.vue
+**功能**: APK选择、左右穿梭
+
+#### ConditionTree.vue - 条件树
+**被引用**: DependencyEditor.vue, RuleEditorModalPro.vue
+**功能**: 条件规则树形展示（递归自引用）
+
+#### ComponentSelector.vue - 组件选择器
+**被引用**: Drawer.vue
+**功能**: 组件列表选择
+
+#### DependencyEditor.vue - 依赖编辑器
+**被引用**: RoomCreatorPage.vue, RoomCreator.vue
+**导入组件**: ConditionTree.vue, ActionConfig.vue
+**功能**: 高级选项联动编辑
+
+#### ActionConfig.vue - 动作配置
+**被引用**: DependencyEditor.vue, RuleEditorModalPro.vue
+**功能**: 联动动作配置
+
+---
+
+### 数据录入组件
+
+#### VariableEditor.vue - 变量编辑器
+**被引用**: VariableManagementModal.vue
+**导入组件**: CustomSelect.vue
+**功能**: 单个变量编辑
+
+#### CustomSelect.vue - 自定义下拉
+**被引用**: VariableEditor.vue
+**功能**: 增强下拉选择
+
+---
+
+## 组件依赖关系图
+
+```mermaid
+graph TD
+    %% 页面层级
+    App[App.vue] --> Router[<router-view />]
+    Router --> Admin[Admin.vue]
+    Router --> GameDir[GameDirectory.vue]
+    Router --> Workbench[Workbench.vue]
+    Router --> RoomCreator[RoomCreatorPage.vue]
+    Router --> SimpleDep[SimpleDependencyPage.vue]
+
+    %% Admin 依赖
+    Admin --> GameInfo[GameInfo.vue]
+    GameInfo --> Transfer[Transfer.vue]
+
+    %% GameDirectory 依赖
+    GameDir --> FileCard[FileCard.vue]
+    GameDir --> CopyToModal[CopyToModal.vue]
+    GameDir --> SubmitTestModal[SubmitTestModal.vue]
+    GameDir --> SubmitHistoryModal[SubmitHistoryModal.vue]
+
+    %% Workbench 依赖
+    Workbench --> VariableMgmt[VariableManagementModal.vue]
+    Workbench --> CalcScore[CalcScoreConfig.vue]
+    VariableMgmt --> VariableEditor[VariableEditor.vue]
+    CalcScore --> ScoreModifier[ScoreModifierModal.vue]
+
+    %% RoomCreatorPage 依赖
+    RoomCreator --> BasicParams[BasicParams.vue]
+    RoomCreator --> GroupManager[GroupManager.vue]
+    RoomCreator --> BasicParamsDrawer[BasicParamsDrawer.vue]
+    RoomCreator --> Drawer[Drawer.vue]
+    RoomCreator --> DependencyEditor[DependencyEditor.vue]
+    RoomCreator --> SimpleDepPage[SimpleDependencyPage.vue]
+    RoomCreator --> AddGroupModal[AddGroupModal.vue]
+    Drawer --> ComponentSelector[ComponentSelector.vue]
+    DependencyEditor --> ConditionTree[ConditionTree.vue]
+    DependencyEditor --> ActionConfig[ActionConfig.vue]
+
+    %% SimpleDependencyPage 依赖
+    SimpleDep --> RuleEditorPro[RuleEditorModalPro.vue]
+    SimpleDepPage --> RuleEditorPro
+    RuleEditorPro --> ConditionTree
+    RuleEditorPro --> ActionConfig
+
+    %% VariableEditor 依赖
+    VariableEditor --> CustomSelect[CustomSelect.vue]
+
+    %% 样式说明
+    style App fill:#3b82f6,color:#fff
+    style Router fill:#60a5fa,color:#fff
+    style Admin fill:#10b981,color:#fff
+    style GameDir fill:#10b981,color:#fff
+    style Workbench fill:#10b981,color:#fff
+    style RoomCreator fill:#10b981,color:#fff
+    style SimpleDep fill:#10b981,color:#fff
+```
+
+---
+
+## 更新规范
+
+### 新增组件时
+
+1. **在本文档中添加组件信息**:
+   - 组件名称和路径
+   - 功能描述
+   - 父组件引用关系
+   - 子组件依赖关系
+
+2. **更新依赖关系图**:
+   - 在 Mermaid 图中添加新的节点和连线
+   - 保持图表的层级结构清晰
+
+3. **更新目录结构**:
+   - 确保组件分类正确(页面组件/业务组件)
+
+### 修改组件时
+
+1. **检查依赖关系**:
+   - 确认是否影响其他组件
+   - 更新引用关系表
+
+2. **更新文档**:
+   - 修改功能描述
+   - 更新导入的子组件列表
+
+### 删除组件时
+
+1. **检查引用**:
+   - 确认无其他组件引用该组件
+   - 移除文档中相关记录
+
+2. **更新关系图**:
+   - 移除 Mermaid 图中对应节点
+
+---
+
+## 文件路径速查
+
+```
+src/
+├── views/                          # 页面组件
+│   ├── Admin.vue                   # 游戏管理后台
+│   ├── GameDirectory.vue           # 游戏目录详情
+│   ├── Workbench.vue               # 规则配置工作台
+│   ├── RoomCreatorPage.vue         # 创房面板配置
+│   └── SimpleDependencyPage.vue    # 选项联动简版
+│
+├── components/                     # 业务组件
+│   ├── Sidebar.vue                 # 侧边栏
+│   ├── RoomCreator.vue             # 创房面板(旧)
+│   ├── GameInfo.vue                # 游戏信息编辑
+│   ├── FileCard.vue                # 文件卡片
+│   ├── GroupManager.vue            # 分组管理
+│   ├── BasicParams.vue             # 基础参数
+│   ├── Drawer.vue                  # 选项配置抽屉
+│   ├── BasicParamsDrawer.vue       # 基础参数抽屉
+│   ├── Transfer.vue                # 穿梭框
+│   ├── ConditionTree.vue           # 条件树
+│   ├── ComponentSelector.vue       # 组件选择器
+│   ├── DependencyEditor.vue        # 依赖编辑器
+│   ├── ActionConfig.vue            # 动作配置
+│   ├── AddGroupModal.vue           # 添加分组弹窗
+│   ├── CopyToModal.vue             # 复制到弹窗
+│   ├── SubmitTestModal.vue         # 提测弹窗
+│   ├── SubmitHistoryModal.vue      # 提测记录弹窗
+│   ├── VariableManagementModal.vue # 变量管理弹窗
+│   ├── VariableEditor.vue          # 变量编辑器
+│   ├── CalcScoreConfig.vue         # 算分规则配置
+│   ├── RuleEditorModalPro.vue      # 规则编辑器Pro
+│   ├── ScoreModifierModal.vue      # 分数修正弹窗
+│   └── CustomSelect.vue            # 自定义下拉
+│
+├── api/                            # API接口
+│   ├── gameApi.js                  # 游戏相关API
+│   └── apkApi.js                   # APK相关API
+│
+└── router/
+    └── index.js                    # 路由配置
+```
+
+---
+
+## 已清理文件记录
+
+以下文件已被清理（未使用或已废弃）：
+
+| 文件名 | 清理原因 | 清理时间 |
+|--------|----------|----------|
+| Icon.vue | 文件缺失，使用 Element Plus el-icon 替代 | 2026-03-13 |
+| AdvancedConfig.vue | 未被任何组件引用 | 2026-03-13 |
+| ComponentPreview.vue | 未被任何组件引用 | 2026-03-13 |
+| PlayerCountConfig.vue | 未被任何组件引用 | 2026-03-13 |
+| RoundCountConfig.vue | 未被任何组件引用 | 2026-03-13 |
+| RuleEditorModal.vue | 被 RuleEditorModalPro 替代 | 2026-03-13 |
+| ComponentSelectorDrawer.vue | 未被任何组件引用 | 2026-03-13 |
+
+---
+
+*本文档由系统自动生成，创建新组件时请务必更新此文档*

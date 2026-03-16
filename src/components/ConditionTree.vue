@@ -1,82 +1,98 @@
 <template>
   <div class="condition-tree-container">
-    <div class="panel-title">
+    <div v-if="showTitle" class="panel-title">
       <span>条件判断 (IF)</span>
-      <span style="font-size:var(--font-size-xs); color:var(--color-text-tertiary); font-weight:var(--font-weight-normal);">点击圆点切换 且/或</span>
+      <span class="panel-hint">点击圆点切换 且/或</span>
     </div>
     <div class="scroll-area">
-      <div v-if="conditionTree" class="tree-node" :id="`group-${conditionTree.id}`">
-        <div class="tree-line"></div>
-        <div :class="['logic-btn', conditionTree.logic]" @click="toggleLogic(conditionTree.id)">
-          {{ conditionTree.logic === 'and' ? '且' : '或' }}
-        </div>
-        <div>
-          <div 
-            v-for="(child, index) in conditionTree.children" 
-            :key="`${child.id || index}`"
-          >
-            <div v-if="child.type === 'rule'" class="rule-item">
-              <select 
-                class="edit-select" 
-                style="width:100px;"
-                v-model="child.field"
-                @change="updateRule(child, 'field', child.field)"
-              >
-                <option 
-                  v-for="component in allComponents" 
-                  :key="component.id" 
-                  :value="component.id"
+      <div v-if="conditionTree" class="tree-wrapper">
+        <div class="tree-node" :id="`group-${conditionTree.id}`">
+          <!-- 垂直连接线 -->
+          <div class="tree-line"></div>
+          <!-- 逻辑切换按钮 -->
+          <div :class="['logic-btn', conditionTree.logic]" @click="toggleLogic(conditionTree.id)">
+            {{ conditionTree.logic === 'and' ? '且' : '或' }}
+          </div>
+          <!-- 子节点容器 -->
+          <div class="children-container">
+            <div 
+              v-for="(child, index) in conditionTree.children" 
+              :key="`${child.id || index}`"
+              class="child-wrapper"
+            >
+              <!-- 规则项 -->
+              <div v-if="child.type === 'rule'" class="rule-item">
+                <select 
+                  class="edit-select field-select" 
+                  v-model="child.field"
+                  @change="updateRule(child, 'field', child.field)"
+                  
                 >
-                  {{ component.title }}
-                </option>
-              </select>
-              <select 
-                class="edit-select" 
-                style="width:60px;"
-                v-model="child.op"
-                @change="updateRule(child, 'op', child.op)"
-              >
-                <option value="eq">等于</option>
-                <option value="neq">不等于</option>
-              </select>
-              <select 
-                v-if="getComponentOptions(child.field).length > 0" 
-                class="edit-select" 
-                style="flex:1;"
-                v-model="child.val"
-                @change="updateRule(child, 'val', child.val)"
-              >
-                <option 
-                  v-for="option in getComponentOptions(child.field)" 
-                  :key="option.value" 
-                  :value="option.value"
+                  <option 
+                    v-for="component in allComponents" 
+                    :key="component.id" 
+                    :value="component.id"
+                  >
+                    {{ component.title }}
+                  </option>
+                </select>
+                <select
+                  class="edit-select op-select"
+                  v-model="child.op"
+                  @change="updateRule(child, 'op', child.op)"
                 >
-                  {{ option.label }}
-                </option>
-              </select>
-              <input 
-                v-else 
-                type="text" 
-                class="edit-input"
-                v-model="child.val"
-                @input="updateRule(child, 'val', child.val)"
-              >
-              <div class="btn-icon" @click="removeNode(conditionTree.id, index)">✕</div>
-            </div>
-            <div v-else-if="child.type === 'group'" class="sub-group">
-              <ConditionTree 
-                :condition-tree="child" 
-                :all-components="allComponents"
-                :depth="depth + 1"
-                @update:condition-tree="(updatedTree) => updateSubGroup(child, updatedTree)"
-              />
-              <div class="btn-icon" style="position:absolute;top:4px;right:4px;" @click="removeNode(conditionTree.id, index)">✕</div>
+                  <option
+                    v-for="op in getOperatorsByComponentType(child.field)"
+                    :key="op.value"
+                    :value="op.value"
+                  >
+                    {{ op.label }}
+                  </option>
+                </select>
+                <select 
+                  v-if="getComponentOptions(child.field).length > 0" 
+                  class="edit-select value-select" 
+                  v-model="child.val"
+                  @change="updateRule(child, 'val', child.val)"
+                >
+                  <option 
+                    v-for="option in getComponentOptions(child.field)" 
+                    :key="option.value" 
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+                <input 
+                  v-else 
+                  type="text" 
+                  class="edit-input value-input"
+                  v-model="child.val"
+                  @input="updateRule(child, 'val', child.val)"
+                  placeholder="输入值"
+                >
+                <div class="btn-icon delete-btn" @click="removeNode(conditionTree.id, index)">✕</div>
+              </div>
+              <!-- 子条件组 -->
+              <div v-else-if="child.type === 'group'" class="sub-group-wrapper">
+                <div class="sub-group">
+                  <ConditionTree
+                    :condition-tree="child"
+                    :all-components="allComponents"
+                    :depth="depth + 1"
+                    :show-title="false"
+                    @update:condition-tree="(updatedTree) => updateSubGroup(child, updatedTree)"
+                  />
+                  <div class="btn-icon delete-btn sub-group-delete" @click="removeNode(conditionTree.id, index)">✕</div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div style="margin-top:8px; display:flex;">
-          <div class="btn-add-small" @click="addCondition(conditionTree.id)">+ 条件</div>
-          <div v-if="depth < 2" class="btn-add-small" style="margin-left:8px;" @click="addGroup(conditionTree.id)">+ 条件组</div>
+          <!-- 添加按钮区域 -->
+          <div class="add-buttons">
+            <div class="btn-add-small" @click="addCondition(conditionTree.id)">+ 条件</div>
+            <div v-if="depth < 2" class="btn-add-small" @click="addGroup(conditionTree.id)">+ 条件组</div>
+          </div>
         </div>
       </div>
       <div v-else class="empty-state">
@@ -103,6 +119,10 @@ const props = defineProps({
   depth: {
     type: Number,
     default: 1
+  },
+  showTitle: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -113,6 +133,64 @@ const emit = defineEmits(['update:condition-tree'])
 function getComponentOptions(componentId) {
   const component = props.allComponents.find(c => c.id === componentId)
   return component?.options || []
+}
+
+/**
+ * 获取组件类型
+ * @param {string} componentId - 组件ID
+ * @returns {string} 组件类型
+ */
+function getComponentType(componentId) {
+  const component = props.allComponents.find(c => c.id === componentId)
+  return component?.type || 'radio'
+}
+
+/**
+ * 根据组件类型获取可用的运算符列表
+ * @param {string} componentId - 组件ID
+ * @returns {Array} 运算符列表
+ */
+function getOperatorsByComponentType(componentId) {
+  const componentType = getComponentType(componentId)
+  
+  // 定义不同组件类型对应的运算符
+  const operatorMap = {
+    // 单选类型：等于、不等于
+    'radio': [
+      { value: 'eq', label: '等于' },
+      { value: 'neq', label: '不等于' }
+    ],
+    // 复选类型：包含、不包含、选中、未选中
+    'checkbox': [
+      { value: 'contains', label: '包含' },
+      { value: 'not_contains', label: '不包含' },
+      { value: 'selected', label: '选中' },
+      { value: 'unselected', label: '未选中' }
+    ],
+    // 下拉列表类型：等于、不等于、包含、不包含
+    'select': [
+      { value: 'eq', label: '等于' },
+      { value: 'neq', label: '不等于' },
+      { value: 'contains', label: '包含' },
+      { value: 'not_contains', label: '不包含' }
+    ],
+    // 多选下拉类型：同复选
+    'select-multiple': [
+      { value: 'contains', label: '包含' },
+      { value: 'not_contains', label: '不包含' },
+      { value: 'selected', label: '选中' },
+      { value: 'unselected', label: '未选中' }
+    ],
+    // 下拉&开关类型：等于、不等于、开启、未开启
+    'select-switch': [
+      { value: 'eq', label: '等于' },
+      { value: 'neq', label: '不等于' },
+      { value: 'enabled', label: '开启' },
+      { value: 'disabled', label: '未开启' }
+    ]
+  }
+  
+  return operatorMap[componentType] || operatorMap['radio']
 }
 
 // 切换逻辑运算符
@@ -186,6 +264,15 @@ function removeNode(parentId, index) {
 
 // 更新规则
 function updateRule(rule, key, value) {
+  // 当字段改变时，检查运算符是否兼容新字段类型
+  if (key === 'field') {
+    const availableOps = getOperatorsByComponentType(value)
+    const availableOpValues = availableOps.map(op => op.value)
+    // 如果当前运算符在新字段类型中不可用，重置为第一个可用运算符
+    if (!availableOpValues.includes(rule.op)) {
+      rule.op = availableOpValues[0] || 'eq'
+    }
+  }
   // 规则更新通过v-model双向绑定自动处理
   // 这里可以添加额外的逻辑，如果需要
   emit('update:condition-tree', props.conditionTree)
@@ -206,27 +293,37 @@ function updateSubGroup(oldGroup, newGroup) {
 </script>
 
 <style scoped>
+/* 容器样式 */
 .condition-tree-container {
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: #FAFAFA;
 }
 
+/* 面板标题 */
 .panel-title {
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--spacing-4);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #262626;
+  border-bottom: 1px solid #E8E8E8;
+  background: #FFFFFF;
   flex-shrink: 0;
 }
 
+.panel-hint {
+  font-size: 10px;
+  color: #8C8C8C;
+  font-weight: 400;
+}
+
+/* 滚动区域 */
 .scroll-area {
   flex: 1;
   overflow-y: auto;
@@ -234,24 +331,32 @@ function updateSubGroup(oldGroup, newGroup) {
   background: #FAFAFA;
 }
 
+/* 树形结构包装器 */
+.tree-wrapper {
+  position: relative;
+}
+
+/* 树节点 */
 .tree-node {
   position: relative;
   padding-left: 24px;
-  margin-bottom: 8px;
 }
 
+/* 垂直连接线 */
 .tree-line {
   position: absolute;
   left: 0;
   top: 12px;
-  bottom: 12px;
+  bottom: 40px;
   width: 2px;
-  background: var(--line-color);
+  background: #D9D9D9;
+  border-radius: 1px;
 }
 
+/* 逻辑切换按钮 */
 .logic-btn {
   position: absolute;
-  left: -12px;
+  left: -11px;
   top: 50%;
   transform: translateY(-50%);
   width: 24px;
@@ -260,100 +365,191 @@ function updateSubGroup(oldGroup, newGroup) {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
+  font-size: 10px;
+  font-weight: bold;
   color: white;
   cursor: pointer;
   z-index: 10;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-fast);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.logic-btn:hover {
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
 }
 
 .logic-btn.and {
-  background-color: var(--primary);
+  background-color: #2F54EB;
 }
 
 .logic-btn.or {
-  background-color: var(--secondary);
+  background-color: #FA8C16;
 }
 
-.rule-item {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  padding: var(--spacing-2);
+/* 子节点容器 */
+.children-container {
   display: flex;
-  gap: var(--spacing-2);
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-xs);
-  align-items: center;
-  margin-bottom: var(--spacing-2);
+  flex-direction: column;
+  gap: 8px;
 }
 
-.sub-group {
-  margin-left: 16px;
-  margin-top: 8px;
+.child-wrapper {
   position: relative;
 }
 
+/* 规则项 */
+.rule-item {
+  background: #FFFFFF;
+  border: 1px solid #E8E8E8;
+  padding: 8px;
+  display: flex;
+  gap: 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  align-items: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.rule-item:hover {
+  border-color: #D9D9D9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* 子条件组包装器 */
+.sub-group-wrapper {
+  margin-top: 4px;
+}
+
+/* 子条件组 */
+.sub-group {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid #E8E8E8;
+  border-radius: 8px;
+  padding: 12px;
+  margin-left: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.sub-group-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.sub-group-delete:hover {
+  background: #FFF1F0;
+}
+
+/* 添加按钮区域 */
+.add-buttons {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  padding-left: 4px;
+}
+
 .btn-add-small {
-  font-size: var(--font-size-xs);
-  padding: 2px var(--spacing-2);
-  background: var(--color-surface);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--border-radius-full);
-  color: var(--color-text-tertiary);
+  font-size: 11px;
+  padding: 4px 12px;
+  background: #FFFFFF;
+  border: 1px dashed #D9D9D9;
+  border-radius: 12px;
+  color: #8C8C8C;
   cursor: pointer;
-  margin-left: var(--spacing-2);
-  transition: all var(--transition-fast);
+  transition: all 0.2s ease;
+  user-select: none;
 }
 
 .btn-add-small:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: var(--color-primary-light);
+  border-color: #2F54EB;
+  color: #2F54EB;
+  background: #F0F5FF;
 }
 
+/* 删除按钮 */
 .btn-icon {
   width: 20px;
   height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-tertiary);
+  color: #BFBFBF;
   cursor: pointer;
-  transition: color var(--transition-fast);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-size: 12px;
 }
 
 .btn-icon:hover {
-  color: var(--color-danger);
+  color: #FF4D4F;
+  background: #FFF1F0;
 }
 
+.delete-btn {
+  flex-shrink: 0;
+}
+
+/* 表单控件 */
 .edit-select,
 .edit-input {
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-hover);
-  border-radius: var(--border-radius-sm);
-  padding: var(--spacing-1) var(--spacing-2);
-  font-size: var(--font-size-xs);
+  border: 1px solid #E8E8E8;
+  background: #F5F6FA;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
   height: 28px;
-  color: var(--color-text-primary);
-  transition: all var(--transition-fast);
+  color: #262626;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.edit-select:hover,
+.edit-input:hover {
+  border-color: #D9D9D9;
 }
 
 .edit-select:focus,
 .edit-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+  border-color: #2F54EB;
+  box-shadow: 0 0 0 2px rgba(47, 84, 235, 0.15);
+  background: #FFFFFF;
 }
 
+.field-select {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.op-select {
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.value-select,
+.value-input {
+  flex: 1;
+  min-width: 80px;
+}
+
+/* 空状态 */
 .empty-state {
-  padding: var(--spacing-8);
+  padding: 40px 24px;
   text-align: center;
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-xs);
-  background: var(--color-surface-hover);
-  border-radius: var(--border-radius-lg);
-  border: 1px dashed var(--color-border);
+  color: #BFBFBF;
+  font-size: 12px;
+  background: #FFFFFF;
+  border-radius: 8px;
+  border: 1px dashed #D9D9D9;
 }
 </style>

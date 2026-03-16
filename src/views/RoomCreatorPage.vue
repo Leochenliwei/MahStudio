@@ -10,29 +10,29 @@
           :class="{ active: activeTab === 'config' }"
           @click="activeTab = 'config'"
         >
-          <Icon name="sliders" size="16" />
+          <el-icon :size="16"><Operation /></el-icon>
           面板选项
         </button>
-        <button 
-          class="tab-item" 
+        <button
+          class="tab-item"
+          :class="{ active: activeTab === 'simple-dependency' }"
+          @click="activeTab = 'simple-dependency'"
+        >
+          <el-icon :size="16"><Grid /></el-icon>
+          选项联动（简版P0）
+        </button>
+        <button
+          class="tab-item"
           :class="{ active: activeTab === 'dependency' }"
           @click="activeTab = 'dependency'"
         >
-          <Icon name="link" size="16" />
-          选项联动
+          <el-icon :size="16"><Link /></el-icon>
+          选项联动（高阶等迭代）
         </button>
+        
       </div>
 
-    <div class="page-header">
-      <div class="header-left">
-      </div>
-      <div class="header-right">
-        <button class="save-btn" @click="saveConfig">
-          <Icon name="save" size="16" />
-          保存配置
-        </button>
-      </div>
-    </div>
+    
     </div>
 
     <!-- 主内容区 -->
@@ -49,23 +49,35 @@
         />
 
         <!-- 分组管理 -->
-        <GroupManager 
+        <GroupManager
           :groups="roomConfig.groups"
-          @edit-group-name="editGroupName"
+          @edit-group="handleEditGroup"
           @add-component="addComponent"
           @open-drawer="openDrawer"
-          @add-group="addGroup"
+          @show-add-group-modal="openCreateGroupModal"
+          @update:group-description="updateGroupDescription"
         />
       </div>
 
       <!-- 选项联动内容 -->
       <div v-if="activeTab === 'dependency'" class="dependency-content">
-        <DependencyEditor 
+        <DependencyEditor
           :is-open="true"
           :rules="roomConfig.dependencies"
           :form-schema="roomConfig.groups"
           @update:rules="(newRules) => roomConfig.dependencies = newRules"
           @back-to-config="activeTab = 'config'"
+        />
+      </div>
+
+      <!-- 简版选项联动内容 -->
+      <div v-if="activeTab === 'simple-dependency'" class="simple-dependency-content">
+        <SimpleDependencyPage
+          :embedded="true"
+          :game-id="route.params.id"
+          :form-schema="roomConfig.groups"
+          @back="activeTab = 'config'"
+          @open-advanced-editor="activeTab = 'dependency'"
         />
       </div>
     </div>
@@ -111,6 +123,14 @@
       @toggle-component-status="toggleComponentStatus"
       @update-component-property="updateComponentProperty"
     />
+
+    <!-- 添加分组弹窗 -->
+    <AddGroupModal
+      v-model:visible="showAddGroupModal"
+      :mode="groupModalMode"
+      :group-data="editingGroupData"
+      @confirm="handleGroupModalConfirm"
+    />
   </div>
 </template>
 
@@ -118,31 +138,36 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElNotification } from 'element-plus'
-import Icon from '../components/Icon.vue'
+import { Operation, Grid, Link, CircleCheck } from '@element-plus/icons-vue'
 import BasicParams from '../components/BasicParams.vue'
 import GroupManager from '../components/GroupManager.vue'
 import BasicParamsDrawer from '../components/BasicParamsDrawer.vue'
 import Drawer from '../components/Drawer.vue'
 import DependencyEditor from '../components/DependencyEditor.vue'
+import SimpleDependencyPage from './SimpleDependencyPage.vue'
+import AddGroupModal from '../components/AddGroupModal.vue'
 
 const router = useRouter()
 const route = useRoute()
 
-// 响应式数据
-const roomConfig = ref({
+/**
+ * 默认麻将创房面板配置数据
+ * 包含局数、人数、玩法选项、点杠规则、算杠规则、点炮规则、胡牌规则、特殊规则和番型配置
+ */
+const defaultRoomConfig = {
   id: '',
   name: '',
   basic: {
     playerCount: {
       options: [4, 3, 2],
-      default: 4,
+      default: 2,
       allowLess: false,
       allowLessStart: false
     },
     roundCount: {
       mode: 'round',
       options: [4, 8, 16],
-      default: 4
+      default: 8
     },
     baseScore: 1,
     timeLimits: {
@@ -153,13 +178,208 @@ const roomConfig = ref({
   },
   groups: [
     {
-      id: 'group_1',
-      name: '分组1',
-      components: []
+      id: 'group_options',
+      name: '选项',
+      columns: 4,
+      components: [
+        {
+          id: 'comp_options_type',
+          type: 'radio',
+          title: '选项类型',
+          options: [
+            { label: '经典选项', value: 'classic', isDefault: false },
+            { label: '更多选项', value: 'more', isDefault: true }
+          ],
+          required: false,
+          disabled: false
+        }
+      ]
+    },
+    {
+      id: 'group_play_method',
+      name: '玩法',
+      columns: 4,
+      components: [
+        {
+          id: 'comp_play_method',
+          type: 'radio',
+          title: '玩法选择',
+          options: [
+            { label: '常规玩法', value: 'normal', isDefault: true },
+            { label: '风耗子', value: 'wind_joker', isDefault: false, help: '风牌作为万能牌' },
+            { label: '随机耗子', value: 'random_joker', isDefault: false, help: '随机确定万能牌' },
+            { label: '抓双耗子', value: 'double_joker', isDefault: false, help: '抓取两张万能牌' }
+          ],
+          required: false,
+          disabled: false
+        }
+      ]
+    },
+    {
+      id: 'group_dealer_options',
+      name: '选项',
+      columns: 4,
+      components: [
+        {
+          id: 'comp_dealer_settings',
+          type: 'checkbox',
+          title: '庄家设置',
+          options: [
+            { label: '带庄', value: 'with_dealer', isDefault: false },
+            { label: '自摸庄分翻倍', value: 'self_draw_double', isDefault: false, help: '自摸时庄家分数翻倍计算' },
+            { label: '跟庄', value: 'follow_dealer', isDefault: false, help: '跟随庄家规则' },
+            { label: '风嘴子', value: 'wind_bonus', isDefault: false, help: '风牌额外计分' },
+            { label: '风嘴子算分', value: 'wind_score', isDefault: false, help: '风嘴子分数计算方式' },
+            { label: '轮庄', value: 'rotate_dealer', isDefault: false }
+          ],
+          required: false,
+          disabled: false
+        }
+      ]
+    },
+    {
+      id: 'group_kong_call',
+      name: '点杠',
+      columns: 4,
+      components: [
+        {
+          id: 'comp_kong_call',
+          type: 'radio',
+          title: '点杠规则',
+          options: [
+            { label: '听前杠包杠', value: 'before_listen', isDefault: true, help: '听牌前杠牌需要包杠' },
+            { label: '点杠包杠', value: 'call_kong', isDefault: false, help: '点杠者包杠' },
+            { label: '点杠不包杠', value: 'no_call_kong', isDefault: false, help: '点杠者不包杠' }
+          ],
+          required: false,
+          disabled: false
+        }
+      ]
+    },
+    {
+      id: 'group_kong_score',
+      name: '算杠',
+      columns: 4,
+      components: [
+        {
+          id: 'comp_kong_score',
+          type: 'radio',
+          title: '算杠规则',
+          options: [
+            { label: '杠出即有', value: 'kong_immediate', isDefault: true },
+            { label: '杠随胡走', value: 'kong_with_win', isDefault: false, help: '杠分随胡牌结算' },
+            { label: '听牌保杠', value: 'listen_protect', isDefault: false, help: '听牌后保护杠分' }
+          ],
+          required: false,
+          disabled: false
+        }
+      ]
+    },
+    {
+      id: 'group_win_call',
+      name: '点炮',
+      columns: 4,
+      components: [
+        {
+          id: 'comp_win_call',
+          type: 'radio',
+          title: '点炮规则',
+          options: [
+            { label: '听前点炮包胡', value: 'before_listen_win', isDefault: true },
+            { label: '点炮包胡包杠', value: 'call_win_kong', isDefault: false, help: '点炮者包胡包杠' },
+            { label: '点炮包胡家杠', value: 'call_win_dealer_kong', isDefault: false, help: '点炮者包胡和庄家杠' },
+            { label: '听前点炮包胡包杠', value: 'before_listen_all', isDefault: false, help: '听牌前点炮包胡包杠' }
+          ],
+          required: false,
+          disabled: false
+        }
+      ]
+    },
+    {
+      id: 'group_win_limit',
+      name: '胡牌',
+      columns: 4,
+      components: [
+        {
+          id: 'comp_win_limit',
+          type: 'checkbox',
+          title: '胡牌限制',
+          options: [
+            { label: '123点不可胡', value: 'no_123', isDefault: false, help: '123点数时不能胡牌' },
+            { label: '1234点不可胡', value: 'no_1234', isDefault: false, help: '1234点数时不能胡牌' },
+            { label: '小于6点可胡', value: 'less_6', isDefault: false, help: '小于6点可以胡牌' },
+            { label: '有胡必胡', value: 'must_win', isDefault: false },
+            { label: '过胡需自摸', value: 'pass_self_draw', isDefault: false, help: '过胡后只能自摸' }
+          ],
+          required: false,
+          disabled: false
+        }
+      ]
+    },
+    {
+      id: 'group_rules',
+      name: '规则',
+      columns: 4,
+      components: [
+        {
+          id: 'comp_special_rules',
+          type: 'checkbox',
+          title: '特殊规则',
+          options: [
+            { label: '明报', value: 'open_call', isDefault: false, help: '公开报牌' },
+            { label: '绝张不能听', value: 'no_last_listen', isDefault: false, help: '绝张牌不能听' },
+            { label: '七墩荒庄', value: 'seven_empty', isDefault: false, help: '七墩牌后荒庄' },
+            { label: '缺一门', value: 'missing_suit', isDefault: false },
+            { label: '不带风', value: 'no_wind', isDefault: false },
+            { label: '摔三张', value: 'throw_three', isDefault: false, help: '开局摔三张牌' },
+            { label: '豪七必须胡绝张', value: 'seven_must_last', isDefault: false, help: '豪华七对必须胡绝张' }
+          ],
+          required: false,
+          disabled: false
+        }
+      ]
+    },
+    {
+      id: 'group_fan_type',
+      name: '番型',
+      columns: 4,
+      components: [
+        {
+          id: 'comp_fan_calc',
+          type: 'radio',
+          title: '番型计算',
+          options: [
+            { label: '翻倍', value: 'double', isDefault: true, help: '番型分数翻倍计算' },
+            { label: '加点', value: 'add_point', isDefault: false, help: '番型分数加点计算' },
+            { label: '不翻倍加点', value: 'no_double_add', isDefault: false, help: '不翻倍只加点' }
+          ],
+          required: false,
+          disabled: false
+        },
+        {
+          id: 'comp_fan_types',
+          type: 'select-multiple',
+          title: '番型列表',
+          options: [
+            { label: '碰碰胡', value: 'pengpeng', isDefault: false, multiplier: 2 },
+            { label: '七对', value: 'seven_pairs', isDefault: true, multiplier: 2 },
+            { label: '豪华七对', value: 'luxury_seven', isDefault: true, multiplier: 4 },
+            { label: '十三幺', value: 'thirteen_orphans', isDefault: true, multiplier: 4 },
+            { label: '一条龙', value: 'pure_straight', isDefault: true, multiplier: 2 },
+            { label: '清一色', value: 'full_flush', isDefault: true, multiplier: 2 },
+            { label: '风一色', value: 'wind_flush', isDefault: true, multiplier: 2 }
+          ],
+          required: false,
+          disabled: false
+        }
+      ]
     }
   ],
   dependencies: []
-})
+}
+
+// 响应式数据
+const roomConfig = ref(JSON.parse(JSON.stringify(defaultRoomConfig)))
 
 // 抽屉相关
 const activeDrawer = ref('')
@@ -200,6 +420,13 @@ const selectedBaseScoreTemplate = ref(0)
 // 编辑状态
 const editingComponent = ref(null)
 const editingGroupId = ref(null)
+
+// 添加分组弹窗显示状态
+const showAddGroupModal = ref(false)
+// 弹窗模式：'create' | 'edit'
+const groupModalMode = ref('create')
+// 当前编辑的分组
+const editingGroupData = ref(null)
 
 // 组件列表数据
 const components = ref([])
@@ -318,8 +545,27 @@ function loadConfig() {
       roomConfig.value = JSON.parse(savedConfig)
     } catch (error) {
       console.error('加载配置失败:', error)
+      // 加载失败时使用默认配置
+      resetToDefaultConfig()
     }
+  } else {
+    // 没有保存的配置时使用默认 mock 数据
+    resetToDefaultConfig()
   }
+}
+
+/**
+ * 重置为默认 mock 配置
+ * 将当前配置恢复为默认的麻将创房面板配置
+ */
+function resetToDefaultConfig() {
+  roomConfig.value = JSON.parse(JSON.stringify(defaultRoomConfig))
+  ElNotification({
+    title: '提示',
+    message: '已加载默认创房配置',
+    type: 'info',
+    duration: 2000
+  })
 }
 
 // 保存配置
@@ -349,14 +595,101 @@ function goBack() {
   router.push({ name: 'Workbench', params: { id: route.params.id } })
 }
 
-// 添加分组
-function addGroup() {
-  const newGroup = {
-    id: `group_${Date.now()}`,
-    name: `分组${roomConfig.value.groups.length + 1}`,
-    components: []
+/**
+ * 打开创建分组弹窗
+ * 关联需求：分组管理 - 创建新分组
+ */
+function openCreateGroupModal() {
+  groupModalMode.value = 'create'
+  editingGroupData.value = null
+  showAddGroupModal.value = true
+}
+
+/**
+ * 处理编辑分组
+ * @param {Object} group - 分组对象
+ * 关联需求：分组管理 - 编辑分组
+ */
+function handleEditGroup(group) {
+  groupModalMode.value = 'edit'
+  editingGroupData.value = group
+  showAddGroupModal.value = true
+}
+
+/**
+ * 处理分组弹窗确认
+ * @param {Object} data - 弹窗返回数据
+ * @param {string} data.mode - 'create' | 'edit'
+ * @param {string} data.groupId - 编辑时的分组ID
+ * @param {string} data.name - 分组名称
+ * @param {number} data.columns - 列数
+ * @param {string} data.description - 说明
+ */
+function handleGroupModalConfirm(data) {
+  if (data.mode === 'create') {
+    // 创建新分组
+    const newGroup = {
+      id: `group_${Date.now()}`,
+      name: data.name,
+      columns: data.columns,
+      description: data.description,
+      components: []
+    }
+    roomConfig.value.groups.push(newGroup)
+
+    ElNotification({
+      title: '成功',
+      message: `分组 "${data.name}" 创建成功`,
+      type: 'success',
+      duration: 2000
+    })
+  } else if (data.mode === 'edit' && data.groupId) {
+    // 编辑现有分组
+    const group = roomConfig.value.groups.find(g => g.id === data.groupId)
+    if (group) {
+      group.name = data.name
+      group.columns = data.columns
+      group.description = data.description
+
+      ElNotification({
+        title: '成功',
+        message: `分组 "${data.name}" 修改成功`,
+        type: 'success',
+        duration: 2000
+      })
+    }
   }
-  roomConfig.value.groups.push(newGroup)
+}
+
+/**
+ * 更新分组分列数
+ * @param {string} groupId - 分组ID
+ * @param {number} columns - 分列数
+ */
+function updateGroupColumns(groupId, columns) {
+  const group = roomConfig.value.groups.find(g => g.id === groupId)
+  if (group) {
+    group.columns = columns
+  }
+}
+
+/**
+ * 更新分组说明
+ * @param {string} groupId - 分组ID
+ * @param {string} description - 分组说明
+ * 关联需求：分组管理 - 更新分组说明
+ */
+function updateGroupDescription(groupId, description) {
+  const group = roomConfig.value.groups.find(g => g.id === groupId)
+  if (group) {
+    group.description = description
+    ElNotification({
+      title: '成功',
+      message: '分组说明已更新',
+      type: 'success',
+      duration: 1500
+    })
+  }
 }
 
 // 编辑分组名称
@@ -824,6 +1157,13 @@ onMounted(async () => {
 
 /* 依赖内容区域 */
 .dependency-content {
+  height: calc(100vh - 160px);
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 简版选项联动内容区域 */
+.simple-dependency-content {
   height: calc(100vh - 160px);
   width: 100%;
   overflow: hidden;

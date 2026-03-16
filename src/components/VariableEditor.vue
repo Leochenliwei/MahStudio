@@ -5,7 +5,7 @@
       <div class="modal-header">
         <h2>{{ editingVariable ? '编辑变量' : '新增变量' }}</h2>
         <button class="close-btn" @click="closeModal">
-          <Icon name="x" size="20" />
+          <el-icon :size="20"><Close /></el-icon>
         </button>
       </div>
       
@@ -162,7 +162,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { ElNotification } from 'element-plus'
-import Icon from './Icon.vue'
+import { Close } from '@element-plus/icons-vue'
 import CustomSelect from './CustomSelect.vue'
 
 /**

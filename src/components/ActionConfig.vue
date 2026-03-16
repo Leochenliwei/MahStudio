@@ -5,8 +5,20 @@
       <div class="btn-add-small" @click="addAction" style="color:var(--primary); border-color:var(--primary);">+ 新增动作</div>
     </div>
     <div class="scroll-area">
-      <div 
-        v-for="(action, idx) in targets" 
+      <!-- 公共提示语配置 -->
+      <div class="global-config-section">
+        <div class="global-config-title">💬 提示语</div>
+        <input
+          type="text"
+          class="edit-input tooltip-input"
+          :value="tooltip"
+          @input="$emit('update:tooltip', $event.target.value)"
+          placeholder="请输入提示语内容"
+        >
+      </div>
+
+      <div
+        v-for="(action, idx) in targets"
         :key="idx"
         class="action-edit-card"
       >
@@ -142,8 +154,8 @@
             </div>
             <div class="prop-controls" :style="{ opacity: action.props.visible.enabled ? 1 : 0.4 }">
               <span class="condition-label when">满足时</span>
-              <select 
-                class="edit-select" 
+              <select
+                class="edit-select"
                 style="width:80px;"
                 v-model="action.props.visible.when"
                 @change="updatePropValue(idx, 'visible', 'when', action.props.visible.when)"
@@ -153,16 +165,9 @@
                 <option value="hide">隐藏</option>
               </select>
               <span class="condition-label else">否则</span>
-              <select 
-                class="edit-select" 
-                style="width:80px;"
-                v-model="action.props.visible.else"
-                @change="updatePropValue(idx, 'visible', 'else', action.props.visible.else)"
-                :disabled="!action.props.visible.enabled"
-              >
-                <option value="show">显示</option>
-                <option value="hide">隐藏</option>
-              </select>
+              <span class="auto-else-value">
+                {{ action.props.visible.when === 'show' ? '隐藏' : '显示' }}
+              </span>
             </div>
           </div>
           <div class="prop-row">
@@ -177,8 +182,8 @@
             </div>
             <div class="prop-controls" :style="{ opacity: action.props.disabled.enabled ? 1 : 0.4 }">
               <span class="condition-label when">满足时</span>
-              <select 
-                class="edit-select" 
+              <select
+                class="edit-select"
                 style="width:80px;"
                 v-model="action.props.disabled.when"
                 @change="updatePropValue(idx, 'disabled', 'when', action.props.disabled.when)"
@@ -188,16 +193,9 @@
                 <option value="unlock">解锁</option>
               </select>
               <span class="condition-label else">否则</span>
-              <select 
-                class="edit-select" 
-                style="width:80px;"
-                v-model="action.props.disabled.else"
-                @change="updatePropValue(idx, 'disabled', 'else', action.props.disabled.else)"
-                :disabled="!action.props.disabled.enabled"
-              >
-                <option value="lock">锁定</option>
-                <option value="unlock">解锁</option>
-              </select>
+              <span class="auto-else-value">
+                {{ action.props.disabled.when === 'lock' ? '解锁' : '锁定' }}
+              </span>
             </div>
           </div>
           <div class="prop-row">
@@ -212,8 +210,8 @@
             </div>
             <div class="prop-controls" :style="{ opacity: action.props.selected.enabled ? 1 : 0.4 }">
               <span class="condition-label when">满足时</span>
-              <select 
-                class="edit-select" 
+              <select
+                class="edit-select"
                 style="width:80px;"
                 v-model="action.props.selected.when"
                 @change="updatePropValue(idx, 'selected', 'when', action.props.selected.when)"
@@ -223,16 +221,9 @@
                 <option value="false">不选中</option>
               </select>
               <span class="condition-label else">否则</span>
-              <select 
-                class="edit-select" 
-                style="width:80px;"
-                v-model="action.props.selected.else"
-                @change="updatePropValue(idx, 'selected', 'else', action.props.selected.else)"
-                :disabled="!action.props.selected.enabled"
-              >
-                <option value="true">选中</option>
-                <option value="false">不选中</option>
-              </select>
+              <span class="auto-else-value">
+                {{ action.props.selected.when === 'true' ? '不选中' : '选中' }}
+              </span>
             </div>
           </div>
         </div>
@@ -260,11 +251,19 @@ const props = defineProps({
   allComponents: {
     type: Array,
     default: () => []
+  },
+  tooltip: {
+    type: String,
+    default: ''
+  },
+  description: {
+    type: String,
+    default: ''
   }
 })
 
 // Emits
-const emit = defineEmits(['update:targets'])
+const emit = defineEmits(['update:targets', 'update:tooltip', 'update:description'])
 
 // 计算所有带有选项的组件
 const allComponentsWithOptions = computed(() => {
@@ -568,6 +567,18 @@ function updatePropValue(actionIdx, propType, condition, value) {
   color: #999;
 }
 
+.auto-else-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  padding: 4px 8px;
+  /* background: #f0f0f0; */
+  border-radius: 4px;
+  min-width: 60px;
+  text-align: left;
+  display: inline-block;
+}
+
 .edit-select, .edit-input {
   border: 1px solid #eee;
   background: #F5F6FA;
@@ -602,5 +613,50 @@ function updatePropValue(actionIdx, propType, condition, value) {
   background: rgba(255,255,255,0.5);
   border-radius: 8px;
   border: 1px dashed #ddd;
+}
+
+/* 全局配置区域 */
+.global-config-section {
+  background: #f8f9fa;
+  border: 1px dashed #d0d0d0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.global-config-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+/* 提示语输入框 */
+.tooltip-input {
+  width: 100%;
+}
+
+/* 规则说明文本域 */
+.description-textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 50px;
+  font-family: inherit;
+}
+
+/* 文本域基础样式 */
+.edit-textarea {
+  border: 1px solid #eee;
+  background: #F5F6FA;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 12px;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.edit-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 </style>

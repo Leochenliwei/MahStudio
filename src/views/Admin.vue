@@ -5,21 +5,21 @@
       <h2>后台管理</h2>
       <div class="backend-menu">
         <!-- 游戏管理-test 菜单 -->
-        <button 
-          @click="switchEnv('test')" 
+        <button
+          @click="switchEnv('test')"
           class="menu-item"
           :class="{ 'active': activeEnv === 'test' }"
         >
-          <Icon name="grid" size="16" class="mr-2" />
+          <el-icon :size="16" class="mr-2"><Grid /></el-icon>
           游戏管理-test
         </button>
         <!-- 游戏管理-online 菜单 -->
-        <button 
-          @click="switchEnv('online')" 
+        <button
+          @click="switchEnv('online')"
           class="menu-item"
           :class="{ 'active': activeEnv === 'online' }"
         >
-          <Icon name="grid" size="16" class="mr-2" />
+          <el-icon :size="16" class="mr-2"><Grid /></el-icon>
           游戏管理-online
         </button>
         <h4>！！！这里搞两个菜单主要是为了演示发布系统的双环境差异</h4>
@@ -111,7 +111,7 @@
           
           <!-- 空状态提示 -->
           <div v-if="gameConfigs.length === 0" class="empty-state">
-            <Icon name="box" size="48" class="empty-icon" />
+            <el-icon :size="48" class="empty-icon"><Box /></el-icon>
             <p>暂无游戏配置</p>
             <button class="action-btn" @click="showAddGameModal = true">创建第一个游戏</button>
           </div>
@@ -124,7 +124,7 @@
           <div class="modal-header">
             <h4>新增游戏</h4>
             <button class="modal-close-btn" @click="closeAddGameModal">
-              <Icon name="x" size="16" />
+              <el-icon :size="16"><Close /></el-icon>
             </button>
           </div>
           <div class="modal-body">
@@ -210,7 +210,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElNotification } from 'element-plus'
-import Icon from '../components/Icon.vue'
+import { Grid, Box, Close } from '@element-plus/icons-vue'
 import GameInfoModal from '../components/GameInfo.vue'
 import { FileType, getAllGames, addNewGame as addNewGameToMock, updateGame, createGameFile, deleteGame as deleteGameApi } from '../api/gameApi'
 

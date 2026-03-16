@@ -11,11 +11,11 @@
           <!-- 弹窗头部 -->
           <div class="modal-header">
             <h3 class="modal-title">
-              <Icon name="send" size="18" />
+              <el-icon :size="18"><Promotion /></el-icon>
               提交测试
             </h3>
             <button class="close-btn" @click="handleClose" title="关闭">
-              <Icon name="x" size="18" />
+              <el-icon :size="18"><Close /></el-icon>
             </button>
           </div>
 
@@ -49,7 +49,7 @@
                   </div>
                   <div class="option-content">
                     <div class="option-title">
-                      <Icon name="users" size="16" />
+                      <el-icon :size="16"><User /></el-icon>
                       测试约局
                     </div>
                     <div class="option-desc">用于多人对战测试环境</div>
@@ -68,7 +68,7 @@
                   </div>
                   <div class="option-content">
                     <div class="option-title">
-                      <Icon name="coins" size="16" />
+                      <el-icon :size="16"><Coin /></el-icon>
                       测试金币
                     </div>
                     <div class="option-desc">用于金币模式测试环境</div>
@@ -80,7 +80,7 @@
             <!-- 警告提示 -->
             <div class="warning-section">
               <div class="warning-box">
-                <Icon name="alert-triangle" size="18" class="warning-icon" />
+                <el-icon :size="18" class="warning-icon"><Warning /></el-icon>
                 <div class="warning-content">
                   <div class="warning-title">注意</div>
                   <div class="warning-text">
@@ -102,7 +102,7 @@
                   class="confirm-input"
                 />
                 <span class="checkbox-visual">
-                  <Icon v-if="isConfirmed" name="check" size="12" />
+                  <el-icon v-if="isConfirmed" :size="12"><Check /></el-icon>
                 </span>
                 <span class="confirm-text">我已了解，确认提交测试</span>
               </label>
@@ -119,7 +119,7 @@
               :disabled="!canSubmit"
               @click="handleConfirm"
             >
-              <Icon name="check" size="14" />
+              <el-icon :size="14"><Check /></el-icon>
               确认提测
             </button>
           </div>
@@ -152,7 +152,7 @@
  */
 
 import { ref, computed, watch } from 'vue'
-import Icon from './Icon.vue'
+import { Promotion, Close, User, Coin, Warning, Check } from '@element-plus/icons-vue'
 
 // 定义Props
 const props = defineProps({

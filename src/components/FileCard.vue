@@ -21,7 +21,7 @@
       <span class="updated-by">|</span>
       <span class="updated-by">草稿ID：{{ file.id || '未知' }}</span>
       <button class="action-btn small-icon history" @click="handleViewHistory" title="查看提测记录">
-          <Icon name="clock" size="14" />
+          <el-icon :size="14"><Clock /></el-icon>
           更多记录
       </button>
     </div>
@@ -35,19 +35,19 @@
       <!-- 测试/灰度类型操作按钮 -->
       <template v-if="file.type === 'testMatch' || file.type === 'testGold'">
         <button class="action-btn copy" @click="handleView" title="查看配置">
-          <Icon name="eye" size="14" />
+          <el-icon :size="14"><View /></el-icon>
           <span>查看</span>
         </button>
         <button class="action-btn copy" @click="handleCopy" title="复制">
-          <Icon name="copy" size="14" />
+          <el-icon :size="14"><CopyDocument /></el-icon>
           <span>复制</span>
         </button>
         <button class="action-btn copy" @click="handleCopyTo" title="复制">
-          <Icon name="copy" size="14" />
+          <el-icon :size="14"><CopyDocument /></el-icon>
           <span>复制到..</span>
         </button>
         <button class="action-btn gray" @click="handleGrayRelease" :title="environment === 'online' ? '发布' : '发灰度'">
-          <Icon name="rocket" size="14" />
+          <el-icon :size="14"><Promotion /></el-icon>
           <span>{{ environment === 'online' ? '发布' : '发灰度' }}</span>
         </button>
       </template>
@@ -55,15 +55,15 @@
       <!-- 正式类型操作按钮（无发布按钮） -->
       <template v-if="file.type === 'officialMatch' || file.type === 'officialGold'">
         <button class="action-btn copy" @click="handleView" title="查看配置">
-          <Icon name="eye" size="14" />
+          <el-icon :size="14"><View /></el-icon>
           <span>查看</span>
         </button>
         <button class="action-btn copy" @click="handleCopy" title="复制">
-          <Icon name="copy" size="14" />
+          <el-icon :size="14"><CopyDocument /></el-icon>
           <span>复制</span>
         </button>
         <button class="action-btn copy" @click="handleCopyTo" title="复制">
-          <Icon name="copy" size="14" />
+          <el-icon :size="14"><CopyDocument /></el-icon>
           <span>复制到..</span>
         </button>
       </template>
@@ -94,7 +94,7 @@
  * @event view-history - 查看提测记录，携带文件对象
  */
 
-import Icon from './Icon.vue'
+import { Clock, View, CopyDocument, Promotion } from '@element-plus/icons-vue'
 
 // 定义Props
 const props = defineProps({

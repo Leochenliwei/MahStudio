@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <div class="header">
       <button class="back-btn" @click="closePanel">
-        <Icon name="arrow-left" size="16" />
+        <el-icon :size="16"><ArrowLeft /></el-icon>
         退出编辑
       </button>
       <span style="margin-left: auto;">?</span>
@@ -72,7 +72,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import Icon from './Icon.vue'
+import { ArrowLeft } from '@element-plus/icons-vue'
 import Sidebar from './Sidebar.vue'
 import BasicParams from './BasicParams.vue'
 import GroupManager from './GroupManager.vue'

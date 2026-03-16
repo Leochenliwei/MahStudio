@@ -4,67 +4,73 @@
     <div class="components-sidebar" :class="{ 'collapsed': isComponentsSidebarCollapsed }">
       <div class="sidebar-header">
         <h3 v-if="!isComponentsSidebarCollapsed">
-          <Icon name="grid" size="18" />
+          <el-icon :size="18"><Grid /></el-icon>
           组件列表
         </h3>
         <button class="sidebar-toggle" @click="toggleComponentsSidebar">
-          <Icon :name="isComponentsSidebarCollapsed ? 'chevron-right' : 'chevron-left'" size="18" />
+          <el-icon :size="18">
+            <ArrowRight v-if="isComponentsSidebarCollapsed" />
+            <ArrowLeft v-else />
+          </el-icon>
         </button>
       </div>
       <div v-if="!isComponentsSidebarCollapsed" class="components-filter">
         <!-- 搜索输入框 -->
         <div class="search-box">
-          <Icon name="search" size="16" />
-          <input 
-            type="text" 
-            v-model="searchKeyword" 
+          <el-icon :size="16"><Search /></el-icon>
+          <input
+            type="text"
+            v-model="searchKeyword"
             placeholder="搜索组件..."
             class="search-input"
           >
         </div>
       </div>
       <div class="components-list">
-        <div 
-          v-for="(categoryComponents, category) in groupedComponents" 
+        <div
+          v-for="(categoryComponents, category) in groupedComponents"
           :key="category"
           class="category-folder"
         >
-          <div 
+          <div
             class="folder-header"
             @click="toggleCategory(category)"
           >
             <div class="folder-icon">
-              <Icon :name="isCategoryExpanded(category) ? 'chevron-down' : 'chevron-right'" size="16" />
-              <Icon name="folder" size="16" />
+              <el-icon :size="16">
+                <ArrowDown v-if="isCategoryExpanded(category)" />
+                <ArrowRight v-else />
+              </el-icon>
+              <el-icon :size="16"><Folder /></el-icon>
             </div>
             <h4 class="folder-title">{{ category }}</h4>
             <span class="component-count">{{ categoryComponents.length }}</span>
           </div>
-          <div 
+          <div
             class="folder-content"
             v-show="isCategoryExpanded(category)"
           >
-            <div 
-              v-for="component in categoryComponents" 
+            <div
+              v-for="component in categoryComponents"
               :key="component.id"
               class="component-item"
             >
-              <div class="component-icon"><Icon name="box" /></div>
+              <div class="component-icon"><el-icon><Box /></el-icon></div>
               <div class="component-info">
                 <h4>{{ component.name }}</h4>
                 <p>{{ component.description }}</p>
               </div>
               <div class="component-toggle">
                 <label class="toggle-switch" :class="{ 'locked': component.locked }">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     v-model="component.enabled"
                     @change="toggleComponent(component)"
                     :disabled="component.locked"
                   >
                   <span class="toggle-slider"></span>
                   <span v-if="component.locked" class="lock-icon">
-                    <Icon name="lock" size="14" />
+                    <el-icon :size="14"><Lock /></el-icon>
                   </span>
                 </label>
               </div>
@@ -83,23 +89,23 @@
         <!-- 历史记录功能 -->
         <div class="toolbar-section history-section">
           <button class="toolbar-btn" @click="undo" title="撤销 (Ctrl+Z)">
-            <Icon name="arrow-undo" size="16" />
+            <el-icon :size="16"><Back /></el-icon>
             <span>撤销</span>
           </button>
           <button class="toolbar-btn" @click="redo" title="重做 (Ctrl+Y)">
-            <Icon name="arrow-redo" size="16" />
+            <el-icon :size="16"><Right /></el-icon>
             <span>重做</span>
           </button>
           <div class="toolbar-dropdown">
             <button class="toolbar-btn dropdown-toggle" @click="toggleHistoryDropdown">
-              <Icon name="clock" size="16" />
+              <el-icon :size="16"><Clock /></el-icon>
               <span>历史记录</span>
-              <Icon name="chevron-down" size="14" />
+              <el-icon :size="14"><ArrowDown /></el-icon>
             </button>
             <div class="dropdown-menu" v-if="showHistoryDropdown">
               <div class="dropdown-header">操作历史</div>
-              <div 
-                v-for="(item, index) in history" 
+              <div
+                v-for="(item, index) in history"
                 :key="index"
                 class="dropdown-item"
                 @click="rollbackToHistory(index)"
@@ -112,16 +118,16 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 提测功能 -->
         <div class="toolbar-section publish-section">
           <button class="toolbar-btn save-btn" @click="save" title="保存 (Ctrl+S)">
-            <Icon name="save" size="16" />
+            <el-icon :size="16"><DocumentChecked /></el-icon>
             <span>保存</span>
           </button>
-          
+
           <button class="toolbar-btn publish-btn" @click="publish" title="提测 (Ctrl+Enter)">
-            <Icon name="send" size="16" />
+            <el-icon :size="16"><Promotion /></el-icon>
             <span>提测</span>
           </button>
         </div>
@@ -158,13 +164,13 @@
             <div class="category-container">
               <div class="category-header">{{ category.name }}</div>
               <div class="category-body">
-                <div 
-                  v-for="(component, compIndex) in category.components" 
+                <div
+                  v-for="(component, compIndex) in category.components"
                   :key="component.id"
                   class="category-component-item"
                   @click="selectCategoryComponent($event, component)"
                 >
-                  <div class="component-icon small"><Icon name="box" size="16" /></div>
+                  <div class="component-icon small"><el-icon :size="16"><Box /></el-icon></div>
                   <div class="component-info small">
                     <h5>{{ component.name }}</h5>
                   </div>
@@ -207,9 +213,9 @@
           <div class="panel-header">
             <h4>{{ panel.title }}</h4>
             <div class="panel-actions">
-              <button class="panel-action-btn"><Icon name="minus" size="14" /></button>
-              <button class="panel-action-btn"><Icon name="square" size="14" /></button>
-              <button class="panel-action-btn" @click.stop="removePanel(panel.id)"><Icon name="x" size="14" /></button>
+              <button class="panel-action-btn"><el-icon :size="14"><Minus /></el-icon></button>
+              <button class="panel-action-btn"><el-icon :size="14"><FullScreen /></el-icon></button>
+              <button class="panel-action-btn" @click.stop="removePanel(panel.id)"><el-icon :size="14"><Close /></el-icon></button>
             </div>
           </div>
           <div class="panel-body">
@@ -246,15 +252,15 @@
       <div class="bottom-toolbar">
         <div class="toolbar-content">
           <button class="toolbar-item" @click="openTemplateLibrary">
-            <Icon name="grid" size="18" />
+            <el-icon :size="18"><Grid /></el-icon>
             <span>游戏表现</span>
           </button>
           <button class="toolbar-item" @click="openVariableManagement">
-            <Icon name="sliders" size="18" />
+            <el-icon :size="18"><Operation /></el-icon>
             <span>变量管理</span>
           </button>
           <button class="toolbar-item" @click="navigateToRoomCreator">
-            <Icon name="box" size="18" />
+            <el-icon :size="18"><Box /></el-icon>
             <span>创房选项</span>
           </button>
         </div>
@@ -265,11 +271,14 @@
     <div class="properties-panel" :class="{ 'collapsed': isPropertiesSidebarCollapsed }">
       <div class="panel-header">
         <h3 v-if="!isPropertiesSidebarCollapsed">
-          <Icon name="sliders" size="18" />
+          <el-icon :size="18"><Operation /></el-icon>
           组件属性
         </h3>
         <button class="sidebar-toggle" @click="togglePropertiesSidebar">
-          <Icon :name="isPropertiesSidebarCollapsed ? 'chevron-left' : 'chevron-right'" size="18" />
+          <el-icon :size="18">
+            <ArrowLeft v-if="isPropertiesSidebarCollapsed" />
+            <ArrowRight v-else />
+          </el-icon>
         </button>
       </div>
       <div class="properties-content">
@@ -393,7 +402,25 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElNotification } from 'element-plus'
 import VueDraggableResizable from 'vue-draggable-resizable'
-import Icon from '../components/Icon.vue'
+import {
+  Grid,
+  ArrowRight,
+  ArrowLeft,
+  Search,
+  ArrowDown,
+  Folder,
+  Box,
+  Lock,
+  Back,
+  Right,
+  Clock,
+  DocumentChecked,
+  Promotion,
+  Minus,
+  FullScreen,
+  Close,
+  Operation
+} from '@element-plus/icons-vue'
 import VariableManagementModal from '../components/VariableManagementModal.vue'
 import CalcScoreConfig from '../components/CalcScoreConfig.vue'
 import SubmitTestModal from '../components/SubmitTestModal.vue'

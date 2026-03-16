@@ -11,11 +11,11 @@
           <!-- 弹窗头部 -->
           <div class="modal-header">
             <h3 class="modal-title">
-              <Icon name="share" size="18" />
+              <el-icon :size="18"><Share /></el-icon>
               复制到目标游戏
             </h3>
             <button class="close-btn" @click="handleClose" title="关闭">
-              <Icon name="x" size="18" />
+              <el-icon :size="18"><Close /></el-icon>
             </button>
           </div>
 
@@ -33,7 +33,7 @@
             <!-- 搜索框 -->
             <div class="search-section">
               <div class="search-input-wrapper">
-                <Icon name="search" size="16" class="search-icon" />
+                <el-icon :size="16" class="search-icon"><Search /></el-icon>
                 <input
                   v-model="searchQuery"
                   type="text"
@@ -47,7 +47,7 @@
                   @click="clearSearch"
                   title="清空"
                 >
-                  <Icon name="x-circle" size="16" />
+                  <el-icon :size="16"><CircleClose /></el-icon>
                 </button>
               </div>
             </div>
@@ -55,7 +55,7 @@
             <!-- 游戏列表 -->
             <div class="games-list-container">
               <div v-if="filteredGames.length === 0" class="empty-state">
-                <Icon name="inbox" size="48" color="var(--color-text-tertiary)" />
+                <el-icon :size="48" color="var(--color-text-tertiary)"><Box /></el-icon>
                 <p>未找到匹配的游戏</p>
               </div>
               <div v-else class="games-list">
@@ -68,7 +68,7 @@
                 >
                   <div class="game-checkbox">
                     <div class="checkbox-inner" :class="{ checked: selectedGameId === game.id }">
-                      <Icon v-if="selectedGameId === game.id" name="check" size="12" />
+                      <el-icon v-if="selectedGameId === game.id" :size="12"><Check /></el-icon>
                     </div>
                   </div>
                   <div class="game-info">
@@ -94,7 +94,7 @@
               :disabled="!selectedGameId || selectedGameId === currentGameId"
               @click="handleConfirm"
             >
-              <Icon name="check" size="14" />
+              <el-icon :size="14"><Check /></el-icon>
               确认复制
             </button>
           </div>
@@ -131,7 +131,7 @@
  */
 
 import { ref, computed, watch } from 'vue'
-import Icon from './Icon.vue'
+import { Share, Close, Search, CircleClose, Box, Check } from '@element-plus/icons-vue'
 
 // 定义Props
 const props = defineProps({
@@ -323,7 +323,7 @@ function handleConfirm() {
   gap: var(--spacing-2);
 }
 
-.modal-title :deep(svg) {
+.modal-title :deep(.el-icon) {
   color: var(--color-primary);
 }
 

@@ -8,45 +8,45 @@
         <div class="control-btn minimize"></div>
         <div class="control-btn maximize"></div>
       </div> -->
-      
+
       <!-- 标签列表 -->
       <div class="tab-list">
         <!-- 首页标签 -->
-        <div 
-          class="tab-item" 
+        <div
+          class="tab-item"
           :class="{ active: activeTab === 'home' }"
           @click="switchTab('home')"
         >
           <div class="tab-icon">
-            <Icon name="home" size="16" />
+            <el-icon :size="16"><HomeFilled /></el-icon>
           </div>
           <div class="tab-title">首页</div>
         </div>
-        
+
         <!-- 工作台标签 -->
-        <div 
-          v-for="tab in workbenchTabs" 
+        <div
+          v-for="tab in workbenchTabs"
           :key="tab.id"
-          class="tab-item" 
+          class="tab-item"
           :class="{ active: activeTab === tab.id }"
           @click="switchTab(tab.id)"
         >
           <div class="tab-icon">
-            <Icon name="layout-dashboard" size="16" />
+            <el-icon :size="16"><Grid /></el-icon>
           </div>
           <div class="tab-title">{{ tab.name }}</div>
           <div class="tab-close" @click.stop="closeTab(tab.id)">
-            <Icon name="x" size="12" />
+            <el-icon :size="12"><Close /></el-icon>
           </div>
         </div>
-        
+
         <!-- 添加标签按钮 -->
         <div class="tab-add" @click="addTab">
-          <Icon name="plus" size="16" />
+          <el-icon :size="16"><Plus /></el-icon>
         </div>
       </div>
     </div>
-    
+
     <!-- 内容区域 -->
     <div class="content-container">
       <router-view />
@@ -57,7 +57,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import Icon from './components/Icon.vue'
+import { HomeFilled, Grid, Close, Plus } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
