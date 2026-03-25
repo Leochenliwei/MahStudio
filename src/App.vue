@@ -388,11 +388,11 @@ watch(() => route.path, (newPath) => {
 
     if (existingTab) {
       activeTab.value = gameId
-      if (gameName) existingTab.name = gameName
+      if (gameName) existingTab.name = `控制台-${gameName}`
     } else {
       const newTab = {
         id: gameId,
-        name: gameName || `游戏目录 ${gameId}`,
+        name: gameName ? `控制台-${gameName}` : `控制台- ${gameId}`,
         path: newPath
       }
       workbenchTabs.value.push(newTab)
@@ -465,7 +465,7 @@ onMounted(() => {
     if (!existingTab) {
       workbenchTabs.value.push({
         id: gameId,
-        name: gameName || `游戏目录 ${gameId}`,
+        name: gameName ? `控制台-${gameName}` : `控制台- ${gameId}`,
         path: currentPath
       })
     }

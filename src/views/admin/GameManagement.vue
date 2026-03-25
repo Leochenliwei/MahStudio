@@ -464,7 +464,7 @@ function handleReset() {
  */
 function enterGameDirectory(gameId) {
   if (window.openGameDirectoryTab) {
-    const game = gameConfigs.value.find(g => g.id === gameId)
+    const game = gameConfigs.value.find(g => g.id == gameId)
     const gameName = game ? game.name : null
     
     window.openGameDirectoryTab(

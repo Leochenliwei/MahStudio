@@ -182,22 +182,53 @@
               </div>
             </div>
             <div class="file-list-item-actions">
-              <button class="action-btn small" @click="editFile(file)">
+              <!-- 编辑/查看规则按钮（根据权限互斥显示，3秒切换演示） -->
+              <button 
+                v-if="hasEditPermission" 
+                class="action-btn small" 
+                @click="editFile(file)"
+              >
                 <el-icon :size="14" class="mr-1"><Edit /></el-icon>
-                编辑
+                编辑规则
               </button>
-              <button class="action-btn small outline" @click="copyFile(file)">
-                <el-icon :size="14" class="mr-1"><CopyDocument /></el-icon>
-                复制
+              <button
+                v-else
+                class="action-btn small"
+                @click="viewRules(file)"
+              >
+                <el-icon :size="14" class="mr-1"><View /></el-icon>
+                查看规则
               </button>
-              <button class="action-btn small outline" @click="showCopyToModal(file)">
-                <el-icon :size="14" class="mr-1"><Promotion /></el-icon>
-                复制到
-              </button>
+
+              <!-- 提测按钮（高频操作，直接显示） -->
               <button class="action-btn small danger" @click="showSubmitTestModal(file)">
                 <el-icon :size="14" class="mr-1"><Promotion /></el-icon>
                 提测
               </button>
+
+              <!-- 更多操作下拉菜单（低频操作） -->
+              <el-dropdown trigger="click">
+                <button class="action-btn small outline">
+                  <el-icon :size="14" class="mr-1"><More /></el-icon>
+                  更多
+                </button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item @click="copyFile(file)">
+                      <el-icon :size="14" class="mr-1"><CopyDocument /></el-icon>
+                      复制
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="showCopyToModal(file)">
+                      <el-icon :size="14" class="mr-1"><Promotion /></el-icon>
+                      复制到
+                    </el-dropdown-item>
+                    <el-dropdown-item divided @click="deleteFile(file)" class="danger-item">
+                      <el-icon :size="14" class="mr-1"><Delete /></el-icon>
+                      删除
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
             </div>
           </div>
           <div v-if="draftFiles.length === 0" class="empty-list-item">
@@ -286,7 +317,7 @@
  * @since 2026-02-26
  */
 
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElNotification } from 'element-plus'
 import { 
@@ -299,13 +330,16 @@ import {
   Edit,
   CopyDocument,
   Promotion,
-  Close
+  Close,
+  Delete,
+  View,
+  More
 } from '@element-plus/icons-vue'
 import FileCard from '../components/FileCard.vue'
 import CopyToModal from '../components/CopyToModal.vue'
 import SubmitTestModal from '../components/SubmitTestModal.vue'
 import SubmitHistoryModal from '../components/SubmitHistoryModal.vue'
-import { FileType, getGameById, getOtherGames, updateGame, createGameFile, updateGameFile, createSubmitHistory } from '../api/gameApi.js'
+import { FileType, getGameById, getOtherGames, updateGame, createGameFile, updateGameFile, createSubmitHistory, deleteGameFile } from '../api/gameApi.js'
 
 // ==================== 路由相关 ====================
 const router = useRouter()
@@ -391,6 +425,18 @@ const currentViewFile = ref(null)
  */
 const otherGames = ref([])
 
+/**
+ * 是否有编辑权限（用于演示3秒切换效果）
+ * @type {Ref<boolean>}
+ */
+const hasEditPermission = ref(true)
+
+/**
+ * 权限切换定时器
+ * @type {Ref<number|null>}
+ */
+const permissionTimer = ref(null)
+
 // ==================== 数据模型 ====================
 
 // ==================== 计算属性 ====================
@@ -453,16 +499,40 @@ onMounted(() => {
     loading.value = false
     return
   }
-  
+
   // 从路由query获取环境参数
   const env = route.query.env
   if (env && (env === 'test' || env === 'online')) {
     activeEnv.value = env
   }
-  
+
   // 加载游戏数据
   loadGameData()
+
+  // 启动权限切换演示（每3秒切换一次）
+  startPermissionToggle()
 })
+
+/**
+ * 组件卸载时清理定时器
+ */
+onUnmounted(() => {
+  // 清除权限切换定时器
+  if (permissionTimer.value) {
+    clearInterval(permissionTimer.value)
+    permissionTimer.value = null
+  }
+})
+
+/**
+ * 启动权限切换演示
+ * 每3秒自动切换编辑/查看规则按钮的显示状态
+ */
+function startPermissionToggle() {
+  permissionTimer.value = setInterval(() => {
+    hasEditPermission.value = !hasEditPermission.value
+  }, 3000)
+}
 
 // ==================== 方法函数 ====================
 
@@ -929,14 +999,80 @@ function formatDateTime(dateString) {
   if (!dateString) return '-'
   const date = new Date(dateString)
   if (isNaN(date.getTime())) return '-'
-  
+
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   const hours = String(date.getHours()).padStart(2, '0')
   const minutes = String(date.getMinutes()).padStart(2, '0')
-  
+
   return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
+/**
+ * 查看规则（只读模式打开工作台）
+ * @param {Object} file - 文件对象
+ */
+function viewRules(file) {
+  // 使用全局的openGameTab方法打开新标签页，并添加只读参数
+  if (window.openGameTab) {
+    window.openGameTab(
+      game.value.id,
+      game.value.name,
+      file.id,
+      file.type,
+      activeEnv.value,
+      true // 只读模式
+    )
+  } else {
+    // 兼容处理：如果openGameTab方法不存在，使用原有的路由跳转
+    router.push({
+      name: 'Workbench',
+      params: { id: game.value.id },
+      query: {
+        fileId: file.id,
+        fileType: file.type,
+        env: activeEnv.value,
+        gameName: game.value.name,
+        readonly: 'true'
+      }
+    })
+  }
+}
+
+/**
+ * 删除草稿文件
+ * @param {Object} file - 文件对象
+ */
+async function deleteFile(file) {
+  // 弹出确认对话框
+  const confirmed = confirm(`确定要删除草稿 "${file.name}" 吗？此操作不可恢复。`)
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    // 调用API删除文件
+    await deleteGameFile(game.value.id, file.id)
+
+    // 重新加载游戏数据以更新UI
+    await loadGameData()
+
+    ElNotification({
+      title: '成功',
+      message: `删除草稿成功：${file.name}`,
+      type: 'success',
+      duration: 3000
+    })
+  } catch (error) {
+    console.error('删除草稿失败:', error)
+    ElNotification({
+      title: '错误',
+      message: '删除草稿失败: ' + error.message,
+      type: 'error',
+      duration: 3000
+    })
+  }
 }
 </script>
 
@@ -1550,6 +1686,27 @@ function formatDateTime(dateString) {
 .btn-text:hover {
   background-color: #f0f0f0;
   border-color: #d1d5db;
+}
+
+/* ==================== 下拉菜单样式 ==================== */
+
+/* 下拉菜单项样式 */
+:deep(.el-dropdown-menu__item) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+/* 危险操作菜单项 */
+:deep(.el-dropdown-menu__item.danger-item) {
+  color: #ef4444;
+}
+
+:deep(.el-dropdown-menu__item.danger-item:hover) {
+  color: #dc2626;
+  background-color: #fef2f2;
 }
 
 /* ==================== 动画 ==================== */
