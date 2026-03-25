@@ -472,6 +472,7 @@ function enterGameDirectory(gameId) {
       gameName,
       env.value
     )
+    console.log('调用全局的openGameDirectoryTab方法打开新标签页成功')
   }
 }
 
