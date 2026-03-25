@@ -1,6 +1,42 @@
 <template>
   <div class="workbench-container">
-    <!-- 左侧组件列表 -->
+    <!-- 顶部操作栏 -->
+    <div class="top-action-bar">
+      <!-- 左侧游戏信息区域 -->
+      <div class="top-bar-left">
+        <button class="action-btn save-btn" @click="goBack" title="返回">
+          <el-icon :size="20"><ArrowLeft /></el-icon>
+        </button>
+        <div class="game-title">{{ selectedConfig?.name || '未选择游戏' }}</div>
+        <div class="game-info-tags">
+          <span class="info-tag">
+            <el-icon :size="12"><Document /></el-icon>
+            草稿ID: {{ route.params.id || '-' }}
+          </span>
+          <span class="info-tag">
+            <el-icon :size="12"><Setting /></el-icon>
+            CfgID: {{ selectedConfig?.id || '-' }}
+          </span>
+        </div>
+      </div>
+      <!-- 右侧操作按钮区域 -->
+      <div class="top-bar-right">
+        <button class="action-btn save-btn" @click="save" title="保存 (Ctrl+S)">
+          <el-icon :size="16"><DocumentChecked /></el-icon>
+          <span>保存</span>
+        </button>
+        <button class="action-btn publish-btn" @click="publish" title="提测 (Ctrl+Enter)">
+          <el-icon :size="16"><Promotion /></el-icon>
+          <span>提测</span>
+        </button>
+      </div>
+    </div>
+
+
+
+    <!-- 主体内容区域 -->
+    <div class="workbench-body">
+      <!-- 左侧组件列表 -->
     <div class="components-sidebar" :class="{ 'collapsed': isComponentsSidebarCollapsed }">
       <div class="sidebar-header">
         <h3 v-if="!isComponentsSidebarCollapsed">
@@ -54,6 +90,8 @@
               v-for="component in categoryComponents"
               :key="component.id"
               class="component-item"
+              :class="{ 'selected': selectedCategoryComponent?.id === component.id }"
+              @click="selectSidebarComponent(component)"
             >
               <div class="component-icon"><el-icon><Box /></el-icon></div>
               <div class="component-info">
@@ -66,11 +104,11 @@
                     type="checkbox"
                     v-model="component.enabled"
                     @change="toggleComponent(component)"
+                    @click.stop
                     :disabled="component.locked"
                   >
                   <span class="toggle-slider"></span>
                   <span v-if="component.locked" class="lock-icon">
-                    <el-icon :size="14"><Lock /></el-icon>
                   </span>
                 </label>
               </div>
@@ -82,59 +120,9 @@
 
     <!-- 中间工作区画布 -->
     <div class="workbench-main">
-
-      
-      <!-- 工具栏 -->
-      <div class="workbench-toolbar">
-        <!-- 历史记录功能 -->
-        <div class="toolbar-section history-section">
-          <button class="toolbar-btn" @click="undo" title="撤销 (Ctrl+Z)">
-            <el-icon :size="16"><Back /></el-icon>
-            <span>撤销</span>
-          </button>
-          <button class="toolbar-btn" @click="redo" title="重做 (Ctrl+Y)">
-            <el-icon :size="16"><Right /></el-icon>
-            <span>重做</span>
-          </button>
-          <div class="toolbar-dropdown">
-            <button class="toolbar-btn dropdown-toggle" @click="toggleHistoryDropdown">
-              <el-icon :size="16"><Clock /></el-icon>
-              <span>历史记录</span>
-              <el-icon :size="14"><ArrowDown /></el-icon>
-            </button>
-            <div class="dropdown-menu" v-if="showHistoryDropdown">
-              <div class="dropdown-header">操作历史</div>
-              <div
-                v-for="(item, index) in history"
-                :key="index"
-                class="dropdown-item"
-                @click="rollbackToHistory(index)"
-              >
-                {{ item.action }}
-              </div>
-              <div v-if="history.length === 0" class="dropdown-item disabled">
-                无历史记录
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 提测功能 -->
-        <div class="toolbar-section publish-section">
-          <button class="toolbar-btn save-btn" @click="save" title="保存 (Ctrl+S)">
-            <el-icon :size="16"><DocumentChecked /></el-icon>
-            <span>保存</span>
-          </button>
-
-          <button class="toolbar-btn publish-btn" @click="publish" title="提测 (Ctrl+Enter)">
-            <el-icon :size="16"><Promotion /></el-icon>
-            <span>提测</span>
-          </button>
-        </div>
-      </div>
-      
-      <div 
+      <div
         class="workbench-canvas"
+        ref="canvasRef"
         @click="onCanvasClick"
         @mousedown="handleCanvasMouseDown"
         @wheel="handleCanvasWheel"
@@ -168,6 +156,7 @@
                   v-for="(component, compIndex) in category.components"
                   :key="component.id"
                   class="category-component-item"
+                  :class="{ 'selected': selectedCategoryComponent?.id === component.id }"
                   @click="selectCategoryComponent($event, component)"
                 >
                   <div class="component-icon small"><el-icon :size="16"><Box /></el-icon></div>
@@ -265,6 +254,33 @@
           </button>
         </div>
       </div>
+
+      <!-- 画布缩放控制按钮 -->
+      <div class="canvas-zoom-controls">
+        <button
+          class="zoom-btn"
+          @click="zoomIn"
+          :disabled="canvasScale >= MAX_SCALE"
+          title="放大"
+        >
+          <el-icon :size="18"><ZoomIn /></el-icon>
+        </button>
+        <button
+          class="zoom-btn"
+          @click="zoomOut"
+          :disabled="canvasScale <= MIN_SCALE"
+          title="缩小"
+        >
+          <el-icon :size="18"><ZoomOut /></el-icon>
+        </button>
+        <button
+          class="zoom-btn"
+          @click="resetZoom"
+          title="重置"
+        >
+          <el-icon :size="18"><Refresh /></el-icon>
+        </button>
+      </div>
     </div>
 
     <!-- 右侧属性面板 -->
@@ -292,7 +308,7 @@
             <div v-for="property in selectedComponentProperties" :key="property.id" class="property-item">
               <label>{{ property.name }}</label>
               <div class="property-control">
-                <!-- 开关类型 -->
+                <!-- 组件启用开关类型 -->
                 <label v-if="property.type === 'component_switch'" class="toggle-switch">
                   <input 
                     type="checkbox" 
@@ -307,10 +323,16 @@
                   >
                   <span class="toggle-slider"></span>
                 </label>
+                <!-- 布尔开关类型 -->
                 <label v-else-if="property.type === 'switch'" class="toggle-switch">
                   <input 
                     type="checkbox" 
-                    :checked="property.defaultValue || false"
+                    :checked="propertyValues[`${selectedComponentId}.${property.id}`] !== undefined 
+                      ? propertyValues[`${selectedComponentId}.${property.id}`] 
+                      : property.defaultValue"
+                    @change="e => {
+                      propertyValues[`${selectedComponentId}.${property.id}`] = e.target.checked
+                    }"
                   >
                   <span class="toggle-slider"></span>
                 </label>
@@ -326,14 +348,29 @@
                       type="radio" 
                       :name="property.id"
                       :value="option.value"
-                      :checked="property.defaultValue === option.value"
+                      :checked="(propertyValues[`${selectedComponentId}.${property.id}`] !== undefined 
+                        ? propertyValues[`${selectedComponentId}.${property.id}`] 
+                        : property.defaultValue) == option.value"
+                      @change="e => {
+                        propertyValues[`${selectedComponentId}.${property.id}`] = option.value
+                      }"
                     >
                     {{ option.label }}
                   </label>
                 </div>
                 
                 <!-- 下拉选择框类型 -->
-                <select v-else-if="property.type === 'select'" class="property-select">
+                <select 
+                  v-else-if="property.type === 'select'" 
+                  class="property-select"
+                  :value="propertyValues[`${selectedComponentId}.${property.id}`] !== undefined 
+                    ? propertyValues[`${selectedComponentId}.${property.id}`] 
+                    : property.defaultValue"
+                  @change="e => {
+                    propertyValues[`${selectedComponentId}.${property.id}`] = 
+                      isNaN(e.target.value) ? e.target.value : Number(e.target.value)
+                  }"
+                >
                   <option 
                     v-for="option in property.datas" 
                     :key="option.value"
@@ -353,7 +390,12 @@
                     <input 
                       type="checkbox" 
                       :value="option.value"
-                      :checked="Array.isArray(property.defaultValue) ? property.defaultValue.includes(option.value) : property.defaultValue === option.value"
+                      :checked="(propertyValues[`${selectedComponentId}.${property.id}`] !== undefined 
+                        ? propertyValues[`${selectedComponentId}.${property.id}`] 
+                        : property.defaultValue) == option.value"
+                      @change="e => {
+                        propertyValues[`${selectedComponentId}.${property.id}`] = option.value
+                      }"
                     >
                     {{ option.label }}
                   </label>
@@ -365,7 +407,17 @@
                 </button>
                 
                 <!-- 其他类型 -->
-                <input v-else type="text" class="property-input">
+                <input 
+                  v-else 
+                  type="text" 
+                  class="property-input"
+                  :value="propertyValues[`${selectedComponentId}.${property.id}`] !== undefined 
+                    ? propertyValues[`${selectedComponentId}.${property.id}`] 
+                    : property.defaultValue"
+                  @input="e => {
+                    propertyValues[`${selectedComponentId}.${property.id}`] = e.target.value
+                  }"
+                >
               </div>
             </div>
           </div>
@@ -374,8 +426,8 @@
     </div>
 
     <!-- 变量管理弹窗 -->
-    <VariableManagementModal 
-      :visible="isVariableManagementModalVisible"
+    <WhetherToEstablish 
+      :visible="isWhetherToEstablishVisible"
       @close="closeVariableManagement"
     />
 
@@ -394,11 +446,14 @@
       @submit-test="handleSubmitTest"
     />
 
+    <!-- 编辑器弹窗容器 -->
+    <EditorDialogContainer ref="editorDialogContainer" />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElNotification } from 'element-plus'
 import VueDraggableResizable from 'vue-draggable-resizable'
@@ -417,16 +472,33 @@ import {
   DocumentChecked,
   Promotion,
   Minus,
+  ZoomIn,
+  ZoomOut,
+  Refresh,
   FullScreen,
   Close,
-  Operation
+  Operation,
+  Document,
+  Setting
 } from '@element-plus/icons-vue'
-import VariableManagementModal from '../components/VariableManagementModal.vue'
+import WhetherToEstablish from '../components/variable-editing/WhetherToEstablish.vue'
 import CalcScoreConfig from '../components/CalcScoreConfig.vue'
 import SubmitTestModal from '../components/SubmitTestModal.vue'
+import EditorDialogContainer from '../components/editors/EditorDialogContainer.vue'
+import { useComponentData } from '../composables/useComponentData'
 
 const router = useRouter()
 const route = useRoute()
+
+// 使用组件数据 composable
+const {
+  components,
+  isLoading: isLoadingComponents,
+  searchKeyword,
+  groupedComponents,
+  loadComponents,
+  getComponentProperties
+} = useComponentData()
 
 // 选中的游戏配置
 const selectedConfig = ref(null)
@@ -435,7 +507,7 @@ const selectedConfig = ref(null)
 const gameConfigs = ref([
   {
     id: 1,
-    name: '游戏配置 1',
+    name: '麻城痞子杠',
     description: '这是第一个游戏配置',
     status: '启用',
     version: '1.0.0',
@@ -480,106 +552,63 @@ const gameConfigs = ref([
   }
 ])
 
-// 组件列表数据
-const components = ref([])
-
-// 搜索关键词
-const searchKeyword = ref('')
 // 展开的分类
 const expandedCategories = ref(new Set())
 
-// 加载组件列表数据
-async function loadComponents() {
-  console.log('开始加载组件列表...')
-  try {
-    // 使用正确的路径，基于vite.config.js中的base配置
-    console.log('尝试获取 components_list.json 文件...')
-    const response = await fetch('/MahStudio/components_list.json')
-    
-    // 检查响应状态
-    console.log('响应状态:', response.status)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    // 检查响应类型
-    const contentType = response.headers.get('content-type')
-    console.log('响应类型:', contentType)
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text()
-      throw new Error(`Invalid content type: ${contentType}. Response: ${text.substring(0, 100)}...`)
-    }
-    
-    const data = await response.json()
-    console.log('获取到组件数据:', data.components.length, '个组件')
-    
-    // 检查是否有算分相关的组件
-    const calscoreComponents = data.components.filter(component => {
-      return component.properties && component.properties.some(prop => 
-        prop.type === 'button' && prop.extend && prop.extend.editorType === 'calscore'
-      )
-    })
-    console.log('找到算分规则按钮组件:', calscoreComponents.length, '个')
-    
-    // 为每个组件添加默认图标、启用状态和锁定状态
-    components.value = data.components.map(component => ({
-      ...component,
-      icon: '📦', // 默认图标
-      description: component.category, // 使用分类作为描述
-      enabled: component.required || false, // 强制开启的组件默认启用
-      locked: component.required || false // 强制开启的组件默认锁定
-    }))
-    console.log('组件列表加载完成:', components.value.length, '个组件')
-    return components.value
-  } catch (error) {
-    console.error('加载组件列表失败:', error)
-    return []
-  }
+// 属性当前值存储（用于联动计算）
+const propertyValues = ref({})
+
+/**
+ * 解析 visibleWhen 表达式
+ * @param {string} expression - 表达式，如 "{{6t8Ula}} == 1"
+ * @returns {object|null} - 解析结果 {dependsOn, operator, value}
+ */
+function parseVisibleWhen(expression) {
+  if (!expression) return null
+
+  // 匹配 {{propertyId}} operator value 格式
+  const match = expression.match(/\{\{([^}]+)\}\}\s*(==|!=|>|<|>=|<=)\s*(.+)/)
+  if (!match) return null
+
+  const [, dependsOn, operator, valueStr] = match
+
+  // 尝试解析值
+  let value = valueStr.trim()
+  if (value === 'true') value = true
+  else if (value === 'false') value = false
+  else if (!isNaN(value) && value !== '') value = Number(value)
+
+  return { dependsOn, operator, value }
 }
-
-// 过滤后的组件列表
-const filteredComponents = computed(() => {
-  return components.value.filter(component => {
-    // 搜索过滤
-    const matchesSearch = !searchKeyword.value || 
-      component.name.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-      component.description.toLowerCase().includes(searchKeyword.value.toLowerCase())
-    
-    return matchesSearch
-  })
-})
-
-// 按分类分组的组件
-const groupedComponents = computed(() => {
-  const filtered = filteredComponents.value
-  const grouped = {}
-  
-  // 按分类分组
-  filtered.forEach(component => {
-    if (!grouped[component.category]) {
-      grouped[component.category] = []
-    }
-    grouped[component.category].push(component)
-  })
-  
-  return grouped
-})
 
 // 工作台面板数据
 const panels = ref([])
 
-// 画布缩放比例
-const canvasScale = ref(100)
+// ==================== 画布缩放与拖拽常量 ====================
+const MIN_SCALE = 0.25  // 25% 最小缩放
+const MAX_SCALE = 2.0   // 200% 最大缩放
+const ZOOM_STEP = 0.1   // 每次缩放增量 10%
+const DRAG_TRIGGER_DELAY = 200 // 拖拽触发延迟 (ms)
+const STEP_WIDTH = 250
+const STEP_HEIGHT = 420
+const CONNECTOR_WIDTH = 30
+const STEPS_COUNT = 6
+const STEPS_TOTAL_WIDTH = STEPS_COUNT * STEP_WIDTH + (STEPS_COUNT - 1) * CONNECTOR_WIDTH // 1650
 
+// ==================== 画布缩放与拖拽状态 ====================
+// 画布缩放比例 (1.0 = 100%)
+const canvasScale = ref(1.0)
 // 画布位置
 const canvasPosition = ref({ x: 0, y: 0 })
-
 // 拖拽状态
 const isDragging = ref(false)
 const lastMousePosition = ref({ x: 0, y: 0 })
-
-// 拖拽模式
-const dragMode = ref(null) // 'space' 或 'middleMouse'
+// 拖拽模式: null | 'space' | 'middleMouse'
+const dragMode = ref(null)
+// 中键拖拽定时器
+const middleMouseTimer = ref(null)
+// 画布 DOM 引用
+const canvasRef = ref(null)
 
 // 选中的面板ID
 const selectedPanelId = ref(null)
@@ -602,7 +631,7 @@ const isComponentsSidebarCollapsed = ref(false)
 const isPropertiesSidebarCollapsed = ref(false)
 
 // 变量管理弹窗状态
-const isVariableManagementModalVisible = ref(false)
+const isWhetherToEstablishVisible = ref(false)
 
 // 算分规则配置弹窗状态
 const isCalcScoreConfigModalVisible = ref(false)
@@ -610,6 +639,9 @@ const isCalcScoreConfigModalVisible = ref(false)
 // 提测弹窗状态
 const showSubmitTestModalVisible = ref(false)
 const currentSubmitDraft = ref(null)
+
+// 编辑器弹窗容器引用
+const editorDialogContainer = ref(null)
 
 // 切换左侧组件侧边栏
 function toggleComponentsSidebar() {
@@ -650,17 +682,24 @@ function openTemplateLibrary() {
 
 // 打开变量管理
 function openVariableManagement() {
-  isVariableManagementModalVisible.value = true
+  isWhetherToEstablishVisible.value = true
 }
 
 // 关闭变量管理
 function closeVariableManagement() {
-  isVariableManagementModalVisible.value = false
+  isWhetherToEstablishVisible.value = false
 }
 
 // 导航到创房选项页面
 function navigateToRoomCreator() {
-  router.push({ name: 'RoomCreator', params: { id: route.params.id } })
+  const gameId = route.params.id
+  const gameName = selectedConfig.value?.name || ''
+  const cfgId = selectedConfig.value?.id || gameId
+  router.push({
+    name: 'RoomCreator',
+    params: { id: gameId },
+    query: { gameName, cfgId }
+  })
 }
 
 // 快捷键支持
@@ -723,45 +762,155 @@ function handleMouseMove(event) {
   }
 }
 
+/**
+ * 计算初始缩放比例，确保六步框体完整显示
+ * @returns {number} 缩放比例 (0.25 ~ 2.0)
+ */
+function calculateInitialScale() {
+  if (!canvasRef.value) return 1.0
+
+  const canvasWidth = canvasRef.value.clientWidth
+  const canvasHeight = canvasRef.value.clientHeight
+
+  const availableWidth = canvasWidth - 100
+  const availableHeight = canvasHeight - 100
+
+  const scaleX = availableWidth / STEPS_TOTAL_WIDTH
+  const scaleY = availableHeight / STEP_HEIGHT
+
+  let scale = Math.min(scaleX, scaleY)
+  scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale))
+
+  return scale
+}
+
+/**
+ * 计算初始位置，使六步框体居中显示
+ * @param {number} scale - 当前缩放比例
+ * @returns {{x: number, y: number}} 画布位置
+ */
+function calculateInitialPosition(scale) {
+  if (!canvasRef.value) return { x: 0, y: 0 }
+
+  const canvasWidth = canvasRef.value.clientWidth
+  const canvasHeight = canvasRef.value.clientHeight
+
+  const contentWidth = STEPS_TOTAL_WIDTH * scale
+  const contentHeight = STEP_HEIGHT * scale
+
+  return {
+    x: (canvasWidth - contentWidth) / 2,
+    y: (canvasHeight - contentHeight) / 2
+  }
+}
+
+/**
+ * 以屏幕中心为基准进行缩放
+ * 缩放时保持内容相对于屏幕中心的位置比例不变
+ * @param {number} newScale - 新的缩放比例
+ */
+function zoomAtCenter(newScale) {
+  const currentScale = canvasScale.value
+
+  // 屏幕中心点
+  const screenCenterX = window.innerWidth / 2
+  const screenCenterY = window.innerHeight / 2
+
+  // 计算内容左上角相对于屏幕中心的位置
+  const relativeX = screenCenterX - canvasPosition.value.x
+  const relativeY = screenCenterY - canvasPosition.value.y
+
+  // 根据新的缩放比例调整位置，保持内容相对于屏幕中心的比例不变
+  // 这样缩放会以屏幕中心为基准
+  canvasPosition.value = {
+    x: screenCenterX - (relativeX * (newScale / currentScale)),
+    y: screenCenterY - (relativeY * (newScale / currentScale))
+  }
+
+  canvasScale.value = newScale
+}
+
+/**
+ * 放大
+ */
+function zoomIn() {
+  const newScale = Math.min(MAX_SCALE, canvasScale.value + ZOOM_STEP)
+  zoomAtCenter(newScale)
+}
+
+/**
+ * 缩小
+ */
+function zoomOut() {
+  const newScale = Math.max(MIN_SCALE, canvasScale.value - ZOOM_STEP)
+  zoomAtCenter(newScale)
+}
+
+/**
+ * 重置缩放为初始状态
+ */
+function resetZoom() {
+  const initialScale = calculateInitialScale()
+  const initialPosition = calculateInitialPosition(initialScale)
+  canvasScale.value = initialScale
+  canvasPosition.value = initialPosition
+}
+
 // 鼠标释放事件处理函数
 function handleMouseUp() {
   if (isDragging.value) {
     isDragging.value = false
     dragMode.value = null
   }
+  if (middleMouseTimer.value) {
+    clearTimeout(middleMouseTimer.value)
+    middleMouseTimer.value = null
+  }
 }
 
 // 画布鼠标按下事件处理函数
 function handleCanvasMouseDown(event) {
-  // 鼠标中键按下：开始拖拽
-  if (event.button === 1 && !isDragging.value) {
+  // 鼠标中键按下：开始拖拽（长按 200ms 后触发）
+  if (event.button === 1) {
     event.preventDefault()
-    dragMode.value = 'middleMouse'
-    isDragging.value = true
-    lastMousePosition.value = { x: event.clientX, y: event.clientY }
+
+    middleMouseTimer.value = setTimeout(() => {
+      dragMode.value = 'middleMouse'
+      isDragging.value = true
+      lastMousePosition.value = { x: event.clientX, y: event.clientY }
+    }, DRAG_TRIGGER_DELAY)
+
+    const cancelTimer = () => {
+      if (middleMouseTimer.value) {
+        clearTimeout(middleMouseTimer.value)
+        middleMouseTimer.value = null
+      }
+      document.removeEventListener('mouseup', cancelTimer)
+    }
+    document.addEventListener('mouseup', cancelTimer)
   }
 }
 
 // 画布鼠标滚轮事件处理函数
 function handleCanvasWheel(event) {
   event.preventDefault()
-  
+
   // 检测是否按下了修饰键（Windows: Alt, Mac: Command）
   const isZooming = event.altKey || event.metaKey
-  
+
   if (isZooming) {
     // 实现缩放功能
     const zoomSpeed = 0.05
     const delta = event.deltaY > 0 ? -zoomSpeed : zoomSpeed
-    
+
     // 计算新的缩放比例
-    let newScale = canvasScale.value + delta * 100
-    
+    let newScale = canvasScale.value + delta
+
     // 限制缩放范围
-    newScale = Math.max(10, Math.min(500, newScale))
-    
+    newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale))
+
     // 更新缩放比例
-    canvasScale.value = newScale
+    zoomAtCenter(newScale)
   } else {
     // 实现滚动功能
     const scrollSpeed = 5
@@ -923,14 +1072,16 @@ function loadCategories() {
   }))
 }
 
-// 将强制开启的组件添加到对应的分类中
+/**
+ * 将强制开启的组件添加到对应的分类中
+ * 强制开启的组件由 isLocked 字段标识
+ */
 function addRequiredComponentsToCategories() {
   components.value.forEach(component => {
-    // 对于强制开启的组件，无论 enabled 状态如何，都添加到分类中
-    if (component.required) {
-      // 确保强制开启的组件状态为 enabled 和 locked
+    // 对于强制开启的组件（isLocked=true），无论 enabled 状态如何，都添加到分类中
+    if (component.locked) {
+      // 确保强制开启的组件状态为 enabled
       component.enabled = true
-      component.locked = true
       
       // 找到对应的分类并添加组件
       const category = categories.value.find(cat => cat.name.trim() === component.category.trim())
@@ -1015,10 +1166,23 @@ onMounted(async () => {
     addRequiredComponentsToCategories()
     // 确保强制开启的组件已添加到分类中
     console.log('Required components added to categories')
+    // 初始化画布缩放和位置（使用 nextTick 确保 DOM 就绪）
+    await nextTick()
+    initCanvas()
   } catch (error) {
     console.error('初始化组件失败:', error)
   }
 })
+
+/**
+ * 初始化画布缩放和位置
+ */
+function initCanvas() {
+  const scale = calculateInitialScale()
+  const position = calculateInitialPosition(scale)
+  canvasScale.value = scale
+  canvasPosition.value = position
+}
 
 // 计算属性：选中的面板
 const selectedPanel = computed(() => {
@@ -1036,23 +1200,78 @@ const selectedComponent = computed(() => {
   return null
 })
 
-// 计算属性：选中组件的属性
-const selectedComponentProperties = computed(() => {
+/**
+ * 判断属性是否应该显示
+ * @param {object} property - 属性对象
+ * @param {string} componentId - 组件ID
+ * @returns {boolean} - 是否应该显示
+ */
+function isPropertyVisible(property, componentId) {
+  if (!property.visibleWhen) return true
+  
+  const parsed = parseVisibleWhen(property.visibleWhen)
+  if (!parsed) return true
+  
+  const { dependsOn, operator, value } = parsed
+  
+  // 从 propertyValues 获取依赖属性的当前值
+  const valueKey = `${componentId}.${dependsOn}`
+  const actualValue = propertyValues.value[valueKey] !== undefined 
+    ? propertyValues.value[valueKey] 
+    : property.defaultValue
+  
+  // 根据运算符比较值
+  switch (operator) {
+    case '==':
+      return actualValue == value
+    case '!=':
+      return actualValue != value
+    case '>':
+      return actualValue > value
+    case '<':
+      return actualValue < value
+    case '>=':
+      return actualValue >= value
+    case '<=':
+      return actualValue <= value
+    default:
+      return true
+  }
+}
+
+// 计算属性：当前选中的组件ID
+const selectedComponentId = computed(() => {
   if (selectedCategoryComponent.value) {
-    return selectedCategoryComponent.value.properties || []
+    return selectedCategoryComponent.value.id
   }
   if (selectedPanel.value && selectedPanel.value.type) {
-    return getComponentProperties(selectedPanel.value.type)
+    return selectedPanel.value.type
   }
-  return []
+  return null
+})
+
+// 计算属性：选中组件的属性（包含可见性过滤）
+const selectedComponentProperties = computed(() => {
+  let properties = []
+  const componentId = selectedComponentId.value
+  
+  if (selectedCategoryComponent.value) {
+    properties = selectedCategoryComponent.value.properties || []
+  } else if (selectedPanel.value && selectedPanel.value.type) {
+    const component = components.value.find(c => c.id === selectedPanel.value.type)
+    properties = component ? component.properties : []
+  }
+  
+  // 过滤掉不可见的属性
+  return properties.filter(prop => isPropertyVisible(prop, componentId))
 })
 
 // 计算属性：画布内容样式
 const canvasContentStyle = computed(() => {
-  const scale = canvasScale.value / 100
+  const scale = canvasScale.value
   return {
     transform: `translate(${canvasPosition.value.x}px, ${canvasPosition.value.y}px) scale(${scale})`,
-    transformOrigin: '0 0'
+    transformOrigin: 'center center'
   }
 })
 
@@ -1105,6 +1324,15 @@ function clearSelection() {
   selectedPanelId.value = null
 }
 
+// 选择侧边栏组件
+function selectSidebarComponent(component) {
+  // 即使组件是禁用状态，也允许选中并显示其属性
+  selectedCategoryComponent.value = component
+  selectedPanelId.value = null
+  // 自动展开右侧属性面板
+  isPropertiesSidebarCollapsed.value = false
+}
+
 // 添加新面板
 function addNewPanel(component, x, y) {
   const newId = panels.value.length > 0 ? Math.max(...panels.value.map(p => p.id)) + 1 : 1
@@ -1151,22 +1379,108 @@ function updatePanelProperties() {
   }
 }
 
-// 根据组件类型获取属性列表
-function getComponentProperties(componentId) {
-  const component = components.value.find(c => c.id === componentId)
-  return component ? component.properties : []
-}
-
 /**
  * 处理按钮点击事件
  * @param {object} property - 属性对象
  */
 function handleButtonClick(property) {
   console.log('按钮被点击:', property)
+
   // 检查是否有extend属性和editorType
-  if (property.extend && property.extend.editorType === 'calscore') {
-    // 打开算分规则配置弹窗
-    isCalcScoreConfigModalVisible.value = true
+  if (!property.extend || !property.extend.editorType) {
+    console.warn('按钮属性缺少extend或editorType配置')
+    return
+  }
+
+  const editorType = property.extend.editorType
+  const propertyKey = `${selectedComponentId.value}.${property.id}`
+
+  // 根据editorType打开对应的编辑器
+  switch (editorType) {
+    case 'mahjongstack':
+      // 牌堆选择器
+      editorDialogContainer.value?.openEditor(
+        'mahjongstack',
+        propertyKey,
+        { defaultSelect: propertyValues.value[propertyKey] || [] },
+        (value) => {
+          propertyValues.value[propertyKey] = value
+          console.log('牌堆选择结果:', value)
+        }
+      )
+      break
+
+    case 'calscore':
+      // 算分公式编辑器
+      editorDialogContainer.value?.openEditor(
+        'calscore',
+        propertyKey,
+        {
+          defaultSelect: propertyValues.value[propertyKey] || [],
+          cfgId: parseInt(route.params.id) || 0,
+          extendConfig: property.extend
+        },
+        (value) => {
+          propertyValues.value[propertyKey] = value
+          console.log('算分公式编辑结果:', value)
+        }
+      )
+      break
+
+    case 'motionconstraint':
+      // 动作约束编辑器
+      editorDialogContainer.value?.openEditor(
+        'motionconstraint',
+        propertyKey,
+        propertyValues.value[propertyKey] || {},
+        (value) => {
+          propertyValues.value[propertyKey] = value
+          console.log('动作约束编辑结果:', value)
+        }
+      )
+      break
+
+    case 'correctscore':
+      // 分数修正编辑器
+      editorDialogContainer.value?.openEditor(
+        'correctscore',
+        propertyKey,
+        propertyValues.value[propertyKey] || {},
+        (value) => {
+          propertyValues.value[propertyKey] = value
+          console.log('分数修正编辑结果:', value)
+        }
+      )
+      break
+
+    case 'fanxingselect':
+      // 番型配置编辑器
+      editorDialogContainer.value?.openEditor(
+        'fanxingselect',
+        propertyKey,
+        { defaultSelect: propertyValues.value[propertyKey] || [] },
+        (value) => {
+          propertyValues.value[propertyKey] = value
+          console.log('番型选择结果:', value)
+        }
+      )
+      break
+
+    case 'actionlimit':
+      // 动作限制编辑器
+      editorDialogContainer.value?.openEditor(
+        'actionlimit',
+        propertyKey,
+        propertyValues.value[propertyKey] || { limit_list: [] },
+        (value) => {
+          propertyValues.value[propertyKey] = value
+          console.log('动作限制编辑结果:', value)
+        }
+      )
+      break
+
+    default:
+      console.warn(`未知的编辑器类型: ${editorType}`)
   }
 }
 </script>
@@ -1177,8 +1491,124 @@ function handleButtonClick(property) {
   height: 100%;
   overflow: hidden;
   display: flex;
+  flex-direction: column;
   background-color: var(--color-background-secondary);
   color: var(--color-text-primary);
+}
+
+/* 顶部操作栏样式 */
+.top-action-bar {
+  height: 56px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.game-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.game-info-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 返回按钮样式 */
+.top-bar-left .back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.top-bar-left .back-btn:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.action-btn.save-btn {
+  background-color: #ffffff;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.action-btn.save-btn:hover {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.action-btn.publish-btn {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+
+.action-btn.publish-btn:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+/* 主体内容区域 */
+.workbench-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
 }
 
 /* 左侧组件列表样式 */
@@ -1463,6 +1893,12 @@ input:focus + .toggle-slider {
   box-shadow: 0 4px 12px rgba(100, 108, 255, 0.15);
 }
 
+.component-item.selected {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
 .component-item:active {
   cursor: grabbing;
 }
@@ -1505,6 +1941,7 @@ input:focus + .toggle-slider {
   flex-direction: column;
   overflow: hidden;
   background-color: var(--color-background);
+  position: relative;
 }
 
 .workbench-header {
@@ -1750,11 +2187,14 @@ input:focus + .toggle-slider {
 
 .workbench-canvas {
   flex: 1;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: var(--color-background-secondary);
-  overflow: auto;
+  overflow: hidden;
   cursor: default;
-  /* 添加网格背景 - 亮色系 */
   background-image:
     linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
@@ -1873,6 +2313,12 @@ input:focus + .toggle-slider {
 .category-component-item:hover {
   background-color: var(--color-surface-hover);
   border-color: var(--color-primary);
+}
+
+.category-component-item.selected {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .component-icon.small {
@@ -2340,6 +2786,49 @@ input:focus + .toggle-slider {
 .toolbar-item span {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
+}
+
+/* 画布缩放控制按钮 */
+.canvas-zoom-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.zoom-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #374151;
+  transition: all 0.2s;
+}
+
+.zoom-btn:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.zoom-btn:active:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.zoom-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* 覆盖 vue-draggable-resizable 的默认样式 */

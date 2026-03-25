@@ -1,0 +1,9 @@
+- [x] EditorDialogContainer.vue 组件创建完成，包含 openEditor/closeEditor 方法
+- [x] MahjongStackDialog.vue 组件移植完成，支持 mock 数据
+- [x] ScoreCalculationFormulaEditing.vue 组件移植完成，支持 mock 数据
+- [x] Workbench.vue 集成弹窗容器，handleButtonClick 正确识别 editorType
+- [x] Mock 数据文件创建完成，包含牌堆和玩家数据
+- [x] 牌堆选择器弹窗可以正常打开、编辑、确认和关闭
+- [x] 算分公式编辑器弹窗可以正常打开、编辑、确认和关闭
+- [x] 弹窗确认后的值正确同步到 propertyValues
+- [x] 使用 webapp-testing skill 验证所有功能正常

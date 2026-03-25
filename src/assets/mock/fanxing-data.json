@@ -1,0 +1,1396 @@
+{
+    "fan_config_list": [
+        {
+            "scene": 3,
+            "name": "牌型",
+            "categories": [
+                {
+                    "category": {
+                        "id": 42,
+                        "scene": 3,
+                        "key": "_1770707785",
+                        "name": "所有牌型",
+                        "sort": 0,
+                        "status": 0
+                    },
+                    "content": {
+                        "base_fans": [
+                            {
+                                "id": 6,
+                                "name": "鸡胡",
+                                "fan_code": 1,
+                                "exclude_fan_codes": [],
+                                "description": "需满足2,3,3,3,3牌型，其中3可以是刻字，杠或者顺子，则命中该番型",
+                                "remark": "需满足2,3,3,3,3牌型，其中3可以是刻字，杠或者顺子，则命中该番型",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [
+                                    1,
+                                    2,
+                                    3,
+                                    7,
+                                    8,
+                                    9,
+                                    19,
+                                    19,
+                                    19,
+                                    37,
+                                    38,
+                                    39,
+                                    41,
+                                    41
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 8,
+                                "name": "七对",
+                                "fan_code": 2,
+                                "exclude_fan_codes": [
+                                    6
+                                ],
+                                "description": "手牌有七个对子",
+                                "remark": "手牌有七个对子",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100002
+                                ],
+                                "example_cards": [
+                                    1,
+                                    1,
+                                    5,
+                                    5,
+                                    33,
+                                    33,
+                                    34,
+                                    34,
+                                    36,
+                                    36,
+                                    17,
+                                    17,
+                                    21,
+                                    21
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 13,
+                                "name": "十三幺",
+                                "fan_code": 16,
+                                "exclude_fan_codes": [],
+                                "description": "三个花色的19各一张+东南西北中发白各一张，以及前面13张牌中的任意一张",
+                                "remark": "三个花色的19各一张+东南西北中发白各一张，以及前面13张牌中的任意一张",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100004
+                                ],
+                                "example_cards": [
+                                    1,
+                                    9,
+                                    33,
+                                    41,
+                                    17,
+                                    25,
+                                    49,
+                                    50,
+                                    51,
+                                    52,
+                                    53,
+                                    54,
+                                    55,
+                                    55
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 12,
+                                "name": "十三烂",
+                                "fan_code": 6,
+                                "exclude_fan_codes": [],
+                                "description": "序数牌点间隔2的牌或序数91也符合（如1,4筒，9,1万）加任意不重复的字牌",
+                                "remark": "序数牌点间隔2的牌或序数91也符合（如1,4筒，9,1万）加任意不重复的字牌",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100003
+                                ],
+                                "example_cards": [
+                                    1,
+                                    5,
+                                    9,
+                                    34,
+                                    37,
+                                    40,
+                                    17,
+                                    20,
+                                    24,
+                                    49,
+                                    50,
+                                    52,
+                                    53,
+                                    54
+                                ],
+                                "is_chosen": true
+                            }
+                        ],
+                        "bind_fans": [
+                            {
+                                "id": 7,
+                                "name": "碰碰胡",
+                                "fan_code": 3,
+                                "exclude_fan_codes": [],
+                                "description": "手牌有四组刻字+1对",
+                                "remark": "手牌有四组刻字+1对",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [
+                                    3,
+                                    3,
+                                    3,
+                                    24,
+                                    24,
+                                    24,
+                                    25,
+                                    25,
+                                    25,
+                                    37,
+                                    37,
+                                    37,
+                                    41,
+                                    41
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 10,
+                                "name": "双豪华七对",
+                                "fan_code": 22,
+                                "exclude_fan_codes": [
+                                    8,
+                                    9
+                                ],
+                                "description": "手牌中有两组四张相同牌的七对",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100002
+                                ],
+                                "example_cards": [
+                                    4,
+                                    4,
+                                    4,
+                                    4,
+                                    34,
+                                    34,
+                                    34,
+                                    34,
+                                    17,
+                                    17,
+                                    18,
+                                    18,
+                                    22,
+                                    22
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 9,
+                                "name": "豪华七对",
+                                "fan_code": 5,
+                                "exclude_fan_codes": [
+                                    8
+                                ],
+                                "description": "手牌有七个对子，且有两个对子是相同牌",
+                                "remark": "手牌有七个对子，且有两个对子是相同牌",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100002
+                                ],
+                                "example_cards": [
+                                    40,
+                                    40,
+                                    40,
+                                    40,
+                                    4,
+                                    4,
+                                    7,
+                                    7,
+                                    9,
+                                    9,
+                                    34,
+                                    34,
+                                    36,
+                                    36
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 11,
+                                "name": "三豪华七对",
+                                "fan_code": 23,
+                                "exclude_fan_codes": [
+                                    8,
+                                    9,
+                                    10
+                                ],
+                                "description": "手牌中有三组四张相同牌的七对",
+                                "remark": "手牌中有三组四张相同牌的七对",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100002
+                                ],
+                                "example_cards": [
+                                    1,
+                                    1,
+                                    1,
+                                    1,
+                                    5,
+                                    5,
+                                    5,
+                                    5,
+                                    33,
+                                    33,
+                                    33,
+                                    33,
+                                    18,
+                                    18
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 16,
+                                "name": "一条龙",
+                                "fan_code": 13,
+                                "exclude_fan_codes": [],
+                                "description": "有同色的123、456、789三顺",
+                                "remark": "有同色的123、456、789三顺",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [
+                                    1,
+                                    2,
+                                    3,
+                                    4,
+                                    5,
+                                    6,
+                                    7,
+                                    8,
+                                    9,
+                                    34,
+                                    34,
+                                    34,
+                                    21,
+                                    21
+                                ],
+                                "is_chosen": true
+                            }
+                        ],
+                        "combine_fans": [
+                            {
+                                "id": 14,
+                                "name": "硬胡",
+                                "fan_code": 21,
+                                "exclude_fan_codes": [],
+                                "description": "胡牌时无宝牌或宝牌做牌本值",
+                                "remark": "胡牌时无宝牌或宝牌做牌本值",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100007,
+                                    100008,
+                                    100004,
+                                    100001,
+                                    100002,
+                                    100003,
+                                    100005,
+                                    100006
+                                ],
+                                "example_cards": [],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 15,
+                                "name": "缺门",
+                                "fan_code": 24,
+                                "exclude_fan_codes": [],
+                                "description": "万筒条三门花色缺一门",
+                                "remark": "万筒条三门花色缺一门",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001,
+                                    100002,
+                                    100003
+                                ],
+                                "example_cards": [
+                                    6,
+                                    6,
+                                    6,
+                                    7,
+                                    8,
+                                    9,
+                                    33,
+                                    33,
+                                    33,
+                                    36,
+                                    36,
+                                    36,
+                                    41,
+                                    41
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 28,
+                                "name": "门清",
+                                "fan_code": 11,
+                                "exclude_fan_codes": [],
+                                "description": "胡牌时，胡牌玩家未进行吃、碰、杠（除暗杠外）的操作，即为门清",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100007,
+                                    100008,
+                                    100004,
+                                    100001,
+                                    100002,
+                                    100003,
+                                    100005,
+                                    100006
+                                ],
+                                "example_cards": [
+                                    1,
+                                    2,
+                                    3,
+                                    34,
+                                    35,
+                                    36,
+                                    17,
+                                    18,
+                                    19,
+                                    21,
+                                    21,
+                                    21,
+                                    41,
+                                    41
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 18,
+                                "name": "清一色",
+                                "fan_code": 4,
+                                "exclude_fan_codes": [
+                                    19
+                                ],
+                                "description": "满足平胡，七对等等基础牌型，且手牌和鸣牌区只有一种序数花色",
+                                "remark": "满足平胡，七对等等基础牌型，且手牌和鸣牌区只有一种序数花色",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100005
+                                ],
+                                "example_cards": [
+                                    17,
+                                    17,
+                                    17,
+                                    18,
+                                    19,
+                                    20,
+                                    21,
+                                    21,
+                                    21,
+                                    23,
+                                    23,
+                                    23,
+                                    25,
+                                    25
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 20,
+                                "name": "字一色",
+                                "fan_code": 19,
+                                "exclude_fan_codes": [
+                                    21
+                                ],
+                                "description": "满足平胡，七对等等基础牌型，且手牌和鸣牌区只有字牌（东南西北中发白）",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100006
+                                ],
+                                "example_cards": [
+                                    49,
+                                    49,
+                                    49,
+                                    51,
+                                    51,
+                                    51,
+                                    50,
+                                    51,
+                                    52,
+                                    53,
+                                    53,
+                                    53,
+                                    55,
+                                    55
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 27,
+                                "name": "天胡",
+                                "fan_code": 26,
+                                "exclude_fan_codes": [],
+                                "description": "庄家起手胡牌",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100002,
+                                    100003,
+                                    100005,
+                                    100006,
+                                    100007,
+                                    100008,
+                                    100004,
+                                    100001
+                                ],
+                                "example_cards": [
+                                    1,
+                                    2,
+                                    3,
+                                    35,
+                                    36,
+                                    37,
+                                    17,
+                                    17,
+                                    17,
+                                    21,
+                                    21,
+                                    21,
+                                    53,
+                                    53
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 17,
+                                "name": "海底捞月",
+                                "fan_code": 14,
+                                "exclude_fan_codes": [],
+                                "description": "胡牌堆最后一张牌",
+                                "remark": "胡牌堆最后一张牌",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100007,
+                                    100008,
+                                    100004,
+                                    100001,
+                                    100002,
+                                    100003,
+                                    100005,
+                                    100006
+                                ],
+                                "example_cards": [],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 23,
+                                "name": "自摸",
+                                "fan_code": 7,
+                                "exclude_fan_codes": [],
+                                "description": "",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 25,
+                                "name": "接炮胡",
+                                "fan_code": 8,
+                                "exclude_fan_codes": [],
+                                "description": "",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 24,
+                                "name": "杠开",
+                                "fan_code": 9,
+                                "exclude_fan_codes": [],
+                                "description": "",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 26,
+                                "name": "抢杠胡",
+                                "fan_code": 17,
+                                "exclude_fan_codes": [],
+                                "description": "",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [],
+                                "is_chosen": true
+                            }
+                        ],
+                        "special_fans": [
+                            {
+                                "id": 21,
+                                "name": "字一色-假胡",
+                                "fan_code": 10003,
+                                "exclude_fan_codes": [],
+                                "description": "手牌满足只有字牌即可胡，不需要满足其他牌型",
+                                "remark": "手牌满足只有字牌即可胡，不需要满足其他牌型",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100006
+                                ],
+                                "example_cards": [
+                                    49,
+                                    49,
+                                    51,
+                                    52,
+                                    52,
+                                    52,
+                                    53,
+                                    53,
+                                    53,
+                                    54,
+                                    54,
+                                    55,
+                                    55,
+                                    55
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 19,
+                                "name": "清一色-假胡",
+                                "fan_code": 10002,
+                                "exclude_fan_codes": [],
+                                "description": "手牌满足只有一种花色即可胡，不需要满足其他牌型",
+                                "remark": "手牌满足只有一种花色即可胡，不需要满足其他牌型",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100005
+                                ],
+                                "example_cards": [
+                                    17,
+                                    19,
+                                    19,
+                                    19,
+                                    21,
+                                    21,
+                                    23,
+                                    23,
+                                    23,
+                                    24,
+                                    24,
+                                    24,
+                                    25,
+                                    25
+                                ],
+                                "is_chosen": true
+                            }
+                        ]
+                    }
+                },
+                {
+                    "category": {
+                        "id": 43,
+                        "scene": 3,
+                        "key": "_1770707821",
+                        "name": "鸡胡牌型",
+                        "sort": 1,
+                        "status": 0
+                    },
+                    "content": {
+                        "base_fans": [
+                            {
+                                "id": 6,
+                                "name": "鸡胡",
+                                "fan_code": 1,
+                                "exclude_fan_codes": [],
+                                "description": "需满足2,3,3,3,3牌型，其中3可以是刻字，杠或者顺子，则命中该番型",
+                                "remark": "需满足2,3,3,3,3牌型，其中3可以是刻字，杠或者顺子，则命中该番型",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [
+                                    1,
+                                    2,
+                                    3,
+                                    7,
+                                    8,
+                                    9,
+                                    19,
+                                    19,
+                                    19,
+                                    37,
+                                    38,
+                                    39,
+                                    41,
+                                    41
+                                ],
+                                "is_chosen": true
+                            }
+                        ],
+                        "bind_fans": [
+                            {
+                                "id": 7,
+                                "name": "碰碰胡",
+                                "fan_code": 3,
+                                "exclude_fan_codes": [],
+                                "description": "手牌有四组刻字+1对",
+                                "remark": "手牌有四组刻字+1对",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [
+                                    3,
+                                    3,
+                                    3,
+                                    24,
+                                    24,
+                                    24,
+                                    25,
+                                    25,
+                                    25,
+                                    37,
+                                    37,
+                                    37,
+                                    41,
+                                    41
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 16,
+                                "name": "一条龙",
+                                "fan_code": 13,
+                                "exclude_fan_codes": [],
+                                "description": "有同色的123、456、789三顺",
+                                "remark": "有同色的123、456、789三顺",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [
+                                    1,
+                                    2,
+                                    3,
+                                    4,
+                                    5,
+                                    6,
+                                    7,
+                                    8,
+                                    9,
+                                    34,
+                                    34,
+                                    34,
+                                    21,
+                                    21
+                                ],
+                                "is_chosen": true
+                            }
+                        ],
+                        "combine_fans": [],
+                        "special_fans": []
+                    }
+                },
+                {
+                    "category": {
+                        "id": 14,
+                        "scene": 3,
+                        "key": "",
+                        "name": "七对牌型",
+                        "sort": 2,
+                        "status": 0
+                    },
+                    "content": {
+                        "base_fans": [
+                            {
+                                "id": 8,
+                                "name": "七对",
+                                "fan_code": 2,
+                                "exclude_fan_codes": [
+                                    6
+                                ],
+                                "description": "手牌有七个对子",
+                                "remark": "手牌有七个对子",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100002
+                                ],
+                                "example_cards": [
+                                    1,
+                                    1,
+                                    5,
+                                    5,
+                                    33,
+                                    33,
+                                    34,
+                                    34,
+                                    36,
+                                    36,
+                                    17,
+                                    17,
+                                    21,
+                                    21
+                                ],
+                                "is_chosen": true
+                            }
+                        ],
+                        "bind_fans": [
+                            {
+                                "id": 9,
+                                "name": "豪华七对",
+                                "fan_code": 5,
+                                "exclude_fan_codes": [
+                                    8
+                                ],
+                                "description": "手牌有七个对子，且有两个对子是相同牌",
+                                "remark": "手牌有七个对子，且有两个对子是相同牌",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100002
+                                ],
+                                "example_cards": [
+                                    40,
+                                    40,
+                                    40,
+                                    40,
+                                    4,
+                                    4,
+                                    7,
+                                    7,
+                                    9,
+                                    9,
+                                    34,
+                                    34,
+                                    36,
+                                    36
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 10,
+                                "name": "双豪华七对",
+                                "fan_code": 22,
+                                "exclude_fan_codes": [
+                                    8,
+                                    9
+                                ],
+                                "description": "手牌中有两组四张相同牌的七对",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100002
+                                ],
+                                "example_cards": [
+                                    4,
+                                    4,
+                                    4,
+                                    4,
+                                    34,
+                                    34,
+                                    34,
+                                    34,
+                                    17,
+                                    17,
+                                    18,
+                                    18,
+                                    22,
+                                    22
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 11,
+                                "name": "三豪华七对",
+                                "fan_code": 23,
+                                "exclude_fan_codes": [
+                                    8,
+                                    9,
+                                    10
+                                ],
+                                "description": "手牌中有三组四张相同牌的七对",
+                                "remark": "手牌中有三组四张相同牌的七对",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100002
+                                ],
+                                "example_cards": [
+                                    1,
+                                    1,
+                                    1,
+                                    1,
+                                    5,
+                                    5,
+                                    5,
+                                    5,
+                                    33,
+                                    33,
+                                    33,
+                                    33,
+                                    18,
+                                    18
+                                ],
+                                "is_chosen": true
+                            }
+                        ],
+                        "combine_fans": [],
+                        "special_fans": []
+                    }
+                },
+                {
+                    "category": {
+                        "id": 47,
+                        "scene": 3,
+                        "key": "shisanlanpaixing_1771987839",
+                        "name": "十三烂牌型",
+                        "sort": 3,
+                        "status": 0
+                    },
+                    "content": {
+                        "base_fans": [
+                            {
+                                "id": 12,
+                                "name": "十三烂",
+                                "fan_code": 6,
+                                "exclude_fan_codes": [],
+                                "description": "序数牌点间隔2的牌或序数91也符合（如1,4筒，9,1万）加任意不重复的字牌",
+                                "remark": "序数牌点间隔2的牌或序数91也符合（如1,4筒，9,1万）加任意不重复的字牌",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100003
+                                ],
+                                "example_cards": [
+                                    1,
+                                    5,
+                                    9,
+                                    34,
+                                    37,
+                                    40,
+                                    17,
+                                    20,
+                                    24,
+                                    49,
+                                    50,
+                                    52,
+                                    53,
+                                    54
+                                ],
+                                "is_chosen": true
+                            }
+                        ],
+                        "bind_fans": [],
+                        "combine_fans": [],
+                        "special_fans": []
+                    }
+                },
+                {
+                    "category": {
+                        "id": 48,
+                        "scene": 3,
+                        "key": "shisanyao_1771987883",
+                        "name": "十三幺",
+                        "sort": 4,
+                        "status": 0
+                    },
+                    "content": {
+                        "base_fans": [
+                            {
+                                "id": 13,
+                                "name": "十三幺",
+                                "fan_code": 16,
+                                "exclude_fan_codes": [],
+                                "description": "三个花色的19各一张+东南西北中发白各一张，以及前面13张牌中的任意一张",
+                                "remark": "三个花色的19各一张+东南西北中发白各一张，以及前面13张牌中的任意一张",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100004
+                                ],
+                                "example_cards": [
+                                    1,
+                                    9,
+                                    33,
+                                    41,
+                                    17,
+                                    25,
+                                    49,
+                                    50,
+                                    51,
+                                    52,
+                                    53,
+                                    54,
+                                    55,
+                                    55
+                                ],
+                                "is_chosen": true
+                            }
+                        ],
+                        "bind_fans": [],
+                        "combine_fans": [],
+                        "special_fans": []
+                    }
+                },
+                {
+                    "category": {
+                        "id": 19,
+                        "scene": 3,
+                        "key": "diqu1",
+                        "name": "组合牌型",
+                        "sort": 5,
+                        "status": 0
+                    },
+                    "content": {
+                        "base_fans": [],
+                        "bind_fans": [],
+                        "combine_fans": [
+                            {
+                                "id": 14,
+                                "name": "硬胡",
+                                "fan_code": 21,
+                                "exclude_fan_codes": [],
+                                "description": "胡牌时无宝牌或宝牌做牌本值",
+                                "remark": "胡牌时无宝牌或宝牌做牌本值",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100007,
+                                    100008,
+                                    100004,
+                                    100001,
+                                    100002,
+                                    100003,
+                                    100005,
+                                    100006
+                                ],
+                                "example_cards": [],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 15,
+                                "name": "缺门",
+                                "fan_code": 24,
+                                "exclude_fan_codes": [],
+                                "description": "万筒条三门花色缺一门",
+                                "remark": "万筒条三门花色缺一门",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001,
+                                    100002,
+                                    100003
+                                ],
+                                "example_cards": [
+                                    6,
+                                    6,
+                                    6,
+                                    7,
+                                    8,
+                                    9,
+                                    33,
+                                    33,
+                                    33,
+                                    36,
+                                    36,
+                                    36,
+                                    41,
+                                    41
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 28,
+                                "name": "门清",
+                                "fan_code": 11,
+                                "exclude_fan_codes": [],
+                                "description": "胡牌时，胡牌玩家未进行吃、碰、杠（除暗杠外）的操作，即为门清",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100007,
+                                    100008,
+                                    100004,
+                                    100001,
+                                    100002,
+                                    100003,
+                                    100005,
+                                    100006
+                                ],
+                                "example_cards": [
+                                    1,
+                                    2,
+                                    3,
+                                    34,
+                                    35,
+                                    36,
+                                    17,
+                                    18,
+                                    19,
+                                    21,
+                                    21,
+                                    21,
+                                    41,
+                                    41
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 16,
+                                "name": "一条龙",
+                                "fan_code": 13,
+                                "exclude_fan_codes": [],
+                                "description": "有同色的123、456、789三顺",
+                                "remark": "有同色的123、456、789三顺",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [
+                                    1,
+                                    2,
+                                    3,
+                                    4,
+                                    5,
+                                    6,
+                                    7,
+                                    8,
+                                    9,
+                                    34,
+                                    34,
+                                    34,
+                                    21,
+                                    21
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 17,
+                                "name": "海底捞月",
+                                "fan_code": 14,
+                                "exclude_fan_codes": [],
+                                "description": "胡牌堆最后一张牌",
+                                "remark": "胡牌堆最后一张牌",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100007,
+                                    100008,
+                                    100004,
+                                    100001,
+                                    100002,
+                                    100003,
+                                    100005,
+                                    100006
+                                ],
+                                "example_cards": [],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 18,
+                                "name": "清一色",
+                                "fan_code": 4,
+                                "exclude_fan_codes": [
+                                    19
+                                ],
+                                "description": "满足平胡，七对等等基础牌型，且手牌和鸣牌区只有一种序数花色",
+                                "remark": "满足平胡，七对等等基础牌型，且手牌和鸣牌区只有一种序数花色",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100005
+                                ],
+                                "example_cards": [
+                                    17,
+                                    17,
+                                    17,
+                                    18,
+                                    19,
+                                    20,
+                                    21,
+                                    21,
+                                    21,
+                                    23,
+                                    23,
+                                    23,
+                                    25,
+                                    25
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 20,
+                                "name": "字一色",
+                                "fan_code": 19,
+                                "exclude_fan_codes": [
+                                    21
+                                ],
+                                "description": "满足平胡，七对等等基础牌型，且手牌和鸣牌区只有字牌（东南西北中发白）",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100006
+                                ],
+                                "example_cards": [
+                                    49,
+                                    49,
+                                    49,
+                                    51,
+                                    51,
+                                    51,
+                                    50,
+                                    51,
+                                    52,
+                                    53,
+                                    53,
+                                    53,
+                                    55,
+                                    55
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 27,
+                                "name": "天胡",
+                                "fan_code": 26,
+                                "exclude_fan_codes": [],
+                                "description": "庄家起手胡牌",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100002,
+                                    100003,
+                                    100005,
+                                    100006,
+                                    100007,
+                                    100008,
+                                    100004,
+                                    100001
+                                ],
+                                "example_cards": [
+                                    1,
+                                    2,
+                                    3,
+                                    35,
+                                    36,
+                                    37,
+                                    17,
+                                    17,
+                                    17,
+                                    21,
+                                    21,
+                                    21,
+                                    53,
+                                    53
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 23,
+                                "name": "自摸",
+                                "fan_code": 7,
+                                "exclude_fan_codes": [],
+                                "description": "",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 25,
+                                "name": "接炮胡",
+                                "fan_code": 8,
+                                "exclude_fan_codes": [],
+                                "description": "",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 24,
+                                "name": "杠开",
+                                "fan_code": 9,
+                                "exclude_fan_codes": [],
+                                "description": "",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 26,
+                                "name": "抢杠胡",
+                                "fan_code": 17,
+                                "exclude_fan_codes": [],
+                                "description": "",
+                                "remark": "",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100001
+                                ],
+                                "example_cards": [],
+                                "is_chosen": true
+                            }
+                        ],
+                        "special_fans": []
+                    }
+                },
+                {
+                    "category": {
+                        "id": 32,
+                        "scene": 3,
+                        "key": "diqu14",
+                        "name": "特殊牌型",
+                        "sort": 6,
+                        "status": 0
+                    },
+                    "content": {
+                        "base_fans": [],
+                        "bind_fans": [],
+                        "combine_fans": [],
+                        "special_fans": [
+                            {
+                                "id": 19,
+                                "name": "清一色-假胡",
+                                "fan_code": 10002,
+                                "exclude_fan_codes": [],
+                                "description": "手牌满足只有一种花色即可胡，不需要满足其他牌型",
+                                "remark": "手牌满足只有一种花色即可胡，不需要满足其他牌型",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100005
+                                ],
+                                "example_cards": [
+                                    17,
+                                    19,
+                                    19,
+                                    19,
+                                    21,
+                                    21,
+                                    23,
+                                    23,
+                                    23,
+                                    24,
+                                    24,
+                                    24,
+                                    25,
+                                    25
+                                ],
+                                "is_chosen": true
+                            },
+                            {
+                                "id": 21,
+                                "name": "字一色-假胡",
+                                "fan_code": 10003,
+                                "exclude_fan_codes": [],
+                                "description": "手牌满足只有字牌即可胡，不需要满足其他牌型",
+                                "remark": "手牌满足只有字牌即可胡，不需要满足其他牌型",
+                                "sort": 0,
+                                "status": 1,
+                                "combined_fans": [
+                                    100006
+                                ],
+                                "example_cards": [
+                                    49,
+                                    49,
+                                    51,
+                                    52,
+                                    52,
+                                    52,
+                                    53,
+                                    53,
+                                    53,
+                                    54,
+                                    54,
+                                    55,
+                                    55,
+                                    55
+                                ],
+                                "is_chosen": true
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "fan_ids": [],
+    "fan_exclusion": {}
+}

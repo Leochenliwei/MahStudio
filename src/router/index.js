@@ -5,6 +5,14 @@ import RoomCreatorPage from '../views/RoomCreatorPage.vue'
 import GameDirectory from '../views/GameDirectory.vue'
 import SimpleDependencyPage from '../views/SimpleDependencyPage.vue'
 
+// Admin 子页面
+import GameManagement from '../views/admin/GameManagement.vue'
+import ApkManagement from '../views/admin/ApkManagement.vue'
+import UserManagement from '../views/admin/UserManagement.vue'
+import SystemSettings from '../views/admin/SystemSettings.vue'
+import OperationLogs from '../views/admin/OperationLogs.vue'
+import DataStatistics from '../views/admin/DataStatistics.vue'
+
 /**
  * 路由配置
  * 需求关联: 路由导航功能
@@ -15,6 +23,44 @@ const routes = [
     path: '/',
     name: 'Admin',
     component: Admin
+  },
+  {
+    // 游戏管理路由 - 支持test/online环境
+    // query参数:
+    //   - env: 环境 (test/online)
+    path: '/admin/game-management',
+    name: 'GameManagement',
+    component: GameManagement
+  },
+  {
+    // APK管理路由
+    path: '/admin/apk-management',
+    name: 'ApkManagement',
+    component: ApkManagement
+  },
+  {
+    // 用户管理路由
+    path: '/admin/user-management',
+    name: 'UserManagement',
+    component: UserManagement
+  },
+  {
+    // 系统设置路由
+    path: '/admin/system-settings',
+    name: 'SystemSettings',
+    component: SystemSettings
+  },
+  {
+    // 操作日志路由
+    path: '/admin/operation-logs',
+    name: 'OperationLogs',
+    component: OperationLogs
+  },
+  {
+    // 数据统计路由
+    path: '/admin/data-statistics',
+    name: 'DataStatistics',
+    component: DataStatistics
   },
   {
     // 工作台路由 - 支持从草稿/测试文件进入
@@ -28,7 +74,7 @@ const routes = [
     props: true
   },
   {
-    path: '/workbench/:id/room-creator',
+    path: '/room-creator/:id',
     name: 'RoomCreator',
     component: RoomCreatorPage,
     props: true

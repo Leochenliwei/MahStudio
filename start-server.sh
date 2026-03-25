@@ -70,38 +70,9 @@ cd "$SCRIPT_DIR/server" || {
     exit 1
 }
 
-# 获取本机IP地址
-get_local_ip() {
-    local ip=""
-    # macOS
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        ip=$(ifconfig | grep "inet " | grep -v "127.0.0.1" | awk '{print $2}' | head -n 1)
-    # Linux
-    else
-        ip=$(hostname -I | awk '{print $1}')
-    fi
-    echo "$ip"
-}
-
-LOCAL_IP=$(get_local_ip)
-
 echo -e "${GREEN}正在启动服务器...${NC}"
-echo ""
-echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}  服务启动成功${NC}"
-echo -e "${BLUE}========================================${NC}"
-echo ""
-echo -e "${GREEN}本地访问地址：${NC}"
-echo -e "  ${YELLOW}http://localhost:4174/MahStudio${NC}"
-echo ""
-echo -e "${GREEN}局域网访问地址：${NC}"
-echo -e "  ${YELLOW}http://${LOCAL_IP}:4174/MahStudio${NC}"
-echo ""
-echo -e "${GREEN}API 地址：${NC}"
-echo -e "  ${YELLOW}http://localhost:4174/api${NC}"
-echo -e "  ${YELLOW}http://${LOCAL_IP}:4174/api${NC}"
-echo ""
-echo -e "${BLUE}========================================${NC}"
+echo -e "${YELLOW}访问地址：http://localhost:4174/MahStudio${NC}"
+echo -e "${YELLOW}API 地址：http://localhost:4174/api${NC}"
 echo ""
 
 # 启动服务器

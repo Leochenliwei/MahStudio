@@ -1,19 +1,7 @@
 <template>
   <div class="game-directory-container">
     <!-- 页面头部 -->
-    <div class="page-header">
-      <!-- 面包屑导航 -->
-      <div class="breadcrumb">
-        <a href="#" @click.prevent="goBack" class="breadcrumb-item">
-          <el-icon :size="14" class="mr-1"><ArrowLeft /></el-icon>
-          游戏管理
-        </a>
-        <span class="breadcrumb-separator">/</span>
-        <span class="breadcrumb-item active">{{ game?.name || '游戏目录' }}</span>
-      </div>
-      
-      
-    </div>
+  
 
     <!-- 游戏信息卡片 -->
     <div v-if="game" class="game-info-card">
@@ -570,8 +558,10 @@ function editFile(file) {
       file.type,
       activeEnv.value
     )
+    console.log('调用全局的openGameTab方法打开新标签页成功')
   } else {
     // 兼容处理：如果openGameTab方法不存在，使用原有的路由跳转
+    console.log('兼容处理：使用路由路由跳转')
     router.push({
       name: 'Workbench',
       params: { id: game.value.id },

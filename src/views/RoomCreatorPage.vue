@@ -1,85 +1,54 @@
 <template>
-  <div class="room-creator-page">
-    
-
-    <!-- 顶部Tab栏 -->
-    <div class="tab-bar">
+  <div class="room-creator-page" :class="{ embedded: embedded }">
+  
+    <!-- 内部 Tab 栏 -->
+    <div class="internal-tab-bar">
       <div class="tab-items">
-        <button 
-          class="tab-item" 
-          :class="{ active: activeTab === 'config' }"
-          @click="activeTab = 'config'"
+        <button
+          class="tab-item"
+          :class="{ active: activeTab === 'panel-options' }"
+          @click="activeTab = 'panel-options'"
         >
-          <el-icon :size="16"><Operation /></el-icon>
-          面板选项
+          <el-icon :size="16"><Home /></el-icon>
+          <span>面板选项</span>
         </button>
         <button
           class="tab-item"
-          :class="{ active: activeTab === 'simple-dependency' }"
-          @click="activeTab = 'simple-dependency'"
-        >
-          <el-icon :size="16"><Grid /></el-icon>
-          选项联动（简版P0）
-        </button>
-        <button
-          class="tab-item"
-          :class="{ active: activeTab === 'dependency' }"
-          @click="activeTab = 'dependency'"
+          :class="{ active: activeTab === 'dependency-list' }"
+          @click="activeTab = 'dependency-list'"
         >
           <el-icon :size="16"><Link /></el-icon>
-          选项联动（高阶等迭代）
+          <span>选项联动</span>
         </button>
-        
       </div>
-
-    
     </div>
 
     <!-- 主内容区 -->
     <div class="main-content">
-      <!-- 配置工具内容 -->
-      <div v-if="activeTab === 'config'">
-        <!-- 基础参数配置 -->
-        <BasicParams 
+      <!-- Tab1: 面板选项 -->
+      <template v-if="activeTab === 'panel-options'">
+        <ItemManagerPage
           :basic-config="roomConfig.basic"
+          :groups="roomConfig.groups"
           @update-player-count-default="updatePlayerCountDefault"
           @update-round-count-default="updateRoundCountDefault"
           @update-basic-config="updateBasicConfig"
           @open-drawer="openDrawer"
-        />
-
-        <!-- 分组管理 -->
-        <GroupManager
-          :groups="roomConfig.groups"
           @edit-group="handleEditGroup"
           @add-component="addComponent"
-          @open-drawer="openDrawer"
           @show-add-group-modal="openCreateGroupModal"
           @update:group-description="updateGroupDescription"
         />
-      </div>
+      </template>
 
-      <!-- 选项联动内容 -->
-      <div v-if="activeTab === 'dependency'" class="dependency-content">
-        <DependencyEditor
-          :is-open="true"
-          :rules="roomConfig.dependencies"
-          :form-schema="roomConfig.groups"
-          @update:rules="(newRules) => roomConfig.dependencies = newRules"
-          @back-to-config="activeTab = 'config'"
-        />
-      </div>
-
-      <!-- 简版选项联动内容 -->
-      <div v-if="activeTab === 'simple-dependency'" class="simple-dependency-content">
+      <!-- Tab2: 选项联动列表 -->
+      <template v-if="activeTab === 'dependency-list'">
         <SimpleDependencyPage
           :embedded="true"
-          :game-id="route.params.id"
+          :game-id="gameId"
           :form-schema="roomConfig.groups"
-          @back="activeTab = 'config'"
-          @open-advanced-editor="activeTab = 'dependency'"
         />
-      </div>
+      </template>
     </div>
 
     <!-- 基础创房面板抽屉 -->
@@ -110,7 +79,6 @@
       :active-drawer="activeDrawer"
       :editing-component="editingComponent"
       :show-component-selector="showComponentSelector"
-      :components="components"
       :editing-option-index="selectedOptionIndex"
       @close-all-drawers="closeAllDrawers"
       @add-option="addOption"
@@ -122,6 +90,7 @@
       @confirm-component-selection="confirmComponentSelection"
       @toggle-component-status="toggleComponentStatus"
       @update-component-property="updateComponentProperty"
+      @open-editor="handleOpenEditor"
     />
 
     <!-- 添加分组弹窗 -->
@@ -131,6 +100,9 @@
       :group-data="editingGroupData"
       @confirm="handleGroupModalConfirm"
     />
+
+    <!-- 编辑器弹窗容器 -->
+    <EditorDialogContainer ref="editorDialogContainer" />
   </div>
 </template>
 
@@ -138,17 +110,31 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElNotification } from 'element-plus'
-import { Operation, Grid, Link, CircleCheck } from '@element-plus/icons-vue'
-import BasicParams from '../components/BasicParams.vue'
-import GroupManager from '../components/GroupManager.vue'
+import { ArrowLeft, Box, Link, DocumentChecked } from '@element-plus/icons-vue'
 import BasicParamsDrawer from '../components/BasicParamsDrawer.vue'
 import Drawer from '../components/Drawer.vue'
-import DependencyEditor from '../components/DependencyEditor.vue'
-import SimpleDependencyPage from './SimpleDependencyPage.vue'
 import AddGroupModal from '../components/AddGroupModal.vue'
+import EditorDialogContainer from '../components/editors/EditorDialogContainer.vue'
+import SimpleDependencyPage from './SimpleDependencyPage.vue'
+import ItemManagerPage from './ItemManagerPage.vue'
+import { Home } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
+
+// Props
+const props = defineProps({
+  embedded: {
+    type: Boolean,
+    default: false
+  }
+})
+
+// 计算属性：游戏ID
+const gameId = computed(() => props.embedded ? route.params.id : '')
+
+// 当前激活的 Tab
+const activeTab = ref('panel-options')
 
 /**
  * 默认麻将创房面板配置数据
@@ -385,9 +371,6 @@ const roomConfig = ref(JSON.parse(JSON.stringify(defaultRoomConfig)))
 const activeDrawer = ref('')
 const showComponentSelector = ref(false)
 
-// 当前激活的Tab
-const activeTab = ref('config')
-
 // 模板数据
 const playerCountTemplates = ref([
   { label: '4人/3人/2人，默认值4人', options: [4, 3, 2], default: 4 },
@@ -432,6 +415,12 @@ const editingGroupData = ref(null)
 const components = ref([])
 const selectedComponentId = ref('')
 const selectedOptionIndex = ref(-1)
+
+// 编辑器弹窗容器引用
+const editorDialogContainer = ref(null)
+
+// 属性当前值存储（用于编辑器回调）
+const propertyValues = ref({})
 
 // 加载组件列表数据
 async function loadComponents() {
@@ -885,14 +874,121 @@ function openAdvancedRules() {
   })
 }
 
-// 打开选项联动编辑器
-function openDependencyEditor() {
-  ElNotification({
-    title: '信息',
-    message: '选项联动功能开发中',
-    type: 'info',
-    duration: 3000
-  })
+/**
+ * 处理打开编辑器事件
+ * @param {object} params - 编辑器参数
+ * @param {string} params.editorType - 编辑器类型
+ * @param {string} params.propertyKey - 属性键
+ * @param {object} params.component - 组件对象
+ * @param {object} params.property - 属性对象
+ * @param {Function} params.callback - 回调函数
+ */
+function handleOpenEditor(params) {
+  const { editorType, propertyKey, property, callback } = params
+
+  console.log('打开编辑器:', params)
+
+  // 检查是否有extend属性和editorType
+  if (!editorType) {
+    console.warn('按钮属性缺少editorType配置')
+    return
+  }
+
+  const currentValue = propertyValues.value[propertyKey] || property.defaultValue || {}
+
+  // 根据editorType打开对应的编辑器
+  switch (editorType) {
+    case 'mahjongstack':
+      // 牌堆选择器
+      editorDialogContainer.value?.openEditor(
+        'mahjongstack',
+        propertyKey,
+        { defaultSelect: currentValue || [] },
+        (value) => {
+          propertyValues.value[propertyKey] = value
+          callback(value)
+          console.log('牌堆选择结果:', value)
+        }
+      )
+      break
+
+    case 'calscore':
+      // 算分公式编辑器
+      editorDialogContainer.value?.openEditor(
+        'calscore',
+        propertyKey,
+        {
+          defaultSelect: currentValue || [],
+          cfgId: parseInt(route.params.id) || 0,
+          extendConfig: property.extend
+        },
+        (value) => {
+          propertyValues.value[propertyKey] = value
+          callback(value)
+          console.log('算分公式编辑结果:', value)
+        }
+      )
+      break
+
+    case 'motionconstraint':
+      // 动作约束编辑器
+      editorDialogContainer.value?.openEditor(
+        'motionconstraint',
+        propertyKey,
+        currentValue || {},
+        (value) => {
+          propertyValues.value[propertyKey] = value
+          callback(value)
+          console.log('动作约束编辑结果:', value)
+        }
+      )
+      break
+
+    case 'correctscore':
+      // 分数修正编辑器
+      editorDialogContainer.value?.openEditor(
+        'correctscore',
+        propertyKey,
+        currentValue || {},
+        (value) => {
+          propertyValues.value[propertyKey] = value
+          callback(value)
+          console.log('分数修正编辑结果:', value)
+        }
+      )
+      break
+
+    case 'fanxingselect':
+      // 番型配置编辑器
+      editorDialogContainer.value?.openEditor(
+        'fanxingselect',
+        propertyKey,
+        { defaultSelect: currentValue || [] },
+        (value) => {
+          propertyValues.value[propertyKey] = value
+          callback(value)
+          console.log('番型选择结果:', value)
+        }
+      )
+      break
+
+    case 'actionlimit':
+      // 动作限制编辑器
+      editorDialogContainer.value?.openEditor(
+        'actionlimit',
+        propertyKey,
+        { limit_list: currentValue?.limit_list || [] },
+        (value) => {
+          propertyValues.value[propertyKey] = value
+          callback(value)
+          console.log('动作限制编辑结果:', value)
+        }
+      )
+      break
+
+    default:
+      console.warn(`未知的编辑器类型: ${editorType}`)
+  }
 }
 
 // 组件挂载时初始化
@@ -904,8 +1000,8 @@ onMounted(async () => {
 
 <style scoped>
 .room-creator-page {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--color-background);
@@ -915,152 +1011,139 @@ onMounted(async () => {
   font-family: var(--font-family);
 }
 
-/* 顶部导航栏 */
+/* 顶部导航栏 - 统一 Workbench 风格 */
 .page-header {
-  padding: 0 var(--spacing-6);
-  height: 64px;
-  border-bottom: 1px solid var(--color-border);
+  height: 56px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 0 24px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  font-weight: var(--font-weight-semibold);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
-  z-index: 10;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 100;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: var(--spacing-6);
+  gap: 16px;
 }
 
-.back-btn {
-  cursor: pointer;
-  font-size: var(--font-size-base);
-  background: none;
-  border: none;
-  color: var(--color-text-primary);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  padding: var(--spacing-2) var(--spacing-3);
-  border-radius: var(--border-radius-md);
-  transition: all var(--transition-normal);
-}
-
-.back-btn:hover {
-  color: var(--color-primary);
-  background: rgba(100, 108, 255, 0.1);
+.page-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 .header-right {
   display: flex;
   align-items: center;
+  gap: 12px;
 }
 
-.save-btn {
+/* 返回按钮样式 */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: var(--font-size-sm);
-  background: var(--color-primary);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-primary);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  padding: var(--spacing-2) var(--spacing-4);
-  border-radius: var(--border-radius-md);
-  transition: all var(--transition-normal);
-  font-weight: var(--font-weight-medium);
+  transition: all 0.3s ease;
 }
 
-.save-btn:hover {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-  box-shadow: var(--shadow-md);
+.back-btn:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+  border-color: #d1d5db;
 }
 
-/* 顶部Tab栏 */
-.tab-bar {
-  padding: 0 var(--spacing-6);
-  height: 48px;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: var(--shadow-sm);
-  z-index: 5;
-}
-
-.tab-items {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-4);
-}
-
-.tab-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-}
-
+/* 操作按钮通用样式 */
 .action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  font-size: var(--font-size-sm);
-  background: var(--color-surface-hover);
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.action-btn.save-btn {
+  background-color: #ffffff;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.action-btn.save-btn:hover {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+/* 内部 Tab 栏样式 */
+.internal-tab-bar {
+  height: 48px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 24px;
   display: flex;
   align-items: center;
-  gap: var(--spacing-1);
-  padding: var(--spacing-1) var(--spacing-3);
-  border-radius: var(--border-radius-md);
-  transition: all var(--transition-normal);
-  font-weight: var(--font-weight-medium);
+  flex-shrink: 0;
+  z-index: 99;
 }
 
-.action-btn:hover {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  background: rgba(100, 108, 255, 0.1);
+.internal-tab-bar .tab-items {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
 }
 
-.tab-item {
-  cursor: pointer;
-  font-size: var(--font-size-sm);
+.internal-tab-bar .tab-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
   background: none;
   border: none;
-  color: var(--color-text-secondary);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  padding: var(--spacing-2) var(--spacing-4);
-  border-radius: var(--border-radius-md);
-  transition: all var(--transition-normal);
-  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.3s ease;
   position: relative;
 }
 
-.tab-item:hover {
-  color: var(--color-primary);
-  background: rgba(100, 108, 255, 0.1);
+.internal-tab-bar .tab-item:hover {
+  color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.05);
 }
 
-.tab-item.active {
-  color: var(--color-primary);
-  background: rgba(100, 108, 255, 0.1);
+.internal-tab-bar .tab-item.active {
+  color: #3b82f6;
 }
 
-.tab-item.active::after {
+.internal-tab-bar .tab-item.active::after {
   content: '';
   position: absolute;
   bottom: 0;
-  left: var(--spacing-4);
-  right: var(--spacing-4);
+  left: 16px;
+  right: 16px;
   height: 2px;
-  background: var(--color-primary);
-  border-radius: var(--border-radius-full);
+  background-color: #3b82f6;
+  border-radius: 2px 2px 0 0;
 }
 
 /* 主内容区 */
@@ -1068,13 +1151,22 @@ onMounted(async () => {
   flex: 1;
   padding: var(--spacing-6);
   background: var(--color-background);
-  /* 网格背景 */
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
   overflow-y: auto;
   scroll-behavior: smooth;
+}
+
+/* 嵌入模式下的主内容区 */
+.room-creator-page.embedded .main-content {
+  flex: 1;
+  height: calc(100% - 48px);
+  padding: 0;
+  overflow: hidden;
+}
+
+/* SimpleDependencyPage 嵌入容器样式 */
+.room-creator-page.embedded .main-content > .simple-dependency-page {
+  height: 100%;
+  width: 100%;
 }
 
 .main-content::-webkit-scrollbar {
@@ -1155,54 +1247,30 @@ onMounted(async () => {
   color: var(--color-text-tertiary) !important;
 }
 
-/* 依赖内容区域 */
-.dependency-content {
-  height: calc(100vh - 160px);
-  width: 100%;
-  overflow: hidden;
-}
-
-/* 简版选项联动内容区域 */
-.simple-dependency-content {
-  height: calc(100vh - 160px);
-  width: 100%;
-  overflow: hidden;
-}
-
 /* 响应式调整 */
 @media (max-width: 768px) {
   .page-header {
     padding: 0 var(--spacing-4);
     height: 56px;
   }
-  
+
   .header-left {
     gap: var(--spacing-4);
   }
-  
+
   .page-title {
     font-size: var(--font-size-base);
   }
-  
+
   .back-btn {
     font-size: var(--font-size-sm);
   }
-  
+
   .save-btn {
     font-size: var(--font-size-sm);
     padding: var(--spacing-1) var(--spacing-3);
   }
-  
-  .tab-bar {
-    padding: 0 var(--spacing-4);
-    height: 44px;
-  }
-  
-  .tab-item {
-    font-size: var(--font-size-sm);
-    padding: var(--spacing-1) var(--spacing-3);
-  }
-  
+
   .main-content {
     padding: var(--spacing-4);
   }

@@ -226,3 +226,109 @@ export function addSubmitHistory(gameId, historyData) {
   
   return null;
 }
+
+// ==================== 变量配置管理 ====================
+
+/**
+ * 获取变量配置列表
+ * @param {number} cfgId - 游戏配置ID
+ * @returns {Array} 变量配置列表
+ */
+export function getVariableConfigs(cfgId) {
+  const data = loadData();
+  if (!data) return [];
+  
+  const game = data[cfgId.toString()];
+  if (!game) return [];
+  
+  return game.variableConfigs || [];
+}
+
+/**
+ * 添加变量配置
+ * @param {number} cfgId - 游戏配置ID
+ * @param {Object} variableData - 变量数据
+ * @returns {Object|null} 新创建的变量配置
+ */
+export function addVariableConfig(cfgId, variableData) {
+  const data = loadData();
+  if (!data) return null;
+  
+  const game = data[cfgId.toString()];
+  if (!game) return null;
+  
+  if (!game.variableConfigs) {
+    game.variableConfigs = [];
+  }
+  
+  const newVariable = {
+    id: `var-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    ...variableData,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  game.variableConfigs.push(newVariable);
+  game.updatedAt = new Date().toISOString();
+  
+  if (saveData(data)) {
+    return newVariable;
+  }
+  
+  return null;
+}
+
+/**
+ * 更新变量配置
+ * @param {number} cfgId - 游戏配置ID
+ * @param {string} variableId - 变量ID
+ * @param {Object} updateData - 更新数据
+ * @returns {Object|null} 更新后的变量配置
+ */
+export function updateVariableConfig(cfgId, variableId, updateData) {
+  const data = loadData();
+  if (!data) return null;
+  
+  const game = data[cfgId.toString()];
+  if (!game || !game.variableConfigs) return null;
+  
+  const variableIndex = game.variableConfigs.findIndex(v => v.id === variableId);
+  if (variableIndex === -1) return null;
+  
+  const updatedVariable = {
+    ...game.variableConfigs[variableIndex],
+    ...updateData,
+    updatedAt: new Date().toISOString()
+  };
+  
+  game.variableConfigs[variableIndex] = updatedVariable;
+  game.updatedAt = new Date().toISOString();
+  
+  if (saveData(data)) {
+    return updatedVariable;
+  }
+  
+  return null;
+}
+
+/**
+ * 删除变量配置
+ * @param {number} cfgId - 游戏配置ID
+ * @param {string} variableId - 变量ID
+ * @returns {boolean} 是否删除成功
+ */
+export function deleteVariableConfig(cfgId, variableId) {
+  const data = loadData();
+  if (!data) return false;
+  
+  const game = data[cfgId.toString()];
+  if (!game || !game.variableConfigs) return false;
+  
+  const variableIndex = game.variableConfigs.findIndex(v => v.id === variableId);
+  if (variableIndex === -1) return false;
+  
+  game.variableConfigs.splice(variableIndex, 1);
+  game.updatedAt = new Date().toISOString();
+  
+  return saveData(data);
+}

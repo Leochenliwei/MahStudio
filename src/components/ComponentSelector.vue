@@ -30,8 +30,14 @@
           </div>
         </div>
 
+        <!-- 加载状态 -->
+        <div v-if="isLoading" class="loading-state">
+          <el-icon :size="24" class="loading-icon"><Loading /></el-icon>
+          <p>加载组件列表...</p>
+        </div>
+
         <!-- 组件列表 -->
-        <div class="components-list">
+        <div v-else class="components-list">
           <div 
             v-for="(categoryComponents, category) in groupedComponents" 
             :key="category"
@@ -199,35 +205,32 @@
                       </select>
 
                       <!-- 复选框类型 -->
-                      <div v-else-if="property.type === 'checkbox'" class="checkbox-group">
-                        <label
+                      <el-checkbox-group
+                        v-else-if="property.type === 'checkbox'"
+                        v-model="property.defaultValue"
+                        class="checkbox-group"
+                        :disabled="!checkedProperties.has(`${component.id}-${property.id}`)"
+                        @change="updateComponentProperty(component, property.id, property.defaultValue)"
+                      >
+                        <el-checkbox
                           v-for="option in property.datas"
                           :key="option.value"
+                          :label="option.value"
                           class="checkbox-option"
-                          :class="{ 'disabled': !checkedProperties.has(`${component.id}-${property.id}`) }"
                         >
-                          <input
-                            type="checkbox"
-                            :value="option.value"
-                            :checked="Array.isArray(property.defaultValue) ? property.defaultValue.includes(option.value) : property.defaultValue === option.value"
-                            :disabled="!checkedProperties.has(`${component.id}-${property.id}`)"
-                            @change="e => {
-                              let newValue = property.defaultValue
-                              if (Array.isArray(newValue)) {
-                                if (e.target.checked) {
-                                  newValue = [...newValue, option.value]
-                                } else {
-                                  newValue = newValue.filter(v => v !== option.value)
-                                }
-                              } else {
-                                newValue = e.target.checked
-                              }
-                              updateComponentProperty(component, property.id, newValue)
-                            }"
-                          >
                           {{ option.label }}
-                        </label>
-                      </div>
+                        </el-checkbox>
+                      </el-checkbox-group>
+
+                      <!-- 按钮类型 -->
+                      <button
+                        v-else-if="property.type === 'button'"
+                        class="property-button"
+                        :disabled="!checkedProperties.has(`${component.id}-${property.id}`)"
+                        @click="handleButtonClick(component, property)"
+                      >
+                        {{ property.name }}
+                      </button>
 
                       <!-- 其他类型 -->
                       <input
@@ -267,16 +270,28 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { Search, ArrowDown, ArrowRight, Folder, Box, Lock, Close, Check } from '@element-plus/icons-vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import { Search, ArrowDown, ArrowRight, Folder, Box, Lock, Close, Check, Loading } from '@element-plus/icons-vue'
+import { useComponentData } from '../composables/useComponentData'
 
 /**
  * 组件选择器组件
  * 用于选择组件并配置其属性，支持搜索、分类、多选等功能
+ * 从远程 API 获取组件列表数据
  * 
  * @author WEBconfig Team
- * @date 2026-03-09
+ * @date 2026-03-19
  */
+
+// 使用组件数据 composable
+const {
+  components,
+  isLoading,
+  searchKeyword,
+  groupedComponents,
+  loadComponents,
+  getComponentProperties
+} = useComponentData()
 
 // 定义props
 const props = defineProps({
@@ -286,13 +301,6 @@ const props = defineProps({
   show: {
     type: Boolean,
     default: false
-  },
-  /**
-   * 组件列表数据
-   */
-  components: {
-    type: Array,
-    default: () => []
   },
   /**
    * 当前编辑的选项索引
@@ -332,11 +340,19 @@ const emit = defineEmits([
    * @param {string} propertyId - 属性ID
    * @param {any} value - 新属性值
    */
-  'update-component-property'
+  'update-component-property',
+  /**
+   * 打开编辑器
+   * @param {Object} params - 编辑器参数
+   * @param {string} params.editorType - 编辑器类型
+   * @param {string} params.propertyKey - 属性键
+   * @param {Object} params.component - 组件对象
+   * @param {Object} params.property - 属性对象
+   * @param {Function} params.callback - 回调函数
+   */
+  'open-editor'
 ])
 
-// 搜索关键词
-const searchKeyword = ref('')
 // 展开的分类集合
 const expandedCategories = ref(new Set())
 // 选中的组件列表
@@ -345,26 +361,6 @@ const selectedComponents = ref([])
 const modifiedProperties = ref(new Set())
 // 已勾选的属性集合，格式: Set<`${componentId}-${propertyId}`>
 const checkedProperties = ref(new Set())
-
-/**
- * 计算属性：按分类分组的组件
- */
-const groupedComponents = computed(() => {
-  const filtered = props.components.filter(component => {
-    const matchesSearch = !searchKeyword.value || 
-      component.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
-    return matchesSearch
-  })
-  
-  const grouped = {}
-  filtered.forEach(component => {
-    if (!grouped[component.category]) {
-      grouped[component.category] = []
-    }
-    grouped[component.category].push(component)
-  })
-  return grouped
-})
 
 /**
  * 监听组件选择器显示状态，自动展开所有分类
@@ -411,15 +407,7 @@ function toggleComponentSelection(component) {
   }
 }
 
-/**
- * 获取组件属性
- * @param {string} componentId - 组件ID
- * @returns {array} 组件属性列表
- */
-function getComponentProperties(componentId) {
-  const component = props.components.find(c => c.id === componentId)
-  return component ? component.properties || [] : []
-}
+
 
 /**
  * 更新组件属性
@@ -467,6 +455,25 @@ function handleClose() {
 }
 
 /**
+ * 切换数组类型属性的选项
+ * @param {object} component - 组件对象
+ * @param {object} property - 属性对象
+ * @param {any} optionValue - 选项值
+ */
+function toggleArrayOption(component, property, optionValue) {
+  let newValue = property.defaultValue
+  if (!Array.isArray(newValue)) {
+    newValue = []
+  }
+  if (newValue.includes(optionValue)) {
+    newValue = newValue.filter(v => v !== optionValue)
+  } else {
+    newValue = [...newValue, optionValue]
+  }
+  updateComponentProperty(component, property.id, newValue)
+}
+
+/**
  * 处理确认事件
  */
 function handleConfirm() {
@@ -474,6 +481,43 @@ function handleConfirm() {
   modifiedProperties.value.clear()
   emit('close')
 }
+
+/**
+ * 处理按钮点击事件
+ * 根据属性的 editorType 打开对应的编辑器
+ * @param {object} component - 组件对象
+ * @param {object} property - 属性对象
+ */
+function handleButtonClick(component, property) {
+  console.log('按钮被点击:', property)
+
+  // 检查是否有extend属性和editorType
+  if (!property.extend || !property.extend.editorType) {
+    console.warn('按钮属性缺少extend或editorType配置')
+    return
+  }
+
+  const editorType = property.extend.editorType
+  const propertyKey = `${component.id}-${property.id}`
+
+  // 根据editorType触发不同的事件，由父组件处理具体的编辑器逻辑
+  emit('open-editor', {
+    editorType,
+    propertyKey,
+    component,
+    property,
+    callback: (value) => {
+      updateComponentProperty(component, property.id, value)
+    }
+  })
+}
+
+/**
+ * 组件挂载时加载组件数据
+ */
+onMounted(() => {
+  loadComponents()
+})
 </script>
 
 <style scoped>
@@ -839,8 +883,7 @@ function handleConfirm() {
 }
 
 /* 禁用的选项样式 */
-.toggle-option.disabled,
-.checkbox-option.disabled {
+.toggle-option.disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -946,19 +989,41 @@ function handleConfirm() {
   width: 100%;
 }
 
-.checkbox-option {
+.checkbox-group {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: var(--spacing-2);
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
+  width: 100%;
 }
 
-.checkbox-option input[type="checkbox"] {
-  accent-color: var(--color-primary);
-  width: 16px;
-  height: 16px;
+.checkbox-option {
+  margin-right: 0;
+}
+
+/* 按钮类型样式 */
+.property-button {
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--color-primary);
+  color: white;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  width: 100%;
+}
+
+.property-button:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.property-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--color-border);
+  border-color: var(--color-border);
 }
 
 /* 文本输入框样式 */
@@ -1041,6 +1106,31 @@ function handleConfirm() {
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-4);
+}
+
+/* 加载状态样式 */
+.loading-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-8);
+  color: var(--color-text-tertiary);
+  gap: var(--spacing-4);
+}
+
+.loading-icon {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* 分类文件夹样式 */

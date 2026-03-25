@@ -1,7 +1,7 @@
 # 项目组件关系文档
 
 > 本文档记录了项目中所有Vue组件的调用关系和层级结构
-> 最后更新时间: 2026-03-13
+> 最后更新时间: 2026-03-20
 
 ---
 
@@ -24,8 +24,10 @@ App.vue (根组件)
     ├── Admin.vue (游戏管理后台)
     ├── GameDirectory.vue (游戏目录详情)
     ├── Workbench.vue (规则配置工作台)
-    ├── RoomCreatorPage.vue (创房面板配置)
-    └── SimpleDependencyPage.vue (选项联动简版)
+    ├── RoomCreatorPage.vue (创房面板配置-容器)
+    │   ├── ItemManagerPage.vue (面板选项管理)
+    │   └── SimpleDependencyPage.vue (选项联动列表-嵌入)
+    └── SimpleDependencyPage.vue (选项联动简版-独立页面)
 ```
 
 ---
@@ -70,7 +72,7 @@ App.vue (根组件)
 **导入的子组件**:
 | 组件名 | 路径 | 用途 |
 |--------|------|------|
-| VariableManagementModal.vue | `../components/VariableManagementModal.vue` | 变量管理弹窗 |
+| WhetherToEstablish.vue | `../components/variable-editing/WhetherToEstablish.vue` | 变量管理弹窗 |
 | CalcScoreConfig.vue | `../components/CalcScoreConfig.vue` | 算分规则配置弹窗 |
 | SubmitTestModal.vue | `../components/SubmitTestModal.vue` | 提测弹窗 |
 
@@ -79,24 +81,40 @@ App.vue (根组件)
 
 ---
 
-### 4. RoomCreatorPage.vue - 创房面板配置
+### 4. RoomCreatorPage.vue - 创房面板配置（容器页面）
 
-**功能**: 创房面板选项配置、分组管理、选项联动
+**功能**: 创房面板选项配置容器，通过内部Tab切换显示 ItemManagerPage 和 SimpleDependencyPage
+
+**导入的子组件**:
+| 组件名 | 路径 | 用途 |
+|--------|------|------|
+| ItemManagerPage.vue | `./ItemManagerPage.vue` | 面板选项管理（基础参数+分组管理） |
+| SimpleDependencyPage.vue | `./SimpleDependencyPage.vue` | 选项联动列表（嵌入模式） |
+| BasicParamsDrawer.vue | `../components/BasicParamsDrawer.vue` | 基础参数抽屉 |
+| Drawer.vue | `../components/Drawer.vue` | 选项配置抽屉 |
+| AddGroupModal.vue | `../components/AddGroupModal.vue` | 添加分组弹窗 |
+| EditorDialogContainer.vue | `../components/editors/EditorDialogContainer.vue` | 编辑器弹窗容器 |
+
+---
+
+### 5. ItemManagerPage.vue - 面板选项管理
+
+**功能**: 整合 BasicParams 和 GroupManager，负责面板选项的展示和交互
 
 **导入的子组件**:
 | 组件名 | 路径 | 用途 |
 |--------|------|------|
 | BasicParams.vue | `../components/BasicParams.vue` | 基础参数配置 |
 | GroupManager.vue | `../components/GroupManager.vue` | 分组管理 |
-| BasicParamsDrawer.vue | `../components/BasicParamsDrawer.vue` | 基础参数抽屉 |
-| Drawer.vue | `../components/Drawer.vue` | 选项配置抽屉 |
-| DependencyEditor.vue | `../components/DependencyEditor.vue` | 依赖编辑器 |
-| SimpleDependencyPage.vue | `./SimpleDependencyPage.vue` | 简版选项联动 |
-| AddGroupModal.vue | `../components/AddGroupModal.vue` | 添加分组弹窗 |
+
+**使用方式**:
+- 被 RoomCreatorPage.vue 以组件形式引用
+- 通过 props 接收 basicConfig 和 groups 数据
+- 通过 emit 事件通知父组件更新数据
 
 ---
 
-### 5. SimpleDependencyPage.vue - 选项联动简版
+### 6. SimpleDependencyPage.vue - 选项联动简版
 
 **功能**: 简版选项联动规则列表、增删改查
 
@@ -107,7 +125,7 @@ App.vue (根组件)
 
 **使用方式**:
 - 独立页面: `/simple-dependency/:id`
-- 嵌入模式: 被 RoomCreatorPage.vue 引用
+- 嵌入模式: 被 RoomCreatorPage.vue 通过 Tab 切换引用
 
 ---
 
@@ -177,9 +195,18 @@ App.vue (根组件)
 **被引用**: GameDirectory.vue
 **功能**: 展示提测历史记录
 
-#### VariableManagementModal.vue - 变量管理弹窗
+#### WhetherToEstablish.vue - 变量编辑弹窗
 **被引用**: Workbench.vue
-**功能**: 变量列表管理
+**导入组件**: AddMultiplyMaxMin.vue, Establish.vue
+**功能**: 变量列表管理，支持多种变量类型编辑
+
+#### AddMultiplyMaxMin.vue - 组内计算编辑器
+**被引用**: WhetherToEstablish.vue
+**功能**: 组内相加/相乘/取最大/取最小类型变量编辑
+
+#### Establish.vue - 条件表达式编辑器
+**被引用**: WhetherToEstablish.vue
+**功能**: 判断是否成立/依次判断/累加/累乘类型变量编辑
 
 #### CalcScoreConfig.vue - 算分规则配置
 **被引用**: Workbench.vue
@@ -194,6 +221,12 @@ App.vue (根组件)
 #### ScoreModifierModal.vue - 分数修正弹窗
 **被引用**: CalcScoreConfig.vue
 **功能**: 分数修正配置
+
+#### ActionLimitEditor.vue - 动作限制编辑器
+**路径**: `src/components/editors/ActionLimitEditor.vue`
+**被引用**: (根据 JSON 配置动态调用，button editorType=actionlimit 时使用)
+**功能**: 动作限制规则列表编辑，支持添加、删除、复制规则项
+**特点**: 基于 ContractEditor.vue 简化实现，去除了复杂的 ConfigFormulaPure 依赖
 
 ---
 
@@ -258,31 +291,34 @@ graph TD
     GameDir --> SubmitHistoryModal[SubmitHistoryModal.vue]
 
     %% Workbench 依赖
-    Workbench --> VariableMgmt[VariableManagementModal.vue]
+    Workbench --> VariableMgmt[WhetherToEstablish.vue]
     Workbench --> CalcScore[CalcScoreConfig.vue]
-    VariableMgmt --> VariableEditor[VariableEditor.vue]
+    VariableMgmt --> AddMultiplyMaxMin[AddMultiplyMaxMin.vue]
+    VariableMgmt --> Establish[Establish.vue]
     CalcScore --> ScoreModifier[ScoreModifierModal.vue]
 
     %% RoomCreatorPage 依赖
-    RoomCreator --> BasicParams[BasicParams.vue]
-    RoomCreator --> GroupManager[GroupManager.vue]
+    RoomCreator --> ItemMgr[ItemManagerPage.vue]
+    RoomCreator --> SimpleDepEmbed[SimpleDependencyPage.vue]
     RoomCreator --> BasicParamsDrawer[BasicParamsDrawer.vue]
     RoomCreator --> Drawer[Drawer.vue]
-    RoomCreator --> DependencyEditor[DependencyEditor.vue]
-    RoomCreator --> SimpleDepPage[SimpleDependencyPage.vue]
     RoomCreator --> AddGroupModal[AddGroupModal.vue]
+    RoomCreator --> EditorDialogContainer[EditorDialogContainer.vue]
+
+    %% ItemManagerPage 依赖
+    ItemMgr --> BasicParams[BasicParams.vue]
+    ItemMgr --> GroupManager[GroupManager.vue]
+
+    %% Drawer 依赖
     Drawer --> ComponentSelector[ComponentSelector.vue]
-    DependencyEditor --> ConditionTree[ConditionTree.vue]
-    DependencyEditor --> ActionConfig[ActionConfig.vue]
 
     %% SimpleDependencyPage 依赖
     SimpleDep --> RuleEditorPro[RuleEditorModalPro.vue]
-    SimpleDepPage --> RuleEditorPro
-    RuleEditorPro --> ConditionTree
-    RuleEditorPro --> ActionConfig
+    SimpleDepEmbed --> RuleEditorPro
 
-    %% VariableEditor 依赖
-    VariableEditor --> CustomSelect[CustomSelect.vue]
+    %% RuleEditorModalPro 依赖
+    RuleEditorPro --> ConditionTree[ConditionTree.vue]
+    RuleEditorPro --> ActionConfig[ActionConfig.vue]
 
     %% 样式说明
     style App fill:#3b82f6,color:#fff
@@ -291,7 +327,9 @@ graph TD
     style GameDir fill:#10b981,color:#fff
     style Workbench fill:#10b981,color:#fff
     style RoomCreator fill:#10b981,color:#fff
+    style ItemMgr fill:#10b981,color:#fff
     style SimpleDep fill:#10b981,color:#fff
+    style SimpleDepEmbed fill:#10b981,color:#fff
 ```
 
 ---
@@ -342,7 +380,8 @@ src/
 │   ├── Admin.vue                   # 游戏管理后台
 │   ├── GameDirectory.vue           # 游戏目录详情
 │   ├── Workbench.vue               # 规则配置工作台
-│   ├── RoomCreatorPage.vue         # 创房面板配置
+│   ├── RoomCreatorPage.vue         # 创房面板配置（容器页面）
+│   ├── ItemManagerPage.vue         # 面板选项管理
 │   └── SimpleDependencyPage.vue    # 选项联动简版
 │
 ├── components/                     # 业务组件
@@ -363,12 +402,25 @@ src/
 │   ├── CopyToModal.vue             # 复制到弹窗
 │   ├── SubmitTestModal.vue         # 提测弹窗
 │   ├── SubmitHistoryModal.vue      # 提测记录弹窗
-│   ├── VariableManagementModal.vue # 变量管理弹窗
-│   ├── VariableEditor.vue          # 变量编辑器
+│   ├── variable-editing/           # 变量编辑组件目录
+│   │   ├── WhetherToEstablish.vue  # 变量编辑弹窗
+│   │   └── common/                 # 子组件目录
+│   │       ├── AddMultiplyMaxMin.vue # 组内计算编辑器
+│   │       ├── Establish.vue       # 条件表达式编辑器
+│   │       ├── util.ts             # 数据转换工具
+│   │       └── Index.ts            # 组件导出索引
 │   ├── CalcScoreConfig.vue         # 算分规则配置
 │   ├── RuleEditorModalPro.vue      # 规则编辑器Pro
 │   ├── ScoreModifierModal.vue      # 分数修正弹窗
-│   └── CustomSelect.vue            # 自定义下拉
+│   ├── CustomSelect.vue            # 自定义下拉
+│   └── editors/                    # 编辑器组件目录
+│       ├── ActionLimitEditor.vue   # 动作限制编辑器
+│       ├── MotionConstraintEditor.vue # 动作约束编辑器
+│       ├── ScoreCorrectionEditor.vue  # 分数修正编辑器
+│       ├── ScoreCalculationFormulaEditing.vue # 算分公式编辑
+│       ├── MahjongStackDialog.vue   # 麻将牌堆编辑器
+│       ├── FanXingDialog.vue        # 番型编辑器
+│       └── EditorDialogContainer.vue # 编辑器弹窗容器
 │
 ├── api/                            # API接口
 │   ├── gameApi.js                  # 游戏相关API
@@ -393,6 +445,9 @@ src/
 | RoundCountConfig.vue | 未被任何组件引用 | 2026-03-13 |
 | RuleEditorModal.vue | 被 RuleEditorModalPro 替代 | 2026-03-13 |
 | ComponentSelectorDrawer.vue | 未被任何组件引用 | 2026-03-13 |
+| VariableManagementModal.vue | 被 WhetherToEstablish 替代 | 2026-03-20 |
+| VariableEditor.vue | 被 WhetherToEstablish 替代 | 2026-03-20 |
+| CustomSelect.vue | 被 WhetherToEstablish 替代 | 2026-03-20 |
 
 ---
 

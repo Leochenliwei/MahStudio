@@ -43,7 +43,6 @@
       :active-drawer="activeDrawer"
       :editing-component="editingComponent"
       :show-component-selector="showComponentSelector"
-      :components="components"
       :editing-option-index="selectedOptionIndex"
       @close-all-drawers="closeAllDrawers"
       @add-option="addOption"

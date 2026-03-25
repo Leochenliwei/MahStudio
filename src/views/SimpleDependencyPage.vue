@@ -19,7 +19,7 @@
 
     <!-- 嵌入模式标题栏 -->
     <div v-if="embedded" class="embedded-header">
-      <span class="embedded-title">选项联动规则列表</span>
+     
       <button class="add-btn" @click="openAdvancedEditor">
         <el-icon :size="16"><Plus /></el-icon>
         新增规则
@@ -98,11 +98,10 @@
 
     <!-- 规则编辑器弹窗 -->
     <RuleEditorModalPro
-      :show="showRuleEditor"
+      v-model="showRuleEditor"
       :is-editing="isEditingRule"
       :form-schema="formSchema"
       :rule-data="editingRuleData"
-      @close="closeRuleEditor"
       @save="handleSaveRule"
     />
   </div>
@@ -308,8 +307,7 @@ function goBack() {
     emit('back')
   } else {
     router.push({
-      path: `/workbench/${gameId.value}/room-creator`,
-      query: { tab: 'dependency' }
+      path: `/room-creator/${gameId.value}`
     })
   }
 }
@@ -376,8 +374,6 @@ function handleSaveRule(rule) {
       console.error('保存配置失败:', error)
     }
   }
-
-  closeRuleEditor()
 }
 
 /**
@@ -456,8 +452,8 @@ onMounted(() => {
 
 <style scoped>
 .simple-dependency-page {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--color-background);
@@ -573,6 +569,9 @@ onMounted(() => {
   padding: var(--spacing-3) var(--spacing-4);
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .table-row:hover {
@@ -985,26 +984,55 @@ onMounted(() => {
 .simple-dependency-page.embedded {
   height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 
 .embedded-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-4) var(--spacing-6);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.embedded-title {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
+  justify-content: flex-end;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+  flex-shrink: 0;
 }
 
 .simple-dependency-page.embedded .main-content {
-  height: calc(100% - 65px);
+  height: calc(100% - 52px);
   padding: var(--spacing-4);
+  overflow-y: auto;
+}
+
+/* 嵌入模式表格样式优化 */
+.simple-dependency-page.embedded .table-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.simple-dependency-page.embedded .rules-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* 嵌入模式下调整列宽 */
+.simple-dependency-page.embedded .col-id {
+  width: 80px;
+}
+
+.simple-dependency-page.embedded .col-desc {
+  width: auto;
+  min-width: 150px;
+}
+
+.simple-dependency-page.embedded .col-create-info,
+.simple-dependency-page.embedded .col-edit-info {
+  width: 120px;
+  min-width: 100px;
+}
+
+.simple-dependency-page.embedded .col-ops {
+  width: 100px;
 }
 
 @media (max-width: 768px) {

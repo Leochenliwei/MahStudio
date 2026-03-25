@@ -1,223 +1,295 @@
 <template>
   <div class="app-container">
-    <!-- 顶部标签栏 -->
-    <div class="tab-bar">
-      <!-- 窗口控制按钮 -->
-      <!-- <div class="window-controls">
-        <div class="control-btn close"></div>
-        <div class="control-btn minimize"></div>
-        <div class="control-btn maximize"></div>
-      </div> -->
-
-      <!-- 标签列表 -->
-      <div class="tab-list">
-        <!-- 首页标签 -->
-        <div
-          class="tab-item"
-          :class="{ active: activeTab === 'home' }"
-          @click="switchTab('home')"
-        >
-          <div class="tab-icon">
-            <el-icon :size="16"><HomeFilled /></el-icon>
-          </div>
-          <div class="tab-title">首页</div>
+    <!-- 左侧菜单栏 -->
+    <div class="sidebar" :class="{ collapsed: isSidebarCollapsed }">
+      <div class="sidebar-header">
+        <div class="logo">
+          <el-icon :size="24"><Setting /></el-icon>
+          <span v-if="!isSidebarCollapsed" class="logo-text">管理中台</span>
         </div>
+        <button class="collapse-btn" @click="toggleSidebar">
+          <el-icon :size="16">
+            <ArrowLeft v-if="!isSidebarCollapsed" />
+            <ArrowRight v-else />
+          </el-icon>
+        </button>
+      </div>
 
-        <!-- 工作台标签 -->
-        <div
-          v-for="tab in workbenchTabs"
-          :key="tab.id"
-          class="tab-item"
-          :class="{ active: activeTab === tab.id }"
-          @click="switchTab(tab.id)"
-        >
-          <div class="tab-icon">
-            <el-icon :size="16"><Grid /></el-icon>
-          </div>
-          <div class="tab-title">{{ tab.name }}</div>
-          <div class="tab-close" @click.stop="closeTab(tab.id)">
-            <el-icon :size="12"><Close /></el-icon>
+      <!-- 主菜单区域 -->
+      <div class="sidebar-content">
+        <div class="menu-section">
+          <div v-if="!isSidebarCollapsed" class="menu-title">主菜单</div>
+          <div class="menu-list">
+            <button
+              v-for="menu in mainMenus"
+              :key="menu.id"
+              class="menu-item"
+              :class="{ active: isMenuActive(menu) }"
+              @click="openMenuTab(menu)"
+              :title="menu.description"
+            >
+              <el-icon :size="18">
+                <component :is="getIconComponent(menu.icon)" />
+              </el-icon>
+              <span v-if="!isSidebarCollapsed" class="menu-text">{{ menu.name }}</span>
+            </button>
           </div>
         </div>
 
-        <!-- 添加标签按钮 -->
-        <div class="tab-add" @click="addTab">
-          <el-icon :size="16"><Plus /></el-icon>
+        <!-- 系统菜单区域 -->
+        <div class="menu-section">
+          <div v-if="!isSidebarCollapsed" class="menu-title">系统</div>
+          <div class="menu-list">
+            <button
+              v-for="menu in systemMenus"
+              :key="menu.id"
+              class="menu-item"
+              :class="{ active: isMenuActive(menu) }"
+              @click="openMenuTab(menu)"
+              :title="menu.description"
+            >
+              <el-icon :size="18">
+                <component :is="getIconComponent(menu.icon)" />
+              </el-icon>
+              <span v-if="!isSidebarCollapsed" class="menu-text">{{ menu.name }}</span>
+            </button>
+          </div>
         </div>
+      </div>
+
+      <!-- 底部信息 -->
+      <div class="sidebar-footer" v-if="!isSidebarCollapsed">
+        <div class="version">v1.0.0</div>
       </div>
     </div>
 
-    <!-- 内容区域 -->
-    <div class="content-container">
-      <router-view />
+    <!-- 右侧内容区域 -->
+    <div class="main-content">
+      <!-- 顶部标签栏 -->
+      <div class="tab-bar">
+        <div class="tab-list">
+          <!-- 首页标签 -->
+          <div
+            class="tab-item"
+            :class="{ active: activeTab === 'home' }"
+            @click="switchTab('home')"
+          >
+            <div class="tab-icon">
+              <el-icon :size="14"><HomeFilled /></el-icon>
+            </div>
+            <div class="tab-title">首页</div>
+          </div>
+
+          <!-- 动态标签页 -->
+          <div
+            v-for="tab in workbenchTabs"
+            :key="tab.id"
+            class="tab-item"
+            :class="{ active: activeTab === tab.id }"
+            @click="switchTab(tab.id)"
+          >
+            <div class="tab-icon">
+              <el-icon :size="14"><component :is="getTabIcon(tab)" /></el-icon>
+            </div>
+            <div class="tab-title">{{ tab.name }}</div>
+            <div class="tab-close" @click.stop="closeTab(tab.id)">
+              <el-icon :size="12"><Close /></el-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 页面内容 -->
+      <div class="content-container">
+        <router-view />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+/**
+ * App.vue - 应用主组件
+ *
+ * 功能：
+ * 1. 左侧可折叠菜单栏 - 支持多菜单独立打开
+ * 2. 顶部虚拟标签页 - 每个菜单/页面独立标签
+ * 3. 标签页管理 - 切换、关闭、记忆状态
+ *
+ * @author Frontend Architect
+ * @since 2026-03-19
+ */
+
+import { ref, watch, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { HomeFilled, Grid, Close, Plus } from '@element-plus/icons-vue'
+import {
+  HomeFilled, Grid, Box, User, Setting, Document,
+  TrendCharts, Close, ArrowLeft, ArrowRight
+} from '@element-plus/icons-vue'
+import {
+  menuConfig, getMainMenus, getSystemMenus, generateMenuTabId, buildMenuPath
+} from './config/menuConfig.js'
 
 const router = useRouter()
 const route = useRoute()
 
-// 活跃标签
+// ==================== 状态管理 ====================
+
+/**
+ * 侧边栏折叠状态
+ * @type {Ref<boolean>}
+ */
+const isSidebarCollapsed = ref(false)
+
+/**
+ * 活跃标签ID
+ * @type {Ref<string>}
+ */
 const activeTab = ref('home')
 
-// 工作台标签列表
-const workbenchTabs = ref([
-  {
-    id: '1',
-    name: '规则配置',
-    path: '/workbench/1'
-  }
-])
+/**
+ * 工作台标签列表
+ * @type {Ref<Array<Object>>}
+ */
+const workbenchTabs = ref([])
 
-// 监听路由变化，更新活跃标签
-watch(() => route.path, (newPath) => {
-  if (newPath === '/') {
-    activeTab.value = 'home'
-  } else {
-    const tabId = newPath.split('/').pop()
-    activeTab.value = tabId
-    
-    // 只有游戏目录路由才创建项目标签页，工作台路由使用浏览器标签页
-    if (newPath.includes('/game-directory/')) {
-      const gameName = route.query.gameName || `游戏目录 ${tabId}`
-      const existingTab = workbenchTabs.value.find(tab => tab.id === tabId)
-      if (existingTab) {
-        existingTab.name = gameName
-      } else {
-        // 只有当没有通过openGameDirectoryTab触发的路由变化时，才在这里创建
-        // 检查是否是通过这些方法触发的路由变化
-        if (!window._isOpeningGameTab) {
-          workbenchTabs.value.push({
-            id: tabId,
-            name: gameName,
-            path: newPath
-          })
-        }
-        // 重置标志
-        window._isOpeningGameTab = false
-      }
+// ==================== 计算属性 ====================
+
+/**
+ * 主菜单列表
+ * @type {ComputedRef<Array>}
+ */
+const mainMenus = computed(() => getMainMenus())
+
+/**
+ * 系统菜单列表
+ * @type {ComputedRef<Array>}
+ */
+const systemMenus = computed(() => getSystemMenus())
+
+// ==================== 图标映射 ====================
+
+/**
+ * 图标组件映射表
+ */
+const iconComponents = {
+  Grid,
+  Box,
+  User,
+  Setting,
+  Document,
+  TrendCharts
+}
+
+/**
+ * 获取图标组件
+ * @param {string} iconName - 图标名称
+ * @returns {Component} 图标组件
+ */
+function getIconComponent(iconName) {
+  return iconComponents[iconName] || Grid
+}
+
+/**
+ * 获取标签页图标
+ * @param {Object} tab - 标签页对象
+ * @returns {Component} 图标组件
+ */
+function getTabIcon(tab) {
+  if (tab.menuId) {
+    const menu = menuConfig.find(m => m.id === tab.menuId)
+    if (menu) {
+      return getIconComponent(menu.icon)
     }
   }
-})
+  return Grid
+}
 
-// 切换标签
-const switchTab = (tabId) => {
+// ==================== 菜单操作 ====================
+
+/**
+ * 切换侧边栏折叠状态
+ */
+function toggleSidebar() {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value
+}
+
+/**
+ * 检查菜单是否处于活跃状态
+ * @param {Object} menu - 菜单配置对象
+ * @returns {boolean} 是否活跃
+ */
+function isMenuActive(menu) {
+  return workbenchTabs.value.some(tab =>
+    tab.menuId === menu.id && tab.id === activeTab.value
+  )
+}
+
+/**
+ * 打开菜单标签页
+ * @param {Object} menu - 菜单配置对象
+ */
+function openMenuTab(menu) {
+  // 生成唯一标签页ID
+  const tabId = generateMenuTabId(menu.id, menu.query)
+
+  // 构建标签页路径
+  const path = buildMenuPath(menu)
+
+  // 创建新标签页
+  const newTab = {
+    id: tabId,
+    name: menu.name,
+    path: path,
+    menuId: menu.id
+  }
+
+  // 添加到标签页列表
+  workbenchTabs.value.push(newTab)
+
+  // 切换到新标签页
+  activeTab.value = tabId
+
+  // 路由跳转
+  router.push({
+    path: menu.path,
+    query: menu.query
+  })
+}
+
+// ==================== 标签页操作 ====================
+
+/**
+ * 切换标签页
+ * @param {string} tabId - 标签页ID
+ */
+function switchTab(tabId) {
   if (tabId === 'home') {
+    activeTab.value = 'home'
     router.push('/')
   } else {
-    // 查找标签页对应的路径
     const tab = workbenchTabs.value.find(t => t.id === tabId)
     if (tab) {
-      // 根据标签页的path属性来跳转，保留原来的路径
+      activeTab.value = tabId
       router.push(tab.path)
-    } else {
-      // 如果标签页不存在，默认跳转到工作台页面
-      router.push(`/workbench/${tabId}`)
     }
   }
 }
 
-// 添加新标签
-const addTab = () => {
-  // 创建新的工作台标签
-  const newId = Date.now().toString()
-  const newTab = {
-    id: newId,
-    name: '新建工作台',
-    path: `/workbench/${newId}`
-  }
-  
-  workbenchTabs.value.push(newTab)
-  switchTab(newId)
-}
-
-// 打开游戏配置标签页（在新浏览器标签页中打开）
-const openGameTab = (gameId, gameName, fileId, fileType, env) => {
-  // 构建完整的URL，包括所有必要的参数
-  const url = new URL(window.location.href)
-  
-  // 保留基础路径，确保包含正确的公共基础URL
-  const basePath = url.pathname.split('/').filter(Boolean)[0]
-  if (basePath) {
-    url.pathname = `/${basePath}/workbench/${gameId}`
-  } else {
-    url.pathname = `/workbench/${gameId}`
-  }
-  
-  // 清空现有的查询参数，然后添加新的参数
-  url.search = ''
-  if (fileId) url.searchParams.set('fileId', fileId)
-  if (fileType) url.searchParams.set('fileType', fileType)
-  if (env) url.searchParams.set('env', env)
-  if (gameName) url.searchParams.set('gameName', gameName)
-  
-  // 在新的浏览器标签页中打开工作台页面
-  window.open(url.toString(), '_blank')
-}
-
-// 打开游戏目录标签页
-const openGameDirectoryTab = (gameId, gameName, env) => {
-  // 检查是否已经存在相同游戏配置的标签页
-  const existingTab = workbenchTabs.value.find(tab => tab.id === gameId)
-  
-  if (existingTab) {
-    // 更新标签页的路径为GameDirectory页面
-    existingTab.path = `/game-directory/${gameId}`
-    existingTab.name = gameName || `游戏目录 ${gameId}`
-    
-    // 跳转到GameDirectory页面
-    router.push({
-      name: 'GameDirectory',
-      params: { gameId: gameId },
-      query: {
-        env: env,
-        gameName: gameName
-      }
-    })
-  } else {
-    // 设置标志，标识这是通过openGameDirectoryTab触发的路由变化
-    window._isOpeningGameTab = true
-    
-    // 创建新的标签页
-    const newTab = {
-      id: gameId,
-      name: gameName || `游戏目录 ${gameId}`,
-      path: `/game-directory/${gameId}`
-    }
-    
-    workbenchTabs.value.push(newTab)
-    
-    // 跳转到新标签页并传递参数
-    router.push({
-      name: 'GameDirectory',
-      params: { gameId: gameId },
-      query: {
-        env: env,
-        gameName: gameName
-      }
-    })
-  }
-}
-
-// 暴露方法给全局
-window.openGameTab = openGameTab
-window.openGameDirectoryTab = openGameDirectoryTab
-
-// 关闭标签
-const closeTab = (tabId) => {
+/**
+ * 关闭标签页
+ * @param {string} tabId - 标签页ID
+ */
+function closeTab(tabId) {
   const index = workbenchTabs.value.findIndex(tab => tab.id === tabId)
   if (index > -1) {
     workbenchTabs.value.splice(index, 1)
-    
-    // 如果关闭的是活跃标签，切换到首页或其他标签
+
+    // 如果关闭的是活跃标签，切换到其他标签或首页
     if (activeTab.value === tabId) {
       if (workbenchTabs.value.length > 0) {
-        switchTab(workbenchTabs.value[0].id)
+        const newIndex = index > 0 ? index - 1 : 0
+        switchTab(workbenchTabs.value[newIndex].id)
       } else {
         switchTab('home')
       }
@@ -225,33 +297,219 @@ const closeTab = (tabId) => {
   }
 }
 
-// 初始化时检查路由
-onMounted(() => {
-  if (route.path !== '/') {
-    const tabId = route.path.split('/').pop()
-    activeTab.value = tabId
-    
-    // 只有游戏目录路由才创建项目标签页，工作台路由使用浏览器标签页
-    if (route.path.includes('/game-directory/')) {
-      // 检查标签是否存在，不存在则添加
-      const tabExists = workbenchTabs.value.some(tab => tab.id === tabId)
-      if (!tabExists) {
-        const gameName = route.query.gameName || `游戏目录 ${tabId}`
-        workbenchTabs.value.push({
-          id: tabId,
-          name: gameName,
-          path: route.path
-        })
-      } else {
-        // 如果标签已存在，更新名称
-        const gameName = route.query.gameName
-        if (gameName) {
-          const existingTab = workbenchTabs.value.find(tab => tab.id === tabId)
-          if (existingTab) {
-            existingTab.name = gameName
-          }
-        }
+// ==================== 全局方法 ====================
+
+/**
+ * 打开游戏目录标签页
+ * @param {string} gameId - 游戏ID
+ * @param {string} gameName - 游戏名称
+ * @param {string} env - 环境类型
+ */
+function openGameDirectoryTab(gameId, gameName, env) {
+  const tabName = gameName ? `控制台-${gameName}` : `控制台- ${gameId}`
+  const existingTab = workbenchTabs.value.find(tab => tab.id === gameId)
+
+  if (existingTab) {
+    existingTab.path = `/game-directory/${gameId}?env=${env}&gameName=${encodeURIComponent(gameName || '')}`
+    existingTab.name = tabName
+    switchTab(gameId)
+  } else {
+    const newTab = {
+      id: gameId,
+      name: tabName,
+      path: `/game-directory/${gameId}?env=${env}&gameName=${encodeURIComponent(gameName || '')}`
+    }
+    workbenchTabs.value.push(newTab)
+    activeTab.value = gameId
+    router.push({
+      name: 'GameDirectory',
+      params: { gameId },
+      query: { env, gameName }
+    })
+  }
+}
+
+/**
+ * 打开游戏工作台标签页
+ * @param {string} gameId - 游戏ID
+ * @param {string} gameName - 游戏名称
+ * @param {string} fileId - 文件ID
+ * @param {string} fileType - 文件类型
+ * @param {string} env - 环境类型
+ */
+function openGameTab(gameId, gameName, fileId, fileType, env) {
+  const tabId = `workbench-${gameId}-${Date.now()}`
+  const tabName = gameName ? `工作台-${gameName}` : `工作台- ${gameId}`
+  console.log('打开游戏工作台标签页', tabName)
+  
+  let path = `/workbench/${gameId}`
+  const query = { fileId, fileType, env, gameName }
+  const queryParams = new URLSearchParams()
+  if (fileId) queryParams.set('fileId', fileId)
+  if (fileType) queryParams.set('fileType', fileType)
+  if (env) queryParams.set('env', env)
+  if (gameName) queryParams.set('gameName', gameName)
+  if (queryParams.toString()) {
+    path += `?${queryParams.toString()}`
+  }
+
+  const newTab = {
+    id: tabId,
+    name: tabName,
+    path: path
+  }
+
+  workbenchTabs.value.push(newTab)
+  activeTab.value = tabId
+
+  router.push({
+    name: 'Workbench',
+    params: { id: gameId },
+    query
+  })
+}
+
+// 暴露方法给全局
+window.openGameDirectoryTab = openGameDirectoryTab
+window.openGameTab = openGameTab
+
+// ==================== 路由监听 ====================
+
+/**
+ * 监听路由变化，更新活跃标签
+ */
+watch(() => route.path, (newPath) => {
+  if (newPath === '/') {
+    activeTab.value = 'home'
+  } else if (newPath.includes('/game-directory/')) {
+    const gameId = newPath.split('/').pop()
+    const gameName = route.query.gameName
+    const existingTab = workbenchTabs.value.find(tab => tab.id === gameId)
+
+    if (existingTab) {
+      activeTab.value = gameId
+      if (gameName) existingTab.name = gameName
+    } else {
+      const newTab = {
+        id: gameId,
+        name: gameName || `游戏目录 ${gameId}`,
+        path: newPath
       }
+      workbenchTabs.value.push(newTab)
+      activeTab.value = gameId
+    }
+  } else if (newPath.includes('/workbench/')) {
+    const gameId = newPath.split('/').pop()
+    const gameName = route.query.gameName
+    const tabName = gameName ? `工作台-${gameName}` : `工作台 ${gameId}`
+
+    const existingTab = workbenchTabs.value.find(tab =>
+      tab.path && tab.path.includes(`/workbench/${gameId}`)
+    )
+
+    if (existingTab) {
+      activeTab.value = existingTab.id
+      if (gameName) existingTab.name = tabName
+    } else {
+      const newTab = {
+        id: `workbench-${gameId}`,
+        name: tabName,
+        path: newPath
+      }
+      workbenchTabs.value.push(newTab)
+      activeTab.value = newTab.id
+    }
+  } else if (newPath.includes('/room-creator/')) {
+    const gameId = newPath.split('/').pop()
+    const gameName = route.query.gameName
+    const cfgId = route.query.cfgId || gameId
+    const tabName = gameName ? `创房-${gameName}-${cfgId}` : `创房-${cfgId}`
+
+    const existingTab = workbenchTabs.value.find(tab =>
+      tab.path && tab.path.includes(`/room-creator/${gameId}`)
+    )
+
+    if (existingTab) {
+      activeTab.value = existingTab.id
+      if (gameName || cfgId) existingTab.name = tabName
+    } else {
+      const newTab = {
+        id: `room-creator-${gameId}`,
+        name: tabName,
+        path: newPath
+      }
+      workbenchTabs.value.push(newTab)
+      activeTab.value = newTab.id
+    }
+  } else if (newPath.includes('/admin/')) {
+    // 处理admin路由
+    const matchedTab = workbenchTabs.value.find(tab => tab.path === newPath)
+    if (matchedTab) {
+      activeTab.value = matchedTab.id
+    }
+  }
+})
+
+// ==================== 生命周期 ====================
+
+onMounted(() => {
+  // 初始化时检查路由
+  const currentPath = route.path
+  if (currentPath === '/') {
+    activeTab.value = 'home'
+  } else if (currentPath.includes('/game-directory/')) {
+    const gameId = currentPath.split('/').pop()
+    const gameName = route.query.gameName
+    const existingTab = workbenchTabs.value.find(tab => tab.id === gameId)
+
+    if (!existingTab) {
+      workbenchTabs.value.push({
+        id: gameId,
+        name: gameName || `游戏目录 ${gameId}`,
+        path: currentPath
+      })
+    }
+    activeTab.value = gameId
+  } else if (currentPath.includes('/workbench/')) {
+    const gameId = currentPath.split('/').pop()
+    const gameName = route.query.gameName
+    const tabName = gameName ? `工作台-${gameName}` : `工作台 ${gameId}`
+
+    const existingTab = workbenchTabs.value.find(tab =>
+      tab.path && tab.path.includes(`/workbench/${gameId}`)
+    )
+
+    if (!existingTab) {
+      workbenchTabs.value.push({
+        id: `workbench-${gameId}`,
+        name: tabName,
+        path: currentPath
+      })
+    }
+    activeTab.value = `workbench-${gameId}`
+  } else if (currentPath.includes('/room-creator/')) {
+    const gameId = currentPath.split('/').pop()
+    const gameName = route.query.gameName
+    const cfgId = route.query.cfgId || gameId
+    const tabName = gameName ? `创房-${gameName}-${cfgId}` : `创房-${cfgId}`
+
+    const existingTab = workbenchTabs.value.find(tab =>
+      tab.path && tab.path.includes(`/room-creator/${gameId}`)
+    )
+
+    if (!existingTab) {
+      workbenchTabs.value.push({
+        id: `room-creator-${gameId}`,
+        name: tabName,
+        path: currentPath
+      })
+    }
+    activeTab.value = `room-creator-${gameId}`
+  } else if (currentPath.includes('/admin/')) {
+    // 检查是否有匹配的菜单标签
+    const matchedTab = workbenchTabs.value.find(tab => tab.path === currentPath)
+    if (matchedTab) {
+      activeTab.value = matchedTab.id
     }
   }
 })
@@ -262,165 +520,227 @@ onMounted(() => {
   width: 100%;
   height: 100vh;
   display: flex;
-  flex-direction: column;
   overflow: hidden;
   background-color: var(--color-background);
   color: var(--color-text-primary);
 }
 
-/* 定义缺失的辅助色变量 */
-:root {
-  --color-danger-hover: #dc2626;
-  --color-warning-hover: #d97706;
-  --color-success-hover: #059669;
+/* ==================== 侧边栏样式 ==================== */
+
+.sidebar {
+  width: 220px;
+  background-color: #1f2937;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  flex-shrink: 0;
 }
 
-/* 顶部标签栏 */
-.tab-bar {
-  height: 48px;
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+.sidebar.collapsed {
+  width: 60px;
+}
+
+.sidebar-header {
+  height: 60px;
   display: flex;
   align-items: center;
-  padding: 0 var(--spacing-4);
-  box-shadow: var(--shadow-sm);
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* 窗口控制按钮 */
-.window-controls {
+.logo {
   display: flex;
-  gap: var(--spacing-2);
-  margin-right: var(--spacing-4);
-  padding: var(--spacing-2);
-  border-radius: var(--border-radius-md);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
+  align-items: center;
+  gap: 12px;
+  color: #3b82f6;
 }
 
-.control-btn {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+.logo-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.collapse-btn {
+  width: 28px;
+  height: 28px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 6px;
+  color: #9ca3af;
   cursor: pointer;
-  transition: all var(--transition-fast);
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.collapse-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 0;
+}
+
+.menu-section {
+  margin-bottom: 24px;
+}
+
+.menu-title {
+  padding: 0 16px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background-color: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.menu-item.active {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+.menu-text {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.version {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* ==================== 主内容区域样式 ==================== */
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
-.control-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+/* ==================== 顶部标签栏样式 ==================== */
+
+.tab-bar {
+  height: 44px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  flex-shrink: 0;
 }
 
-.control-btn.close {
-  background-color: var(--color-danger);
-}
-
-.control-btn.close:hover {
-  background-color: var(--color-danger-hover);
-}
-
-.control-btn.minimize {
-  background-color: var(--color-warning);
-}
-
-.control-btn.minimize:hover {
-  background-color: var(--color-warning-hover);
-}
-
-.control-btn.maximize {
-  background-color: var(--color-success);
-}
-
-.control-btn.maximize:hover {
-  background-color: var(--color-success-hover);
-}
-
-/* 标签列表 */
 .tab-list {
   display: flex;
   align-items: center;
-  gap: var(--spacing-1);
+  gap: 4px;
   flex: 1;
   overflow-x: auto;
 }
 
-/* 标签项 */
 .tab-item {
-  height: 36px;
-  min-width: 140px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  height: 32px;
+  min-width: 120px;
+  max-width: 180px;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px 6px 0 0;
   display: flex;
   align-items: center;
-  padding: 0 var(--spacing-3);
+  padding: 0 10px;
   cursor: pointer;
   position: relative;
-  transition: all var(--transition-normal);
+  transition: all 0.2s ease;
   border-bottom: 2px solid transparent;
 }
 
 .tab-item:hover {
-  background-color: var(--color-surface-hover);
-  border-color: var(--color-primary);
-  transform: translateY(-1px);
+  background-color: #e5e7eb;
 }
 
 .tab-item.active {
-  background-color: var(--color-background);
-  border-bottom-color: var(--color-primary);
-  border-color: var(--color-border-light);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  border-bottom-color: #3b82f6;
+  border-color: #e5e7eb #e5e7eb #3b82f6;
 }
 
-.tab-item.active::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: var(--color-primary);
-  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-}
-
-/* 标签图标 */
 .tab-icon {
-  margin-right: var(--spacing-2);
-  font-size: 14px;
+  margin-right: 6px;
+  color: #6b7280;
   display: flex;
   align-items: center;
 }
 
-/* 标签标题 */
+.tab-item.active .tab-icon {
+  color: #3b82f6;
+}
+
 .tab-title {
   flex: 1;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-size: 13px;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--color-text-secondary);
+  color: #374151;
 }
 
 .tab-item.active .tab-title {
-  color: var(--color-text-primary);
+  color: #1f2937;
 }
 
-/* 标签关闭按钮 */
 .tab-close {
-  margin-left: var(--spacing-2);
-  font-size: 14px;
-  color: var(--color-text-tertiary);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: var(--border-radius-sm);
-  transition: all var(--transition-fast);
+  margin-left: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.7;
+  color: #9ca3af;
+  opacity: 0;
+  transition: all 0.2s ease;
 }
 
 .tab-item:hover .tab-close {
@@ -428,58 +748,43 @@ onMounted(() => {
 }
 
 .tab-close:hover {
-  background-color: var(--color-danger);
-  color: white;
-  transform: scale(1.1);
+  background-color: #ef4444;
+  color: #ffffff;
 }
 
-/* 添加标签按钮 */
-.tab-add {
-  width: 36px;
-  height: 36px;
-  background-color: var(--color-surface);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--border-radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
-  color: var(--color-text-tertiary);
-  transition: all var(--transition-normal);
-  margin-left: var(--spacing-2);
-  flex-shrink: 0;
-}
+/* ==================== 内容容器样式 ==================== */
 
-.tab-add:hover {
-  background-color: var(--color-primary-light);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(100, 108, 255, 0.2);
-}
-
-/* 内容容器 */
 .content-container {
   flex: 1;
   overflow: hidden;
+  background-color: #f5f5f5;
 }
 
-/* 滚动条样式 */
+/* ==================== 滚动条样式 ==================== */
+
 .tab-list::-webkit-scrollbar {
-  height: 4px;
+  height: 3px;
 }
 
 .tab-list::-webkit-scrollbar-track {
-  background: var(--color-surface);
+  background: transparent;
 }
 
 .tab-list::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: var(--border-radius-full);
+  background: #d1d5db;
+  border-radius: 2px;
 }
 
-.tab-list::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border-light);
+.sidebar-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
 }
 </style>

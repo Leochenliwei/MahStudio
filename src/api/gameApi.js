@@ -10,6 +10,111 @@ export const FileType = {
 
 storageService.initializeData();
 
+// ==================== 变量配置管理 API ====================
+
+/**
+ * 获取变量配置列表
+ * @param {Object} params - 查询参数
+ * @param {number} params.cfg_id - 游戏配置ID
+ * @param {number} params.page - 页码
+ * @param {number} params.page_size - 每页数量
+ * @returns {Promise<Object>} 变量配置列表响应
+ */
+export async function getVariableConfigList(params) {
+  const { cfg_id, page = 1, page_size = 999 } = params;
+  const variables = storageService.getVariableConfigs(cfg_id);
+  
+  // 模拟分页
+  const startIndex = (page - 1) * page_size;
+  const endIndex = startIndex + page_size;
+  const paginatedVariables = variables.slice(startIndex, endIndex);
+  
+  return {
+    errno: 0,
+    data: {
+      list: paginatedVariables,
+      total: variables.length,
+      page,
+      page_size
+    }
+  };
+}
+
+/**
+ * 添加变量配置
+ * @param {Object} variableData - 变量数据
+ * @returns {Promise<Object>} 添加结果
+ */
+export async function addVariableConfig(variableData) {
+  const { cfg_id, ...data } = variableData;
+  const newVariable = storageService.addVariableConfig(cfg_id, data);
+  
+  if (newVariable) {
+    return {
+      errno: 0,
+      data: newVariable
+    };
+  }
+  
+  return {
+    errno: 1,
+    errmsg: '添加变量失败'
+  };
+}
+
+/**
+ * 更新变量配置
+ * @param {Object} variableData - 变量数据（包含 id 和 cfg_id）
+ * @returns {Promise<Object>} 更新结果
+ */
+export async function updateVariableConfig(variableData) {
+  if (!variableData || !variableData.id) {
+    return {
+      errno: 1,
+      errmsg: '变量ID不能为空'
+    };
+  }
+  
+  const { id, cfg_id, ...updateData } = variableData;
+  const updatedVariable = storageService.updateVariableConfig(cfg_id, id, updateData);
+  
+  if (updatedVariable) {
+    return {
+      errno: 0,
+      data: updatedVariable
+    };
+  }
+  
+  return {
+    errno: 1,
+    errmsg: '更新变量失败'
+  };
+}
+
+/**
+ * 删除变量配置
+ * @param {Object} params - 删除参数
+ * @param {string} params.id - 变量ID
+ * @param {number} params.cfg_id - 游戏配置ID
+ * @returns {Promise<Object>} 删除结果
+ */
+export async function deleteVariableConfig(params) {
+  const { id, cfg_id } = params;
+  const success = storageService.deleteVariableConfig(cfg_id, id);
+  
+  if (success) {
+    return {
+      errno: 0,
+      data: { id }
+    };
+  }
+  
+  return {
+    errno: 1,
+    errmsg: '删除变量失败'
+  };
+}
+
 export async function getAllGames() {
   return storageService.getAllGames();
 }

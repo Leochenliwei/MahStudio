@@ -141,13 +141,13 @@
       <!-- 级联抽屉 - 组件选择器 -->
       <ComponentSelector
         :show="showComponentSelector"
-        :components="components"
         :editing-option-index="editingOptionIndex"
         :editing-option-label="editingComponent?.options?.[editingOptionIndex]?.label"
         @close="$emit('close-component-selector')"
         @confirm="confirmComponentSelection"
         @toggle-component-status="toggleComponentStatus"
         @update-component-property="updateComponentProperty"
+        @open-editor="handleOpenEditor"
       />
     </div>
 
@@ -174,10 +174,6 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  components: {
-    type: Array,
-    default: () => []
-  },
   editingOptionIndex: {
     type: Number,
     default: -1
@@ -197,6 +193,7 @@ const emit = defineEmits([
   'toggle-component-status',
   'update-component-property',
   'reorder-options',
+  'open-editor',
 ])
 
 // 计算属性：是否显示选项配置抽屉
@@ -305,6 +302,19 @@ function getComponentTypeText(type) {
     'select-switch': '下拉&开关'
   }
   return typeMap[type] || type
+}
+
+/**
+ * 处理打开编辑器事件
+ * @param {object} params - 编辑器参数
+ * @param {string} params.editorType - 编辑器类型
+ * @param {string} params.propertyKey - 属性键
+ * @param {object} params.component - 组件对象
+ * @param {object} params.property - 属性对象
+ * @param {Function} params.callback - 回调函数
+ */
+function handleOpenEditor(params) {
+  emit('open-editor', params)
 }
 
 
