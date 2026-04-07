@@ -10,6 +10,28 @@ import { ElNotification } from 'element-plus'
  */
 
 /**
+ * 获取 JWT Token
+ * 优先从环境变量获取，其次从 localStorage 获取，最后使用默认值
+ * @returns {string} JWT Token
+ */
+function getJwtToken() {
+  // 优先从环境变量获取 token
+  const envToken = import.meta.env.VITE_JWT_TOKEN
+  if (envToken) {
+    return envToken
+  }
+
+  // 尝试从 localStorage 获取 token
+  const storedToken = localStorage.getItem('xq5_jwt_token')
+  if (storedToken) {
+    return storedToken
+  }
+
+  // 默认 token
+  return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyMDE4NywidXNlcl9uYW1lIjoi6ZmI5p2O54KcIiwiZ3JvdXBfaWQiOjIsImlzX3N1cGVydXNlciI6ZmFsc2UsImlzX2V4dGVybmFsIjpmYWxzZSwiZXhwIjoxNzc1MjgyNjMzfQ.9e8QIeewyyVyZBa3xbN70ZfByGnebV3tgLZIfK700fA'
+}
+
+/**
  * 解析 visibleWhen 表达式
  * @param {string} expression - 表达式，如 "{{6t8Ula}} == 1"
  * @returns {object|null} - 解析结果 {dependsOn, operator, value}
@@ -118,12 +140,20 @@ export function useComponentData() {
     isLoading.value = true
 
     try {
-      // 从环境变量获取 URL，使用默认值作为回退
-      const COMPONENT_DATA_URL = import.meta.env.VITE_COMPONENT_DATA_URL ||
-        'https://hotupdatedownload2.xq5.com/patch_wg/rupilot_test.json'
+      // 使用代理路径，避免 CORS 问题
+      const COMPONENT_DATA_URL = '/MajStudio/api/admin/component/buildjson'
 
       console.log('尝试从远程获取组件数据:', COMPONENT_DATA_URL)
-      const response = await fetch(COMPONENT_DATA_URL)
+
+      // 获取 JWT Token
+      const jwtToken = getJwtToken()
+
+      const response = await fetch(COMPONENT_DATA_URL, {
+        headers: {
+          'x-xq5-jwt': jwtToken,
+          'Content-Type': 'application/json'
+        }
+      })
 
       // 检查响应状态
       console.log('响应状态:', response.status)
@@ -140,10 +170,32 @@ export function useComponentData() {
       }
 
       const remoteData = await response.json()
+      console.log('获取到远程数据:', remoteData)
+
+      // 检查业务状态码
+      if (remoteData.errno !== 0) {
+        throw new Error(remoteData.errmsg || '接口返回错误')
+      }
+
+      // 解析 data.json 字段（它是 JSON 字符串需要解析）
+      let jsonData = remoteData.data
+      if (typeof jsonData === 'string') {
+        jsonData = JSON.parse(jsonData)
+      }
+      // 如果 data.json 是嵌套的
+      if (jsonData && jsonData.json) {
+        if (typeof jsonData.json === 'string') {
+          jsonData = JSON.parse(jsonData.json)
+        } else {
+          jsonData = jsonData.json
+        }
+      }
+
+      console.log('解析后的 JSON 数据:', jsonData)
       console.log('获取到远程数据，开始转换...')
 
       // 转换远程数据为内部格式
-      components.value = transformRemoteData(remoteData)
+      components.value = transformRemoteData(jsonData)
 
       console.log('组件列表加载完成:', components.value.length, '个组件')
 

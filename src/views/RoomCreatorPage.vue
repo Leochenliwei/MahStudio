@@ -57,7 +57,6 @@
       :player-count-templates="playerCountTemplates"
       :selected-player-count-template="selectedPlayerCountTemplate"
       :round-count-templates="roundCountTemplates"
-      :circle-count-templates="circleCountTemplates"
       :selected-round-count-template="selectedRoundCountTemplate"
       :base-score-templates="baseScoreTemplates"
       :selected-base-score-template="selectedBaseScoreTemplate"
@@ -148,7 +147,8 @@ const defaultRoomConfig = {
       options: [4, 3, 2],
       default: 2,
       allowLess: false,
-      allowLessStart: false
+      allowLessStart: false,
+      canLess: false
     },
     roundCount: {
       mode: 'round',
@@ -373,24 +373,23 @@ const showComponentSelector = ref(false)
 
 // 模板数据
 const playerCountTemplates = ref([
-  { label: '4人/3人/2人，默认值4人', options: [4, 3, 2], default: 4 },
-  { label: '3人/2人，默认值3人', options: [3, 2], default: 3 },
+  { label: '4人/3人/2人，默认值4人，支持少人开局', options: [4, 3, 2], default: 4, can_less: true },
+  { label: '4人/3人/2人，默认值4人，不支持少人开局', options: [4, 3, 2], default: 4, can_less: false },
+  { label: '3人/2人，默认值3人，支持少人开局', options: [3, 2], default: 3, can_less: true },
+  { label: '3人/2人，默认值3人，不支持少人开局', options: [3, 2], default: 3, can_less: false },
   { label: '2人，默认值2人', options: [2], default: 2 }
 ])
 
-// 打局模式模板
+// 局数/圈数模板（所有选项平铺）
 const roundCountTemplates = ref([
   { label: '4/8/16局，默认4局', options: [4, 8, 16], default: 4 },
-  { label: '8/16/32局，默认8局', options: [8, 16, 32], default: 8 }
-])
-
-// 打圈模式模板
-const circleCountTemplates = ref([
+  { label: '8/16/32局，默认8局', options: [8, 16, 32], default: 8 },
   { label: '1/2/4圈，默认1圈', options: [1, 2, 4], default: 1 },
   { label: '2/4/8圈，默认2圈', options: [2, 4, 8], default: 2 }
 ])
 
 const baseScoreTemplates = ref([
+  { label: '无需底分', options: [], default: 0 },
   { label: '1/2/3/4/5分，默认1分', options: [1, 2, 3, 4, 5], default: 1 },
   { label: '2/4/6/8/10分，默认2分', options: [2, 4, 6, 8, 10], default: 2 },
   { label: '5/10/15/20分，默认5分', options: [5, 10, 15, 20], default: 5 }
@@ -793,6 +792,7 @@ function savePlayerCountConfig() {
   if (template) {
     roomConfig.value.basic.playerCount.options = template.options
     roomConfig.value.basic.playerCount.default = template.default
+    roomConfig.value.basic.playerCount.canLess = template.can_less || false
   }
   closeAllDrawers()
 }

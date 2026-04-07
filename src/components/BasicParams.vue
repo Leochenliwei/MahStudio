@@ -21,7 +21,7 @@
             > 
             <span class="option-text">{{ option }}人</span>
           </label>
-          <label v-if="basicConfig.playerCount.allowLess" class="checkbox-option">
+          <label v-if="basicConfig.playerCount.canLess" class="checkbox-option">
             <input
               type="checkbox"
               v-model="basicConfig.playerCount.allowLessStart"
@@ -62,7 +62,14 @@
           <span class="label-text">底分</span>
         </div>
         <div class="rule-options">
+          <!-- 无底分时的占位提示 -->
+          <div v-if="basicConfig.baseScore === 0" class="empty-placeholder">
+            <el-icon :size="16"><InfoFilled /></el-icon>
+            <span>暂无底分</span>
+          </div>
+          <!-- 有底分时的下拉选择 -->
           <select 
+            v-else
             v-model="basicConfig.baseScore"
             @change="$emit('update-basic-config')"
             class="select-input"
@@ -81,7 +88,7 @@
 </template>
 
 <script setup>
-import { Setting } from '@element-plus/icons-vue'
+import { Setting, InfoFilled } from '@element-plus/icons-vue'
 
 // 定义props
 const props = defineProps({
@@ -235,6 +242,20 @@ const emit = defineEmits([
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+/* 无底分占位提示 */
+.empty-placeholder {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--border-radius-md);
+  background: var(--color-surface-hover);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  min-width: 240px;
+  border: 1px dashed var(--color-border);
 }
 
 /* 操作按钮 */

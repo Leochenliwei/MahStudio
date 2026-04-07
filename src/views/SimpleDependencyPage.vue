@@ -51,12 +51,7 @@
                   <button class="op-btn edit" @click="openEditRuleEditor(rule)" title="编辑">
                     <el-icon :size="14"><Edit /></el-icon>
                   </button>
-                  <button class="op-btn toggle" :class="{ disabled: rule.disabled }" @click="toggleRuleStatus(rule)" :title="rule.disabled ? '启用' : '禁用'">
-                    <el-icon :size="14">
-                      <VideoPlay v-if="rule.disabled" />
-                      <VideoPause v-else />
-                    </el-icon>
-                  </button>
+                  
                   <button class="op-btn delete" @click="confirmDelete(rule)" title="删除">
                     <el-icon :size="14"><Delete /></el-icon>
                   </button>
@@ -670,6 +665,8 @@ onMounted(() => {
   justify-content: center;
   transition: all var(--transition-normal);
   color: var(--color-text-secondary);
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .op-btn:hover {
@@ -686,12 +683,14 @@ onMounted(() => {
   background: rgba(239, 68, 68, 0.1);
 }
 
+/* 启用/禁用按钮 - 规则启用状态（点击可禁用） */
 .op-btn.toggle:hover {
   color: var(--color-warning);
   background: rgba(245, 158, 11, 0.1);
 }
 
-.op-btn.toggle.disabled:hover {
+/* 启用/禁用按钮 - 规则禁用状态（点击可启用） */
+.op-btn.toggle.is-disabled:hover {
   color: var(--color-success);
   background: rgba(16, 185, 129, 0.1);
 }

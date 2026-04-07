@@ -1,7 +1,7 @@
 # 项目组件关系文档
 
 > 本文档记录了项目中所有Vue组件的调用关系和层级结构
-> 最后更新时间: 2026-03-20
+> 最后更新时间: 2026-03-30
 
 ---
 
@@ -228,6 +228,23 @@ App.vue (根组件)
 **功能**: 动作限制规则列表编辑，支持添加、删除、复制规则项
 **特点**: 基于 ContractEditor.vue 简化实现，去除了复杂的 ConfigFormulaPure 依赖
 
+#### ExpressionInput.vue - 表达式输入组件
+**路径**: `src/components/editors/ExpressionInput.vue`
+**被引用**: ActionLimitEditor.vue
+**导入组件**: IdentitySelector.vue
+**功能**: 可视化表达式编辑器，支持嵌套标签块渲染
+**特点**:
+- 数值型单元：[身份] 的 [状态]
+- 布尔型单元：[身份] 的状态 [为/不为] [状态]
+- 支持身份切换、否定状态切换
+- Dropdown 形式展开编辑器
+
+#### IdentitySelector.vue - 身份选择器
+**路径**: `src/components/editors/IdentitySelector.vue`
+**被引用**: ExpressionInput.vue
+**功能**: 游戏元素身份选择下拉组件
+**特点**: 支持泛身份特殊标识（所有闲家、所有玩家等）
+
 ---
 
 ### 功能组件
@@ -319,6 +336,9 @@ graph TD
     %% RuleEditorModalPro 依赖
     RuleEditorPro --> ConditionTree[ConditionTree.vue]
     RuleEditorPro --> ActionConfig[ActionConfig.vue]
+
+    %% ExpressionInput 依赖
+    ExpressionInput --> IdentitySelector[IdentitySelector.vue]
 
     %% 样式说明
     style App fill:#3b82f6,color:#fff
@@ -415,6 +435,8 @@ src/
 │   ├── CustomSelect.vue            # 自定义下拉
 │   └── editors/                    # 编辑器组件目录
 │       ├── ActionLimitEditor.vue   # 动作限制编辑器
+│       ├── ExpressionInput.vue     # 表达式输入组件
+│       ├── IdentitySelector.vue    # 身份选择器
 │       ├── MotionConstraintEditor.vue # 动作约束编辑器
 │       ├── ScoreCorrectionEditor.vue  # 分数修正编辑器
 │       ├── ScoreCalculationFormulaEditing.vue # 算分公式编辑

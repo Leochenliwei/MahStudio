@@ -170,7 +170,8 @@
               </span>
             </div>
           </div>
-          <div class="prop-row">
+          <!-- 交互性 - 仅选项类型可配置 -->
+          <div v-if="action.level === 'item'" class="prop-row">
             <div class="prop-label">
               <input 
                 type="checkbox" 
@@ -198,7 +199,8 @@
               </span>
             </div>
           </div>
-          <div class="prop-row">
+          <!-- 选中性 - 仅选项类型可配置 -->
+          <div v-if="action.level === 'item'" class="prop-row">
             <div class="prop-label">
               <input 
                 type="checkbox" 

@@ -149,15 +149,20 @@
                       >
                         粘贴
                       </el-button>
+                      <el-button
+                        size="small"
+                        text
+                        class="action-btn"
+                        @click="pasteCondition(item)"
+                        title="粘贴表达式"
+                      >
+                        校验
+                      </el-button>
                     </div>
                   </div>
-                  <el-input
+                  <ExpressionInput
                     v-model="item.condition"
-                    type="textarea"
-                    :rows="1"
                     placeholder="请输入条件表达式"
-                    class="condition-input"
-                    resize="none"
                   />
                 </div>
 
@@ -226,6 +231,7 @@ import {
   DocumentChecked,
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import ExpressionInput from './ExpressionInput.vue'
 
 // 生成唯一ID
 let idCounter = 0

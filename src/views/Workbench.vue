@@ -589,11 +589,19 @@ const MIN_SCALE = 0.25  // 25% 最小缩放
 const MAX_SCALE = 2.0   // 200% 最大缩放
 const ZOOM_STEP = 0.1   // 每次缩放增量 10%
 const DRAG_TRIGGER_DELAY = 200 // 拖拽触发延迟 (ms)
-const STEP_WIDTH = 250
-const STEP_HEIGHT = 420
-const CONNECTOR_WIDTH = 30
-const STEPS_COUNT = 6
-const STEPS_TOTAL_WIDTH = STEPS_COUNT * STEP_WIDTH + (STEPS_COUNT - 1) * CONNECTOR_WIDTH // 1650
+
+// 六步框体尺寸常量
+const STEP_WIDTH = 220           // 分类容器宽度
+const STEP_HEIGHT = 420          // 分类容器高度
+const CONNECTOR_WIDTH = 30       // 连接线宽度
+const STEPS_COUNT = 6            // 步骤数量
+const STEP_START_X = 130         // 起始X偏移
+const STEP_START_Y = 50          // 起始Y偏移
+const CONTENT_PADDING = 50       // 内容边距
+
+// 六步框体总尺寸
+const CONTENT_TOTAL_WIDTH = STEP_START_X + STEPS_COUNT * STEP_WIDTH + (STEPS_COUNT - 1) * CONNECTOR_WIDTH + CONTENT_PADDING
+const CONTENT_TOTAL_HEIGHT = STEP_START_Y + STEP_HEIGHT + CONTENT_PADDING
 
 // ==================== 画布缩放与拖拽状态 ====================
 // 画布缩放比例 (1.0 = 100%)
@@ -764,7 +772,7 @@ function handleMouseMove(event) {
 
 /**
  * 计算初始缩放比例，确保六步框体完整显示
- * @returns {number} 缩放比例 (0.25 ~ 2.0)
+ * @returns {number} 缩放比例 (0.25 ~ 1.0)
  */
 function calculateInitialScale() {
   if (!canvasRef.value) return 1.0
@@ -772,14 +780,17 @@ function calculateInitialScale() {
   const canvasWidth = canvasRef.value.clientWidth
   const canvasHeight = canvasRef.value.clientHeight
 
-  const availableWidth = canvasWidth - 100
-  const availableHeight = canvasHeight - 100
+  // 可用空间（留出边距）
+  const availableWidth = canvasWidth - 80  // 左右各40px边距
+  const availableHeight = canvasHeight - 80 // 上下各40px边距
 
-  const scaleX = availableWidth / STEPS_TOTAL_WIDTH
-  const scaleY = availableHeight / STEP_HEIGHT
+  // 计算水平和垂直方向的缩放比例
+  const scaleX = availableWidth / CONTENT_TOTAL_WIDTH
+  const scaleY = availableHeight / CONTENT_TOTAL_HEIGHT
 
-  let scale = Math.min(scaleX, scaleY)
-  scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale))
+  // 取较小值确保完整显示，限制在 25% ~ 100%（初始状态不超过100%）
+  let scale = Math.min(scaleX, scaleY, 1.0)
+  scale = Math.max(MIN_SCALE, scale)
 
   return scale
 }
@@ -787,7 +798,7 @@ function calculateInitialScale() {
 /**
  * 计算初始位置，使六步框体居中显示
  * @param {number} scale - 当前缩放比例
- * @returns {{x: number, y: number}} 画布位置
+ * @returns {{x: number, y: number}} 画布偏移位置
  */
 function calculateInitialPosition(scale) {
   if (!canvasRef.value) return { x: 0, y: 0 }
@@ -795,9 +806,11 @@ function calculateInitialPosition(scale) {
   const canvasWidth = canvasRef.value.clientWidth
   const canvasHeight = canvasRef.value.clientHeight
 
-  const contentWidth = STEPS_TOTAL_WIDTH * scale
-  const contentHeight = STEP_HEIGHT * scale
+  // 内容实际尺寸
+  const contentWidth = CONTENT_TOTAL_WIDTH * scale
+  const contentHeight = CONTENT_TOTAL_HEIGHT * scale
 
+  // 计算居中偏移
   return {
     x: (canvasWidth - contentWidth) / 2,
     y: (canvasHeight - contentHeight) / 2
@@ -1176,12 +1189,21 @@ onMounted(async () => {
 
 /**
  * 初始化画布缩放和位置
+ * 工作台初始化时，将六步框体缩放成适配画布尺寸的大小并居中显示
  */
 function initCanvas() {
-  const scale = calculateInitialScale()
-  const position = calculateInitialPosition(scale)
-  canvasScale.value = scale
-  canvasPosition.value = position
+  // 等待 DOM 更新完成后再计算尺寸
+  nextTick(() => {
+    if (!canvasRef.value) return
+
+    const scale = calculateInitialScale()
+    const position = calculateInitialPosition(scale)
+
+    canvasScale.value = scale
+    canvasPosition.value = position
+
+    console.log('[Workbench] 画布初始化完成:', { scale: scale.toFixed(2), position })
+  })
 }
 
 // 计算属性：选中的面板

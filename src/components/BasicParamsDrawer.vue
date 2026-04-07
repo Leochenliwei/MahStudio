@@ -23,21 +23,7 @@
           </div>
         </div>
 
-        <!-- 允许少人开局开关 -->
-        <div class="allow-less-section">
-          <label class="toggle-label">
-            <span>允许少人开局</span>
-            <label class="toggle-switch">
-              <input 
-                type="checkbox" 
-                :checked="allowLess"
-                @change="$emit('toggle-allow-less', $event.target.checked)"
-              >
-              <span class="toggle-slider"></span>
-            </label>
-          </label>
-          <p class="help-text">开启后，创房面板将显示"少人开局"选项</p>
-        </div>
+       
       </div>
       <div class="drawer-footer">
         <button class="btn btn-primary btn-block" @click="$emit('save-player-count-config')">
@@ -52,26 +38,9 @@
         <h3>设置局数选项</h3>
       </div>
       <div class="drawer-body">
-        <div class="mode-tabs">
-          <button 
-            class="mode-tab" 
-            :class="{ active: roundMode === 'round' }"
-            @click="$emit('switch-round-mode', 'round')"
-          >
-            打局
-          </button>
-          <button 
-            class="mode-tab" 
-            :class="{ active: roundMode === 'circle' }"
-            @click="$emit('switch-round-mode', 'circle')"
-          >
-            打圈
-          </button>
-        </div>
-        
-        <div class="section-title">{{ roundMode === 'round' ? '局数选择' : '圈数选择' }}</div>
+        <div class="section-title">局数/圈数选择</div>
         <div 
-          v-for="(template, index) in currentRoundTemplates" 
+          v-for="(template, index) in roundCountTemplates" 
           :key="index"
           class="option-select-item"
           :class="{ selected: selectedRoundCountTemplate === index }"
@@ -140,10 +109,6 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
-  circleCountTemplates: {
-    type: Array,
-    default: () => []
-  },
   selectedRoundCountTemplate: {
     type: Number,
     default: 0
@@ -184,10 +149,7 @@ const isBasicDrawerActive = computed(() => {
   return ['drawer-people', 'drawer-rounds', 'drawer-base-score'].includes(props.activeDrawer)
 })
 
-// 计算属性：根据模式返回对应的模板数据
-const currentRoundTemplates = computed(() => {
-  return props.roundMode === 'round' ? props.roundCountTemplates : props.circleCountTemplates
-})
+
 </script>
 
 <style scoped>
